@@ -519,7 +519,7 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
                     }
                  };
              })())
-        .html(function (d) { return d.axisname + ' [' + Object.keys(d.units).join(', ') + ']'; });
+        .html(function (d) { return d.axisname; });
     update.exit().remove();
     
     loadingElem.html("Drawing graph...");
