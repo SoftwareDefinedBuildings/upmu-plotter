@@ -209,6 +209,15 @@ function initPlot(self) {
         .attr("fill", "none")
         .attr("class", "clickscreen unclickedchart");
     self.idata.loadingElem = $(self.find('.plotLoading'));
+    
+    var field;
+    var yAxes = self.idata.yAxes;
+    for (var i = 0; i < yAxes.length; i++) {
+        field = self.find(".axis-" + yAxes[i].axisid).firstChild.firstChild;
+        field.value += ' [' + Object.keys(yAxes[i].units).join(',') + ']';
+        field.onchange();
+    }
+    
     self.idata.initialized = true;
 }
 
