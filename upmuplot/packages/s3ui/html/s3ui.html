@@ -2,36 +2,54 @@
     {{> s3plot_plotStyles}}
     <style class="dynamicStyles">
     </style>
-    <!-- This is where <body> started in the original HTML document. -->
-    <h1 class="mainTitle">sMAP Plotting Tool</h1>
-    <h2 class="graphTitle">Graph</h2>
-    {{> s3plot_graphExport}}
-    <table>
-        <tr>
-            <td>
-                {{> s3plot_chart}}
-            </td>
-            <td>
-                <div>
-                    {{> s3plot_streamLegend}}
-                    {{> s3plot_axisLegend}}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-3  col-md-2">
+                {{> s3plot_timeSelection}}
+                <div class="btn-group-vertical">
+                    <div class="plotButton btn btn-primary">Apply and plot</div>
+                    <div class="resetZoom btn btn-default">Reset zoom</div>
+                    <div class="updateStreamList btn btn-default">Refresh Stream Tree</div>
                 </div>
-            </td>
-        </tr>
-    </table>
-    <br>
-    <button class="plotButton">Apply all Settings and Plot Data</button>
-    <button class="resetZoom">Reset Zoom</button>
-    <span class="plotLoading"></span> <!-- Displays details about how the plot is loading -->
-    <div>
-        <span class="settingsTitle">
-            <h2 style="display: inline-block;">Settings</h2>
-            &nbsp;&nbsp;&nbsp;
-        </span>
-        {{> s3plot_automaticUpdate}}
-    </div>
-    {{> s3plot_timeSelection}}
-    {{> s3plot_streamSelection}}
+                <div class="plotLoading" style="width: 100%; margin-top:20px"></div> <!-- Displays details about how the plot is loading -->
+                {{> s3plot_streamSelection}}    
+            </div>
+            <div class="col-sm-9 col-md-10">
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        {{> s3plot_chart}}
+                    </div>
+                </div>
+                <div class="row well">
+                    <div class="col-md-3">
+                        {{> s3plot_streamLegend}} 
+                    </div>
+                    <div class="col-md-6">
+                        {{> s3plot_axisLegend}}
+                    </div>
+                    <div class="col-md-3">
+                        {{> s3plot_graphExport}}
+                        {{> s3plot_automaticUpdate}}
+                    </div>
+                </div>
+                
+                
+                
+            </div> 
+        </div>
+        
+        </div>
+        <!-- This is where <body> started in the original HTML document. -->
+        <!--
+        <div>
+            <span class="settingsTitle">
+                <h2 style="display: inline-block;">Settings</h2>
+                &nbsp;&nbsp;&nbsp;
+            </span>
+            
+        </div> -->
+
 </template>
 
 <template name="s3plot_plotStyles">
@@ -78,26 +96,28 @@
 </template>
 
 <template name="s3plot_chart">
-    <svg class="chart" width="800" height="430" background="white">
-        <rect width="800" height="430" fill="white"></rect> <!-- So the background is white, not transparent. -->
-        <g class="plotDirections" transform="translate(50, 100)">
-            <text transform="translate(0, 0)">1. Select streams from the list below.</text>
-            <text transform="translate(0, 30)">2. Select a time range to load data.</text>
-            <text transform="translate(0, 60)">3. If desired, change axis settings using the box to the right.</text>
-            <text transform="translate(0, 90)">4. Click "Apply all Settings and Plot Data" to see the graph.</text>
-            <text transform="translate(0, 120)">5. Use the mouse to zoom and scroll.</text>
-            <text transform="translate(0, 150)">
-                                        6. Optional: Change the display settings. If new streams are added or the time
-                <tspan x="0" dy="1.2em">range is changed, the "Apply all Settings and Plot Data" must be clicked. All</tspan>
-                <tspan x="0" dy="1.2em">other changes (removing streams, changing axes, etc.) will be applied</tspan>
-                <tspan x="0" dy="1.2em">immediately by default.</tspan>
-            </text>
-        </g>
-    </svg>
+    <div class="well">
+        <svg class="chart" width="800" height="430" background="white">
+            <!--<rect width="800" height="430" fill="white"></rect>  So the background is white, not transparent. -->
+            <g class="plotDirections" transform="translate(50, 100)">
+                <text transform="translate(0, 0)">1. Select streams from the list below.</text>
+                <text transform="translate(0, 30)">2. Select a time range to load data.</text>
+                <text transform="translate(0, 60)">3. If desired, change axis settings using the box to the right.</text>
+                <text transform="translate(0, 90)">4. Click "Apply all Settings and Plot Data" to see the graph.</text>
+                <text transform="translate(0, 120)">5. Use the mouse to zoom and scroll.</text>
+                <text transform="translate(0, 150)">
+                                            6. Optional: Change the display settings. If new streams are added or the time
+                    <tspan x="0" dy="1.2em">range is changed, the "Apply all Settings and Plot Data" must be clicked. All</tspan>
+                    <tspan x="0" dy="1.2em">other changes (removing streams, changing axes, etc.) will be applied</tspan>
+                    <tspan x="0" dy="1.2em">immediately by default.</tspan>
+                </text>
+            </g>
+        </svg>
+    </div>
 </template>
 
 <template name="s3plot_streamLegend">
-    <div class="streamLegend outline">
+    <div class="streamLegend">
         <h3>Legend</h3>
         <table>
             <tbody class="legend"></tbody>
@@ -106,7 +126,7 @@
 </template>
 
 <template name="s3plot_axisLegend">
-    <div class="axisLegend outline">
+    <div class="axisLegend">
         <h3>Axes</h3>
         <button class="addAxis">Add a Y-Axis</button>
         <table>
@@ -132,20 +152,40 @@
 
 <template name="s3plot_timeSelection">
     <div class="timeSelection">
-        <h3>Select Time Range</h3>
         <div class="timeselect">
-            Start:
-            <input type="text" class="datefield startdate" />
-            &nbsp;&nbsp;End:
-            <input type="text" class="datefield enddate" />
-            <button class="nowButton">Now</button>
-            &nbsp;&nbsp;Timezone:
-            <select class="timezoneSelect">
-                <option value="America/Los_Angeles">America/Los_Angeles</option>
-                <option value="UTC">UTC</option>
-                <option value="OTHER">Other:</option>
-            </select>
-            <input type="text" class="otherTimezone" style="visibility: hidden;" />
+            <form role="form">
+                <div class="row">
+                    <div class="form-group col-lg3 col-md4">
+                        <label>Start date</label>
+                        <div class="input-group" style="width:100%">
+                            <input type="text" class="form-control datefield startdate" />
+                            <div class="m1yButton btn input-group-addon" style="width:4em">-1Y</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-lg2 col-md3">
+                        <label>End date</label>
+                        <div class="input-group" style="width:100%">
+                            <input type="text" class="form-control datefield enddate">
+                            <div class="nowButton btn input-group-addon" style="width:4em">Now</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-lg2 col-md3">
+                        <label>Timezone</label>
+                        <div class="input-group" style="width:100%">
+                            <select class="timezoneSelect form-control">
+                                <option value="America/Los_Angeles">America/Los_Angeles</option>
+                                <option value="UTC">UTC</option>
+                                <option value="OTHER">Other:</option>
+                            </select>
+                            <input type="text" class="otherTimezone form-control" style="visibility: hidden;" />
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </template>
@@ -153,7 +193,6 @@
 <template name="s3plot_streamSelection">
     <div class="streamSelection">
         <h3>Select Streams</h3>
-        <button class="updateStreamList">Refresh Stream Tree</button>
         <div class="streamTree"></div>
     </div>
 </template>
