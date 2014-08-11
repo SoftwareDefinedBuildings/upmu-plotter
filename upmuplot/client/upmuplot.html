@@ -1,0 +1,31 @@
+<head>
+  <title>uPMU plotting application</title>
+</head>
+
+<body>
+  {{> navbar}}
+</body>
+
+<template name="navbar">
+  <div class="navbar navbar-default" role="navigation">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="/">uPMU plotting application</a>
+    </div>
+    <div class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li class="{{activeIf 'home'}}"><a href="{{pathFor 'home'}}">Home</a></li>
+      </ul>
+      <ul class="nav navbar-nav">
+        <li class="{{activeIf 'status'}}"><a href="{{pathFor 'status'}}">Status</a></li>
+      </ul>
+    </div>
+  </div>
+</template>
+
+<template name="status">
+  <h1>Status</h1>
+  <p>This is not yet implemented, but will shortly have the liveness of all
+     the units displayed
+     </p>
+</template>
+
