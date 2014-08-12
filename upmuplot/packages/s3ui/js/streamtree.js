@@ -262,7 +262,6 @@ function selectNode(self, tree, select, node) { // unfortunately there's no simp
                     self.idata.pendingRequests -= 1;
                     if (node.data.selected == select) { // the box may have been unchecked in the meantime
                         if (node.data.streamdata == undefined) { // it might have been loaded in the meantime
-                            console.log(data)
                             data = JSON.parse(data)[0];
                             node.data.streamdata = data;
                         }

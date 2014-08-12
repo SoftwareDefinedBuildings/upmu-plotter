@@ -175,7 +175,7 @@ function applyAllSettings() {
     this.find(".plotButton").onclick();
 }
 
-/* To programmatically presses the "Reset Zoom" button, just call "resetZoom". */
+/* To programmatically press the "Reset Zoom" button, just call "resetZoom". */
 
 /* Programmatically toggles the "Automatic Axis Update" checkbox. Its value can
    be found by reading the value of the "automaticAxisUpdate" boolean. */
@@ -192,7 +192,8 @@ function selectStreams(data_lst) {
      var node;
      var source;
      var path;
-     var streamTree = this.idata.streamTree
+     var streamTree = this.idata.streamTree;
+     var loadingRootNodes = this.idata.loadingRootNodes;
      for (var i = 0; i < data_lst.length; i++) {
          source = data_lst[i].Metadata.SourceName;
          path = data_lst[i].Path;
@@ -216,8 +217,11 @@ function selectStreams(data_lst) {
                  continue;
              }
              node = streamTree.get_node(source);
-             if (node.children.length == 0) {
-                 streamTree.load_node(source); // It will be automatically selected if it is there
+             if (node.children.length == 0 && !loadingRootNodes[node.id]) {
+                 loadingRootNodes[node.id] = true;
+                 streamTree.load_node(source, function () {
+                        loadingRootNodes[node.id] = false;
+                    }); // It will be automatically selected if it is there
              }
          } else {
              streamTree.select_node(node, false, true);
@@ -259,5 +263,126 @@ function deselectStreams(data_lst) {
     s3ui.applySettings(this);
 }
 
+/* Given LINK, the portion of a hyperlink that occurs after the question mark
+   in a url, creates the state of the graph it describes. This function assumes
+   that the graph has just been loaded, with no streams selected or custom
+   settings applied. */
+function executePermalink(self, link) {
+    if (link === "") {
+        return;
+    }
+    // Turn the data in LINK into an object
+    var args = {}; // Maps argument name to the value it was given
+    var kws = link.split("&");
+    var kw;
+    var i;
+    for (i = 0; i < kws.length; i++) {
+        kw = kws[i].split('=');
+        args[kw[0]] = kw[1];
+    }
+    
+    var streams = (args.streams || args.streamids).split(',');
+    var streamObjs = [];
+    var stream;
+    var colors = [];
+    var noRequest = true;
+    var uuidMap = {}; // Maps uuid to an index in the array
+    var query = ' select * where';
+    for (i = 0; i < streams.length; i++) {
+        stream = decodeURIComponent(streams[i]).split('_');
+        colors.push(stream.pop());
+        stream = stream.join('_');
+        if (stream.charAt(0) == '{') {
+            streamObjs[i] = JSON.parse(stream);
+        } else {
+            uuidMap[stream] = i;
+            if (!noRequest) {
+                query += ' or';
+            }
+            query += ' uuid = "' + stream + '"';
+            noRequest = false;
+        }
+    }
+    
+    if (noRequest) {
+        setTimeout(function () { finishExecutingPermalink(self, streamObjs, colors, args); }, 50);
+    } else {
+        s3ui.getURL('SENDPOST ' + self.idata.tagsURL + query, function (data) {
+                var receivedStreamObjs = JSON.parse(data);
+                for (i = 0; i < receivedStreamObjs.length; i++) {
+                    streamObjs[uuidMap[receivedStreamObjs[i].uuid]] = receivedStreamObjs[i];
+                }
+                for (i = streamObjs.length - 1; i >= 0; i--) {
+                    if (streamObjs[i] == undefined) {
+                        streamObjs.splice(i, 1);
+                        colors.splice(i, 1);
+                    }
+                }
+                finishExecutingPermalink(self, streamObjs, colors, args);
+            }, 'text');
+    }
+}
+
+function finishExecutingPermalink(self, streams, colors, args) {
+    self.imethods.selectStreams(streams);
+    var i;
+    for (i = 0; i < streams.length; i++) {
+        if (colors[i] != undefined) {
+            try {
+                self.imethods.setStreamColor(streams[i].uuid, colors[i]);
+            } catch (err) {
+                console.log('Could not set ' + streams[i].uuid + ' to ' + colors[i] + ': ' + err.message);
+            }
+        }
+    }
+    self.imethods.setStartTime(new Date(parseInt(args.start) * 1000));
+    self.imethods.setEndTime(new Date(parseInt(args.end) * 1000));
+    if (args.hasOwnProperty('tz')) {
+        self.imethods.setTimezone(decodeURIComponent(args.tz));
+    }
+    if (args.hasOwnProperty('zoom')) {
+        self.idata.initzoom = parseFloat(decodeURIComponent(args.zoom));
+    }
+    if (args.hasOwnProperty('translate')) {
+        self.idata.inittrans = parseFloat(decodeURIComponent(args.translate));
+    }
+    if (args.hasOwnProperty('autoupdate')) {
+        if (!args.autoupdate) {
+            self.toggleAutomaticUpdate();
+        }
+    }
+    if (args.hasOwnProperty('axes')) {
+        var axes = JSON.parse(decodeURIComponent(args.axes));
+        var yAxes = self.idata.yAxes;
+        while (axes.length > yAxes.length) {
+            self.imethods.addYAxis();
+        }
+        while (axes.length < yAxes.length) {
+            self.imethods.removeYAxis(yAxes[yAxes.length - 1]);
+        }
+        var j;
+        var id;
+        var axis;
+        for (i = 0; i < axes.length; i++) {
+            id = "y" + (i + 1);
+            axis = axes[i];
+            for (j = 0; j < axis.streams.length; j++) {
+                if (self.idata.streamSettings[axis.streams[j]].axisid != id) {
+                    self.imethods.setStreamAxis(axis.streams[j], id);
+                }
+            }
+            self.imethods.renameAxis(id, axis.axisname);
+            if (axis.scale !== false) {
+                self.imethods.setAxisScale(id, axis.scale[0], axis.scale[1]);
+            }
+            if (axis.rightside) {
+                self.imethods.setAxisSide(id, false);
+            }
+        }
+    }
+    self.imethods.applyAllSettings();
+}
+
 s3ui.init_control = init_control;
 s3ui.bind_method = bind_method;
+s3ui.executePermalink = executePermalink;
