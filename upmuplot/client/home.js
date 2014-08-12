@@ -1,15 +1,17 @@
 if (Meteor.isClient) {
+    var localtest = false;
     Template.home.plot_data = [
-        { 
-            tagsURL: 'http://quasar.cal-sdb.org:4523/backend/api/query?', 
-            dataURLStart: 'http://quasar.cal-sdb.org:9000/data/uuid/' 
+        {
+            tagsURL: localtest ? 'http://localhost:7856' : 'http://quasar.cal-sdb.org:4523/backend/api/query?',
+            dataURLStart: localtest ? 'http://localhost:7856/data/uuid' : 'http://quasar.cal-sdb.org:9000/data/uuid/'
         }, 
         function (inst) 
         { 
             instances.push(inst); 
-        }, 
-        function () 
-        { 
+        },
+        localtest ? (window.location.search.length == 0 ? '' : window.location.search.slice(1)) : ''];
+        //function () 
+        //{ 
             /*var inst = instances[instances.length - 1]; 
             inst.imethods.selectStreams([
             {
@@ -60,6 +62,6 @@ if (Meteor.isClient) {
                 }
             }
             ]); */
-        }];
+        //}];
 
 }

@@ -16,10 +16,11 @@ operator in a data context:
     {{> s3plot}}
 {{/with}}</code></pre>
 
-If "somecontext" is an array (or array-like object) with an object at index 0
-and functions at indices 2 and 3, the object at index 0 is interpreted as
-specifying parameters and the function at indices 1 and 2 are interpreted as
-callback functions.
+If "somecontext" is an array (or array-like object) with an object at index 0,
+a function at index 1, and either a function or string at index 2, the object
+at index 0 is interpreted as specifying parameters and the functions at indices
+1 and 2 are interpreted as callback functions. If a string is specified at
+index 2, it is interpreted as a Permalink.
 
 The object of parameters may have the following properties (all optional):
 
@@ -40,7 +41,7 @@ The object of parameters may have the following properties (all optional):
 * hide\_refresh\button - TRUE if the "Refresh Stream Tree" button is to be hidden. Defaults to FALSE.
 * hide\_axis\_selection - TRUE if the axis selection menu within the legend is to be hidden. Defaults to FALSE.
 * disable\_color\_selection - TRUE if the color selection menu within the legend is to be disabled. Defaults to FALSE.
-* permalinkStart - Specifies the start of the permalink URL. Defaults to the current window location of the browser, excluding any seach queries in the URL.
+* permalinkStart - Specifies the start of the permalink URL. Defaults to the current window location of the browser, excluding any seach queries in the URL, but including the question mark.
 * dataURLStart - Specifies the start of the url where to get data. Defaults to "http://bunker.cs.berkeley.edu/backend/api/data/uuid/".
 * tagsURL - Specifies the url to query to get stream info. Defaults "http://new.openbms.org/backend/api/query?".
 * width - Specifies the width of the chart area (_not_ the whole graph). Defaults to 600.
@@ -57,7 +58,8 @@ function can also be used to make simple changes to the DOM allowing for a
 customized layout.
 
 The second callback function is called when the tree of streams is initialized,
-not fully loaded. Here, streams can be selected programmatically.
+not fully loaded. Here, streams and settings can be selected programmatically.
+If a string is passed here instead, it is executed as a permalink.
 
 Custom Layouts
 --------------

@@ -18,6 +18,7 @@ function init_control(self) {
     self.imethods.applyAllSettings = bind_method(applyAllSettings, self);
     self.imethods.resetZoom = function () { return s3ui.resetZoom(self); };
     self.imethods.toggleAutomaticUpdate = bind_method(toggleAutomaticUpdate, self);
+    self.imethods.toggleEmbedMetadata = bind_method(toggleEmbedMetadata, self);
     self.imethods.selectStreams = bind_method(selectStreams, self);
     self.imethods.deselectStreams = bind_method(deselectStreams, self);
 }
@@ -183,6 +184,12 @@ function toggleAutomaticUpdate() {
     var checkbox = this.find(".automaticAxisSetting");
     checkbox.checked = !checkbox.checked;
     checkbox.onchange();
+}
+
+/* Programmatically toggles the "Embed Stream Metadata" checkbox. */
+function toggleEmbedMetadata() {
+    var elem = this.find(".includeMetadata");
+    elem.checked = !elem.checked;
 }
 
 /* Given DATA_LST, a list of stream objects, selects the corresponding streams.
@@ -355,10 +362,10 @@ function finishExecutingPermalink(self, streams, colors, args) {
         var axes = JSON.parse(decodeURIComponent(args.axes));
         var yAxes = self.idata.yAxes;
         while (axes.length > yAxes.length) {
-            self.imethods.addYAxis();
+            self.imethods.addAxis();
         }
         while (axes.length < yAxes.length) {
-            self.imethods.removeYAxis(yAxes[yAxes.length - 1]);
+            self.imethods.removeAxis(yAxes[yAxes.length - 1]);
         }
         var j;
         var id;

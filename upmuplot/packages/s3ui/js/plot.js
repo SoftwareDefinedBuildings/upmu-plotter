@@ -370,7 +370,8 @@ function drawPlot(self) {
     
     loadingElem.html("Fetching data...");
     
-    self.idata.zoom.scale(self.idata.initzoom).translate([self.idata.inittrans, 0]).x(xScale);
+    self.idata.zoom.x(xScale);
+    self.idata.zoom.scale(self.idata.initzoom).translate([self.idata.inittrans, 0]);
     
     // Get the data for the streams
     repaintZoomNewData(self, function () {
@@ -392,7 +393,7 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
     
     // Find the minimum and maximum value in each stream to properly scale the axes
     var axisData = {}; // Maps axis ID to a 2-element array containing the minimum and maximum; later on a third element is added containing the y-Axis scale
-    var noData = []; // An array of streams that have no data;
+    var toDraw = []; // An array of streams that have no data;
     var numstreams;
     var i, j, k;
     var streamdata;
@@ -402,11 +403,14 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
     var axis;
     for (i = 0; i < yAxes.length; i++) {
         axis = yAxes[i];
+        numstreams = axis.streams.length;
+        if (numstreams > 0) {
+            toDraw.push(axis);
+        }
         if (!axis.autoscale && (axis.manualscale[1] > axis.manualscale[0])) {
             axisData[axis.axisid] = [NaN, NaN]; // so we know that we're using a manual scale for this axis
             continue;
         }
-        numstreams = axis.streams.length;
         totalmin = undefined;
         totalmax = undefined;
         for (j = 0; j < numstreams; j++) {
@@ -424,9 +428,6 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
                     totalmax = datapointmax;
                 }
             }
-            if (streamdata.length == 0) {
-                noData.push(streamdata);
-            }
         }
         if (totalmin != undefined) {
             if (totalmin == totalmax) { // Choose a range so the axis can show something meaningful
@@ -443,7 +444,7 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
     
     numstreams = streams.length;
     
-    var yScales = $.map(yAxes, function (elem) {
+    var yScales = $.map(toDraw, function (elem) {
             var scale;
             if (isNaN(axisData[elem.axisid][0])) { // manual scale
                 scale = d3.scale.linear()
@@ -468,8 +469,8 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
     
     var leftYAxes = [];
     var rightYAxes = [];
-    for (i = 0; i < yAxes.length; i++) {
-        if (yAxes[i].right) {
+    for (i = 0; i < toDraw.length; i++) {
+        if (toDraw[i].right) {
             rightYAxes.push(yAxisArray[i]);
         } else {
             leftYAxes.push(yAxisArray[i]);

@@ -152,12 +152,12 @@ function init_graph(self, c1, c2) {
         };
     self.find(".startdate").onchange = changedDate;
     self.find(".enddate").onchange = changedDate;
-    self.find(".nowButton").onclick = function () {
-            self.$('.enddate').val(self.idata.dateConverter.format(new Date())).change();
-        };
     self.find(".m1yButton").onclick = function () {
             var m1y = new Date().getTime()-365*24*60*60*1000;
             self.$('.startdate').val(self.idata.dateConverter.format(new Date(m1y))).change();
+        };
+    self.find(".nowButton").onclick = function () {
+            self.$('.enddate').val(self.idata.dateConverter.format(new Date())).change();
         };
     self.find(".timezoneSelect").onchange = function () {
             var visibility = (this[this.selectedIndex].value == 'OTHER' ? 'visible' : 'hidden');

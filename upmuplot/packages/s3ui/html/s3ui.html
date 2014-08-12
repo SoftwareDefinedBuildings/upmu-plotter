@@ -12,7 +12,7 @@
                     <div class="updateStreamList btn btn-default">Refresh Stream Tree</div>
                 </div>
                 <div class="plotLoading" style="width: 100%; margin-top:20px"></div> <!-- Displays details about how the plot is loading -->
-                {{> s3plot_streamSelection}}    
+                {{> s3plot_streamSelection}}
             </div>
             <div class="col-sm-9 col-md-10">
                 
@@ -89,6 +89,8 @@
 <template name="s3plot_permalink">
     <div class="permalinkGenerate">
         <button class="getPermalink">Generate Permalink</button>
+        <input type="checkbox" class="includeMetadata" />
+        <span>Embed Stream Metadata</span>
         <div class="permalink"></div>
     </div>
 </template>
