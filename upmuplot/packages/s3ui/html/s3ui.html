@@ -30,12 +30,10 @@
                     </div>
                     <div class="col-md-3">
                         {{> s3plot_graphExport}}
+                        {{> s3plot_permalink}}
                         {{> s3plot_automaticUpdate}}
                     </div>
                 </div>
-                
-                
-                
             </div> 
         </div>
         
@@ -86,6 +84,13 @@
             font-size: 14px;
         }
     </style>
+</template>
+
+<template name="s3plot_permalink">
+    <div class="permalinkGenerate">
+        <button class="getPermalink">Generate Permalink</button>
+        <div class="permalink"></div>
+    </div>
 </template>
 
 <template name="s3plot_graphExport">
