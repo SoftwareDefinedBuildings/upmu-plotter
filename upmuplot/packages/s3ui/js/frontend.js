@@ -13,6 +13,8 @@ function init_frontend(self) {
     self.idata.otherChange = undefined;
     self.idata.automaticAxisUpdate = false; // True if axes will be updated without the need for an "Update Axes" button
     self.idata.initPermalink = window.location.hostname + (function (port) { if (port === '') { return ''; } return ':' + port; })(window.location.port) + window.location.pathname + '?'; // The start of the permalink
+    self.idata.chart = self.find("svg.chart");
+    self.idata.widthFunction = function () { return window.innerWidth * 0.75; };
 }
 
 /* Adds or removes (depending on the value of SHOW) the stream

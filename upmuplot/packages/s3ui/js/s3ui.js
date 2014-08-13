@@ -30,11 +30,13 @@ s3ui.__init__ = function (self) {
         if (self.data !== null && typeof self.data === "object" && typeof self.data[0] === "object" && typeof self.data[1] === "function" && (typeof self.data[2] === "function" || typeof self.data[2] === "string")) {
             init_visuals(self, self.data[0]);
             if (self.data[0].width != undefined) {
-                self.find("svg.chart").setAttribute("width", self.data[0].width);
-                self.idata.WIDTH = self.data[0].width;
+                self.idata.widthFunction = self.data[0].width;
+            }
+            if (self.data[0].widthmin != undefined) {
+                self.idata.widthmin = self.data[0].widthmin;
             }
             if (self.data[0].height != undefined) {
-                self.find("svg.chart").setAttribute("height", self.data[0].height);
+                self.find("svg.chart").setAttribute("height", self.data[0].height + self.idata.margin.top + self.idata.margin.bottom);
                 self.idata.HEIGHT = self.data[0].height;
             }
             if (self.data[0].dataURLStart != undefined) {
@@ -105,6 +107,14 @@ function init_graph(self, c1, c2) {
     
     // first callback
     c1(self);
+    
+    // Make the window resize dynamically
+    self.idata.TARGETWIDTH = self.idata.widthFunction();
+    s3ui.updateSize(self, false);
+    $(window).resize(function () {
+            self.idata.TARGETWIDTH = self.idata.widthFunction();
+            s3ui.updateSize(self, true);
+        });
     
     // For some reason, Any+Time requires the text elements to have IDs.
     // So, I'm going to give them IDs that are unique across all instances

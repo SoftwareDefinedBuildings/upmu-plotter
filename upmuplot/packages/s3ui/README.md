@@ -41,7 +41,8 @@ The object of parameters may have the following properties (all optional):
 * permalinkStart - Specifies the start of the permalink URL. Defaults to the current window location of the browser, excluding any seach queries in the URL, but including the question mark.
 * dataURLStart - Specifies the start of the url where to get data. Defaults to "http://bunker.cs.berkeley.edu/backend/api/data/uuid/".
 * tagsURL - Specifies the url to query to get stream info. Defaults "http://new.openbms.org/backend/api/query?".
-* width - Specifies the width of the chart area (_not_ the whole graph). Defaults to 600.
+* width - A function that returns the targed width of the graph (_not_ just the chart area) to use. Defaults to function () { return 0.75 * window.innerWidth; }
+* widthmin - The minimum width, in pixels, of the width of the chart area (_not_ the whole graph). Defaults to 300.
 * height - Specifies the height of the chart area (_not_ the whole graph). Defaults to 300.
 
 When the graph has been displayed, but before any interactivity is added, the

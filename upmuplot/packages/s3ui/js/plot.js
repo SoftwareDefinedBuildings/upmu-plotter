@@ -2,10 +2,6 @@
 
 function init_plot(self) {
     self.idata.initialized = false;
-
-    // self.idata.WIDTH and self.idata.HEIGHT of the chart area (constants)
-    self.idata.WIDTH = 600;
-    self.idata.HEIGHT = 300;
     
     // For the permalink
     self.idata.initzoom = 1;
@@ -13,6 +9,14 @@ function init_plot(self) {
 
     // Margin size (not constant)
     self.idata.margin = {left: 100, right: 100, top: 70, bottom: 60};
+    
+    // Height of the chart area (constant)
+    self.idata.HEIGHT = 300;
+    
+    // Width of the chart and chart area (WIDTH is set automatically by updateSize)
+    self.idata.TARGETWIDTH = undefined;
+    self.idata.WIDTH = undefined;
+    self.idata.widthmin = 300;
 
     // Selection of the element to display progress
     self.idata.loadingElem = self.$('.plotLoading');
@@ -196,9 +200,14 @@ function initPlot(self) {
         .attr("fill", "white");
     xaxiscover.append("g")
         .attr("class", "x-axis axis");
-    chart.append("g")
+    var yaxes = chart.append("g")
         .attr("transform", "translate(0, " + self.idata.margin.top + ")")
-        .attr("class", "y-axes");
+        .attr("class", "y-axes")
+   yaxes.append("g")
+        .attr("class", "y-axes-left");
+    yaxes.append("g")
+        .attr("transform", "translate(" + (self.idata.margin.left + self.idata.WIDTH) + ", 0)")
+        .attr("class", "y-axes-right");
     datadensitycover.append("g")
         .attr("transform", "translate(0, 10)")
         .attr("class", "data-density-plot")
@@ -217,26 +226,54 @@ function initPlot(self) {
     self.idata.initialized = true;
 }
 
-/* Updates the size of the chart based on changes to the margins. */
-function updateSize(self) {
+/* Updates the size of the chart based on changes to the margins The width will
+   be changed to best match self.idata.TARGETWIDTH. */
+function updateSize(self, redraw) {
+    var margin = self.idata.margin;
+    self.idata.WIDTH = Math.max(self.idata.widthmin, self.idata.TARGETWIDTH - margin.left - margin.right);
+    var WIDTH = self.idata.WIDTH;
+    var HEIGHT = self.idata.HEIGHT;
     self.$("svg.chart, svg.chart rect.background-rect").attr({
-        width: self.idata.margin.left + self.idata.WIDTH + self.idata.margin.right,
-        height: self.idata.margin.top + self.idata.HEIGHT + self.idata.margin.bottom
+            width: margin.left + WIDTH + margin.right,
+            height: margin.top + HEIGHT + margin.bottom
         });
-    self.$("svg.chart g.chartarea, svg.chart rect.clickscreen").attr("transform", "translate(" + self.idata.margin.left + ", " + self.idata.margin.top + ")");
-    self.$("svg.chart g.x-axis-cover").attr("transform", "translate(" + self.idata.margin.left + ", " + (self.idata.margin.top + self.idata.HEIGHT) + ")");
-    self.$("svg.chart g.data-density-cover").attr("transform", "translate(" + self.idata.margin.left + ", 0)");
-    self.$("rect.x-axis-background").attr("self.idata.HEIGHT", self.idata.margin.bottom);
+    self.$("svg.chart g.chartarea, svg.chart rect.clickscreen").attr({
+            transform: "translate(" + margin.left + ", " + margin.top + ")",
+            width: WIDTH
+        });
+    self.$("svg.chart g.x-axis-cover").attr("transform", "translate(" + margin.left + ", " + (margin.top + HEIGHT) + ")");
+    self.$("svg.chart g.data-density-cover").attr("transform", "translate(" + margin.left + ", 0)");
+    self.$("rect.x-axis-background").attr({
+            height: margin.bottom,
+            width: WIDTH + 2
+        });
     self.$("rect.y-axis-background-left").attr({
-            width: self.idata.margin.left,
-            height: self.idata.margin.top + self.idata.HEIGHT + self.idata.margin.bottom
+            width: margin.left,
+            height: margin.top + HEIGHT + margin.bottom
         });
     self.$("rect.y-axis-background-right").attr({
-            width: self.idata.margin.right,
-            height: self.idata.margin.top + self.idata.HEIGHT + self.idata.margin.bottom,
-            transform: "translate(" + (self.idata.margin.left + self.idata.WIDTH) + ", 0)"
+            width: margin.right,
+            height: margin.top + HEIGHT + margin.bottom,
+            transform: "translate(" + (margin.left + WIDTH) + ", 0)"
         });
-    self.$("g.y-axes").attr("transform", "translate(0, " + self.idata.margin.top + ")");
+    self.$("rect.data-density-background").attr({
+            width: WIDTH + 2,
+            height: margin.top
+        });
+    self.$("g.y-axes").attr("transform", "translate(0, " + margin.top + ")");
+    self.$("g.y-axes-right").attr("transform", "translate(" + (margin.left + WIDTH) + ", 0)");
+    if (!self.idata.initialized) {
+        return;
+    }
+    self.idata.xTitle.setAttribute("x", WIDTH / 2);
+    self.idata.xEnd.setAttribute("x", WIDTH);
+    if (self.idata.oldXScale != undefined) {
+        self.idata.oldXScale.range([0, WIDTH]);
+        self.idata.oldXAxis(d3.select(self.find("g.x-axis")));
+    }
+    if (redraw) {
+        setTimeout(function () { repaintZoomNewData(self); }, 50);
+    }
 }
 
 function disableInputs(self) {
@@ -372,6 +409,8 @@ function drawPlot(self) {
     
     self.idata.zoom.x(xScale);
     self.idata.zoom.scale(self.idata.initzoom).translate([self.idata.inittrans, 0]);
+    self.idata.initzoom = 1;
+    self.idata.inittrans = 0;
     
     // Get the data for the streams
     repaintZoomNewData(self, function () {
@@ -468,12 +507,16 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
     var yAxisArray = $.map(yScales, function (yScale) { return d3.svg.axis().scale(yScale).ticks(5); });
     
     var leftYAxes = [];
+    var leftYObjs = [];
     var rightYAxes = [];
+    var rightYObjs = [];
     for (i = 0; i < toDraw.length; i++) {
         if (toDraw[i].right) {
             rightYAxes.push(yAxisArray[i]);
+            rightYObjs.push(toDraw[i]);
         } else {
             leftYAxes.push(yAxisArray[i]);
+            leftYObjs.push(toDraw[i]);
         }
     }
     
@@ -481,7 +524,7 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
     
     self.idata.margin.left = Math.max(100, leftYAxes.length * 100);
     self.idata.margin.right = Math.max(100, rightYAxes.length * 100);
-    updateSize(self);
+    updateSize(self, false);
     
     // Draw the y-axes
     var update;
@@ -496,40 +539,50 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
         .each(function (yAxis) { d3.select(this).call(yAxis.orient("left")); });
     update.exit().remove();
     
-    update = d3.select(self.find("svg.chart g.y-axes"))
+    update = d3.select(self.find("svg.chart g.y-axes-right"))
       .selectAll("g.y-axis-right")
       .data(rightYAxes);
     update.enter()
       .append("g")
         .attr("class", "y-axis-right axis");
     update
-        .attr("transform", function (d, i) { return "translate(" + (self.idata.margin.left + self.idata.WIDTH + (100 * i)) + ", 0)"; })
+        .attr("transform", function (d, i) { return "translate(" + (100 * i) + ", 0)"; })
         .each(function (yAxis) { d3.select(this).call(yAxis.orient("right")); });
     update.exit().remove();
     
     // Draw the y-axis titles
-    update = d3.select(self.find("svg.chart"))
+    update = d3.select(self.find("svg.chart g.y-axes-left"))
       .selectAll("text.ytitle")
-      .data(yAxes);
+      .data(leftYObjs);
     update.enter()
       .append("text");
     update
         .attr("class", function (d) { return "ytitle title axistitle-" + d.axisid; })
         .attr("text-anchor", "middle")
         .attr("transform", (function () {
-                var i = 0; // index of left axis
-                var j = 0; // index of right axis
+                var j = 0; // index of left axis
                 return function (d) {
-                    if (d.right) {
-                        return "translate(" + (self.idata.margin.left + self.idata.WIDTH + (100 * i++) + 60) + ", " + (self.idata.margin.top + (self.idata.HEIGHT / 2)) + ")rotate(90)";
-                    } else {
-                        return "translate(" + (self.idata.margin.left - (100 * j++) - 60) + ", " + (self.idata.margin.top + (self.idata.HEIGHT / 2)) + ")rotate(-90)";
-                    }
-                 };
+                    return "translate(" + (self.idata.margin.left - (100 * j++) - 60) + ", " + (self.idata.HEIGHT / 2) + ")rotate(-90)";
+                };
              })())
         .html(function (d) { return d.axisname; });
     update.exit().remove();
-    
+    update = d3.select(self.find("svg.chart g.y-axes-right"))
+      .selectAll("text.ytitle")
+      .data(rightYObjs);
+    update.enter()
+      .append("text");
+    update
+        .attr("class", function (d) { return "ytitle title axistitle-" + d.axisid; })
+        .attr("text-anchor", "middle")
+        .attr("transform", (function () {
+                var i = 0; // index of right axis
+                return function (d) {
+                    return "translate(" + ((100 * i++) + 60) + ", " + (self.idata.HEIGHT / 2) + ")rotate(90)";
+                };
+             })())
+        .html(function (d) { return d.axisname; });
+    update.exit().remove();
     loadingElem.html("Drawing graph...");
     setTimeout(function () { drawStreams(self, data, streams, streamSettings, xScale, yScales, yAxisArray, axisData, offsets, loadingElem, false); }, 50);
 }
@@ -797,6 +850,7 @@ function resetZoom(self) {
 }
 
 s3ui.init_plot = init_plot;
+s3ui.updateSize = updateSize;
 s3ui.updatePlot = updatePlot;
 s3ui.applySettings = applySettings;
 s3ui.showDataDensity = showDataDensity;
