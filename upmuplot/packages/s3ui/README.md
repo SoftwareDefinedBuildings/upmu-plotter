@@ -24,13 +24,10 @@ index 2, it is interpreted as a Permalink.
 
 The object of parameters may have the following properties (all optional):
 
-* hide\_main\_title - TRUE if the main title is to be hidden. Defaults to FALSE.
 * hide\_permalink - TRUE if the button to generate a permalink and the space to display it are to be hidden. Defaults to FALSE.
-* hide\_graph\_title - TRUE if the header above the graph (the text "Graph") is to be hidden. Defaults to FALSE.
 * hide\_graph\_export - TRUE if the menu to export the graph to an SVG file is to be hidden. Defaults to FALSE.
 * hide\_stream\_legend - TRUE if the legend displaying streams is to be hidden. Defaults to FALSE.
 * hide\_axis\_legend - TRUE if the legend displaying axes is to be hidden. Defaults to FALSE.
-* hide\_settings\_title - TRUE if the header above the time and stream selection (the text "Settings") is to be hidden. Defaults to FALSE.
 * hide\_automatic\_update - TRUE if the checkbox specifying whether stream removals and axis changes should be applied automatically is to be hidden. Defaults to FALSE.
 * hide\_apply\_button - TRUE if the "Apply all Settings and Plot Now" button is to be hidden. Defaults to FALSE.
 * hide\_reset\_button - TRUE if the "Reset Zoom" button is to be hidden. Defaults to FALSE.

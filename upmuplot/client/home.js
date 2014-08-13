@@ -3,13 +3,16 @@ if (Meteor.isClient) {
     Template.home.plot_data = [
         {
             tagsURL: localtest ? 'http://localhost:7856' : 'http://quasar.cal-sdb.org:4523/backend/api/query?',
-            dataURLStart: localtest ? 'http://localhost:7856/data/uuid' : 'http://quasar.cal-sdb.org:9000/data/uuid/'
+            dataURLStart: localtest ? 'http://localhost:7856/data/uuid' : 'http://quasar.cal-sdb.org:9000/data/uuid/'/*,
+            hide_main_title: true,
+            hide_graph_title: true,
+            hide_settings_title: true*/
         }, 
         function (inst) 
         { 
             instances.push(inst); 
         },
-        localtest ? (window.location.search.length == 0 ? '' : window.location.search.slice(1)) : ''];
+        window.location.search.length == 0 ? '' : window.location.search.slice(1)];
         //function () 
         //{ 
             /*var inst = instances[instances.length - 1]; 

@@ -60,13 +60,10 @@ s3ui.__init__ = function (self) {
     };
     
 function init_visuals(self, options) {
-    setVisibility(self, options, "h1.mainTitle", "hide_main_title");
     setVisibility(self, options, "div.permalinkGenerate", "hide_permalink");
-    setVisibility(self, options, "h2.graphTitle", "hide_graph_title");
     setVisibility(self, options, "div.graphExport", "hide_graph_export");
     setVisibility(self, options, "div.streamLegend-" + self.idata.instanceid, "hide_stream_legend");
     setVisibility(self, options, "div.axisLegend", "hide_axis_legend");
-    setVisibility(self, options, "span.settingsTitle", "hide_settings_title");
     setVisibility(self, options, "span.automaticUpdate", "hide_automatic_update");
     setVisibility(self, options, "button.plotButton", "hide_apply_button");
     setVisibility(self, options, "button.resetZoom", "hide_reset_button");

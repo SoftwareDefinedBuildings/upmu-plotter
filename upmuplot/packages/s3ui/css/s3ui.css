@@ -30,3 +30,16 @@ svg.chart {
 rect.clickscreen {
     pointer-events: visibleFill;
 }
+.jstree-contextmenu {
+    z-index: 99999; /* So the context menu isn't hidden. */
+}
+.jstree-node {
+    position: relative;
+    z-index: 49999; /* So the tree isn't covered by the something accidentally. */
+}
+div.permalink {
+    word-wrap: break-word;
+}
+.legend td, .axes td, .axisLegend th {
+    padding: 2px;
+}
