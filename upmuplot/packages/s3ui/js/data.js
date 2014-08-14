@@ -1,4 +1,3 @@
-
 function init_data(self) {
     /* The dataCache maps UUID to an object that maps the point width exponent to
        cached data. The array contains cached entries, objects that store a start
@@ -133,37 +132,68 @@ function ensureData(self, uuid, pointwidthexp, startTime, endTime, callback) {
     var queryStart = startsBefore ? startTime : cache[i].end_time;
     var queryEnd = endsAfter ? endTime : cache[j].start_time;
     
-    if (i == j && !startsBefore && !endsAfter) {
+    var numRequests = j - i + startsBefore + endsAfter;    
+    if (numRequests == 0) {
         callback(cache[i].cached_data);
     } else {
-        // Fetch the data between the two cache entries, and consolidate into one entry
-        // If j - i > 1, the existing entries between i and j are discarded.
-        var urlCallback = function (streamdata) {
+        // Fetch the data between the cache entries, and consolidate into one entry
+        var numReceived = 0;
+        var urlCallback = function (streamdata, start, end) {
+                var callbackToUse;
+                if (++numReceived == numRequests) {
+                    callbackToUse = callback;
+                } else {
+                    callbackToUse = function () {};
+                }
                 if (dataCache.hasOwnProperty(uuid) && dataCache[uuid][pointwidthexp] == cache) { // If the stream or pointwidth has been deleted to limit memory, just return and don't cache
                     var data;
                     try {
                         data = JSON.parse(streamdata)[0].XReadings;
                     } catch (err) {
                         console.log('Invalid data response from server: ' + err);
-                        data = [];
+                        callback([]);
+                        return;
                     }
-                    insertData(self, uuid, cache, data, queryStart, queryEnd, callback);
+                    insertData(self, uuid, cache, data, start, end, callbackToUse);
                 }
             };
-        /* queryStart and queryEnd are the start and end of the query I want,
-        in terms of the midpoints of the intervals I get back; the real archiver
-        will give me back all intervals that touch the query range. So I shrink
-        the range by half a pointwidth on each side to compensate for that. */
-        var halfpwnanos = Math.pow(2, pointwidthexp - 1) - 1;
-        var halfpwmillisStart = Math.floor(halfpwnanos / 1000000);
-        var halfpwnanosStart = halfpwnanos - (1000000 * halfpwmillisStart);
-        var halfpwmillisEnd = Math.ceil(halfpwnanos / 1000000);
-        var halfpwnanosEnd = (1000000 * halfpwmillisEnd) - halfpwnanos;
-        halfpwnanosStart = (1000000 + halfpwnanosStart).toString().slice(1);
-        halfpwnanosEnd = (1000000 + halfpwnanosEnd).toString().slice(1);
-        var url = self.idata.dataURLStart + uuid + '?starttime=' + (queryStart + halfpwmillisStart) + halfpwnanosStart + '&endtime=' + (queryEnd - halfpwmillisEnd) + halfpwnanosEnd + '&unitoftime=ns&pw=' + pointwidthexp; // We add the "000000" to convert to nanoseconds
-        s3ui.getURL(url, urlCallback, 'text');
+        
+        if (numRequests == 1) {
+            makeDataRequest(self, uuid, queryStart, queryEnd, pointwidthexp, urlCallback);
+        } else {
+            if (startsBefore) {
+                i--;
+            }
+            if (endsAfter) {
+                j++;
+            }
+            makeDataRequest(self, uuid, queryStart, cache[i + 1].start_time, pointwidthexp, urlCallback);
+            for (var k = i + 1; k < j - 1; k++) {
+                makeDataRequest(self, uuid, cache[k].end_time, cache[k + 1].start_time, pointwidthexp, urlCallback);
+            }
+            makeDataRequest(self, uuid, cache[j - 1].end_time, queryEnd, pointwidthexp, urlCallback);
+        }
     }
+}
+
+/* Gets all the points where the middle of the interval is between queryStart
+   and queryEnd, including queryStart but not queryEnd. */
+function makeDataRequest(self, uuid, queryStart, queryEnd, pointwidthexp, callback) {
+    /* queryStart and queryEnd are the start and end of the query I want,
+    in terms of the midpoints of the intervals I get back; the real archiver
+    will give me back all intervals that touch the query range. So I shrink
+    the range by half a pointwidth on each side to compensate for that. */
+    var halfpwnanos = Math.pow(2, pointwidthexp - 1) - 1;
+    var halfpwmillisStart = Math.floor(halfpwnanos / 1000000);
+    var halfpwnanosStart = halfpwnanos - (1000000 * halfpwmillisStart);
+    var halfpwmillisEnd = Math.ceil(halfpwnanos / 1000000);
+    var halfpwnanosEnd = (1000000 * halfpwmillisEnd) - halfpwnanos;
+    halfpwnanosStart = (1000000 + halfpwnanosStart).toString().slice(1);
+    halfpwnanosEnd = (1000000 + halfpwnanosEnd).toString().slice(1);
+    var url = self.idata.dataURLStart + uuid + '?starttime=' + (queryStart + halfpwmillisStart) + halfpwnanosStart + '&endtime=' + (queryEnd - halfpwmillisEnd) + halfpwnanosEnd + '&unitoftime=ns&pw=' + pointwidthexp;
+    s3ui.getURL(url, function (data) {
+            callback(data, queryStart, queryEnd);
+        }, 'text');
 }
 
 function insertData(self, uuid, cache, data, dataStart, dataEnd, callback) {
