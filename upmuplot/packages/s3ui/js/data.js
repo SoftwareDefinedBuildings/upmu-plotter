@@ -101,7 +101,7 @@ function validateContiguous(cacheEntry, pwe) {
    STARTTIME to ENDTIME at the point width corresponding to POINTWIDTHEXP, or
    floor(lg(POINTWIDTH)). If it does not, data are procured from the server and
    added to the cache so the extent of its data is at least from STARTTIME to
-   ENDTIME. STARTTIME and ENDTIME are specified in the stream's time zone.
+   ENDTIME. STARTTIME and ENDTIME are specified in UTC (Universal Coord. Time).
    Once the data is found or procured, CALLBACK is called with an array of data
    as its single argument, where the requested data is a subset of the
    requested data. If another call to this function is pending (it has
@@ -264,7 +264,6 @@ function insertData(self, uuid, cache, data, dataStart, dataEnd, callback) {
    the cache entries at indices i - 1 and i. The fourth element, also a boolean,
    false if ENDTIME occurs in the cache entry at index j and true if it is
    between the cache entries at indices j and j + 1 */
-   
 function getIndices(cache, startTime, endTime) {
     var startsBefore; // false if startTime starts during the cacheEntry at index i, true if it starts before
     var endsAfter; // false if endTime ends during the cacheEntry at index j, true if it ends after
@@ -318,19 +317,17 @@ function getIndices(cache, startTime, endTime) {
 }
 
 /* Reduce memory consumption by removing some cached data. STARTTIME and
-   ENDTIME are in the selected time zone and represent the extent of the
+   ENDTIME are in UTC (Universal Coord. Time) and represent the extent of the
    current view (so the presently viewed data is not erased). If current memory
    consumption is less than THRESHOLD, nothing will happen; otherwise, memory
    comsumption is decreased to TARGET or lower. Returns true if memory
    consumption was decreased; otherwise, returns false. */
-function limitMemory(self, streams, offsets, startTime, endTime, threshold, target) {
+function limitMemory(self, streams, startTime, endTime, threshold, target) {
     if (self.idata.loadedData < threshold) {
         return false;
     }
     var dataCache = self.idata.dataCache;
     var loadedStreams = self.idata.loadedStreams;
-    var streamStartTime;
-    var streamEndTime;
     var currPWE = getPWExponent((endTime - startTime) / self.idata.WIDTH); // PWE stands for point width exponent
     var i, j, k;
     
@@ -406,12 +403,10 @@ function limitMemory(self, streams, offsets, startTime, endTime, threshold, targ
     
     // Delete extra cache entries in the current pointwidth, if deleting streams and pointwidths was not enough
     for (i = 0; i < streams.length; i++) {
-        streamStartTime = startTime - offsets[i];
-        streamEndTime = endTime - offsets[i];
         pwdata = dataCache[streams[i].uuid][currPWE];
         pwcount = 0;
         for (j = pwdata.length - 1; j >= 0; j--) {
-            if ((pwdata[j].start_time <= streamStartTime && pwdata[j].end_time >= streamEndTime) || (pwdata[j].start_time >= streamStartTime && pwdata[j].start_time <= streamEndTime) || (pwdata[j].end_time >= streamStartTime && pwdata[j].end_time <= streamEndTime)) {
+            if ((pwdata[j].start_time <= startTime && pwdata[j].end_time >= endTime) || (pwdata[j].start_time >= startTime && pwdata[j].start_time <= endTime) || (pwdata[j].end_time >= startTime && pwdata[j].end_time <= endTime)) {
                 continue; // This is the cache entry being displayed; we won't delete it
             }
             pwcount += pwdata[j].cached_data.length;
@@ -426,17 +421,15 @@ function limitMemory(self, streams, offsets, startTime, endTime, threshold, targ
     
     // Delete all but displayed data, if deleting streams, pointwidths, and cache entries was not enough
     for (i = 0; i < streams.length; i++) {
-        streamStartTime = startTime - offsets[i];
-        streamEndTime = endTime - offsets[i];
         pwdata = dataCache[streams[i].uuid][currPWE][0].cached_data;
         self.idata.loadedData -= pwdata.length;
         loadedStreams[streams[i].uuid] -= pwdata.length; // this should be 0, but I'm subtracting in case there's an edge case where there are multiple cache entries left even now
-        j = s3ui.binSearch(pwdata, streamStartTime, function (d) { return d[0]; });
-        k = s3ui.binSearch(pwdata, streamEndTime, function (d) { return d[0]; });
-        if (pwdata[j][0] >= streamStartTime && j > 0) {
+        j = s3ui.binSearch(pwdata, startTime, function (d) { return d[0]; });
+        k = s3ui.binSearch(pwdata, endTime, function (d) { return d[0]; });
+        if (pwdata[j][0] >= startTime && j > 0) {
             j--;
         }
-        if (pwdata[k][0] <= streamEndTime && k < pwdata.length - 1) {
+        if (pwdata[k][0] <= endTime && k < pwdata.length - 1) {
             k++;
         }
         dataCache[streams[i].uuid][currPWE][0] = new CacheEntry(pwdata[j][0], pwdata[k][0], pwdata.slice(j, k));

@@ -16,7 +16,7 @@ function init_plot(self) {
     // Width of the chart and chart area (WIDTH is set automatically by updateSize)
     self.idata.TARGETWIDTH = undefined;
     self.idata.WIDTH = undefined;
-    self.idata.widthmin = 300;
+    self.idata.widthmin = 350;
 
     // Selection of the element to display progress
     self.idata.loadingElem = self.$('.plotLoading');
@@ -31,8 +31,7 @@ function init_plot(self) {
     self.idata.oldYScales = undefined;
     self.idata.oldYAxisArray = undefined;
     self.idata.oldAxisData = undefined;
-    self.idata.oldOffsets = undefined;
-    self.idata.offsetMins = undefined;
+    self.idata.offset = undefined;
 
     // Keeps track of whether the graph is drawn on the screen
     self.idata.onscreen = false;
@@ -61,7 +60,7 @@ function init_plot(self) {
 // Behavior for zooming and scrolling
 function repaintZoom(self) {
     d3.select(self.find("g.x-axis")).call(self.idata.oldXAxis);
-    drawStreams(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldXScale, self.idata.oldYScales, self.idata.oldYAxisArray, self.idata.oldAxisData, self.idata.oldOffsets, self.idata.loadingElem, true);
+    drawStreams(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldXScale, self.idata.oldYScales, self.idata.oldYAxisArray, self.idata.oldAxisData, self.idata.loadingElem, true);
 }
 
 // In these functions, I abbreviate point self.idata.WIDTH exponent with pwe
@@ -86,7 +85,13 @@ function cacheData(self, uuid, drawID, pwe, startTime, endTime) {
                     if (drawID != self.idata.drawRequestID || pwe == 1) {
                         return;
                     }
-                    s3ui.ensureData(self, uuid, pwe - 2, startTime - sideCache, endTime + sideCache, function () { s3ui.setStreamMessage(self, uuid, undefined, 1); });
+                    s3ui.ensureData(self, uuid, pwe + 1, startTime - sideCache, endTime + sideCache,
+                    function () {
+                        if (drawID != self.idata.drawRequestID) {
+                            return;
+                        }
+                        s3ui.ensureData(self, uuid, pwe - 2, startTime - sideCache, endTime + sideCache, function () { s3ui.setStreamMessage(self, uuid, undefined, 1); });
+                    });
                 });
             });
         });
@@ -126,7 +131,7 @@ function repaintZoomNewData(self, callback, stopCache) {
     }
     for (var i = 0; i < selectedStreams.length; i++) {
         s3ui.setStreamMessage(self, selectedStreams[i].uuid, "Fetching data...", 4);
-        s3ui.ensureData(self, selectedStreams[i].uuid, pwe, domain[0] - self.idata.oldOffsets[i], domain[1] - self.idata.oldOffsets[i], makeDataCallback(selectedStreams[i], domain[0] - self.idata.oldOffsets[i], domain[1] - self.idata.oldOffsets[i]));
+        s3ui.ensureData(self, selectedStreams[i].uuid, pwe, domain[0] - self.idata.offset, domain[1] - self.idata.offset, makeDataCallback(selectedStreams[i], domain[0] - self.idata.offset, domain[1] - self.idata.offset));
     }
     if (selectedStreams.length == 0) {
         callback();
@@ -203,7 +208,7 @@ function initPlot(self) {
     var yaxes = chart.append("g")
         .attr("transform", "translate(0, " + self.idata.margin.top + ")")
         .attr("class", "y-axes")
-   yaxes.append("g")
+    yaxes.append("g")
         .attr("class", "y-axes-left");
     yaxes.append("g")
         .attr("transform", "translate(" + (self.idata.margin.left + self.idata.WIDTH) + ", 0)")
@@ -233,6 +238,7 @@ function updateSize(self, redraw) {
     self.idata.WIDTH = Math.max(self.idata.widthmin, self.idata.TARGETWIDTH - margin.left - margin.right);
     var WIDTH = self.idata.WIDTH;
     var HEIGHT = self.idata.HEIGHT;
+    self.idata.zoom.size([WIDTH, HEIGHT]);
     self.$("svg.chart, svg.chart rect.background-rect").attr({
             width: margin.left + WIDTH + margin.right,
             height: margin.top + HEIGHT + margin.bottom
@@ -304,25 +310,14 @@ function applySettings(self) {
             otherChange = true;
             s3ui.updatePlotMessage(self);
         } else {
-            self.idata.oldOffsets = buildOffsets(self);
             disableInputs(self);
             repaintZoomNewData(self, function () {
                     setTimeout(function () {
-                            drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, self.idata.oldOffsets, self.idata.loadingElem);
+                            drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, self.idata.loadingElem);
                         }, 50);
                 });
         }
     }
-}
-
-function buildOffsets(self) {
-    var offsets = [];
-    var offsetDate;
-    for (var i = 0; i < self.idata.selectedStreams.length; i++) {
-        offsetDate = new timezoneJS.Date(self.idata.selectedStreams[i].Properties.Timezone);
-        offsets.push((offsetDate.getTimezoneOffset() - self.idata.offsetMins) * 60000); // what to add to stream time zone to get selected time zone (ms)
-    }
-    return offsets;
 }
 
 function drawPlot(self) {
@@ -373,18 +368,7 @@ function drawPlot(self) {
         return;
     }
     
-    var offsetDate; // Used to hold temporary dates so we can get timezone offsets
-    
-    self.idata.offsetMins = startDateObj.getTimezoneOffset();
-    try {
-        var offsets = buildOffsets(self);
-    } catch (e) {
-        loadingElem.html(err);
-        enableInputs(self);
-        return;
-    }
-    self.idata.oldOffsets = offsets;
-    var offset = self.idata.offsetMins * -60000; // what to add to UTC to get to selected time zone
+    self.idata.offset = startDateObj.getTimezoneOffset() * -60000; // what to add to UTC to get to selected time zone
     
     self.idata.xTitle.innerHTML = "Time [" + selectedTimezone + "]";
     
@@ -392,7 +376,7 @@ function drawPlot(self) {
     var xScale, xAxis;
     if (!sameTimeRange) {
         xScale = d3.time.scale.utc() // I'm telling d3 it's in UTC time, but in reality I'm going to add an offset to everything so it actually displays the selected time zone
-            .domain([startDate + offset, endDate + offset])
+            .domain([startDate + self.idata.offset, endDate + self.idata.offset])
             .range([0, self.idata.WIDTH]);
         xAxis = d3.svg.axis().scale(xScale).orient("bottom").ticks(5);
         self.idata.oldStartDate = startDate;
@@ -420,11 +404,11 @@ function drawPlot(self) {
             }
             loadingElem.html("Computing axes...");
             // Set a timeout so the new message (Computing axes...) actually shows
-            setTimeout(function () { drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, startDate, endDate, xScale, offsets, loadingElem); }, 50);
+            setTimeout(function () { drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, startDate, endDate, xScale, loadingElem); }, 50);
         });
 }
 
-function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xScale, offsets, loadingElem) {
+function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xScale, loadingElem) {
     otherChange = false;
     self.idata.oldData = data;
     
@@ -584,14 +568,14 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
         .html(function (d) { return d.axisname; });
     update.exit().remove();
     loadingElem.html("Drawing graph...");
-    setTimeout(function () { drawStreams(self, data, streams, streamSettings, xScale, yScales, yAxisArray, axisData, offsets, loadingElem, false); }, 50);
+    setTimeout(function () { drawStreams(self, data, streams, streamSettings, xScale, yScales, yAxisArray, axisData, loadingElem, false); }, 50);
 }
 
 /* Render the graph on the screen. If DRAWFAST is set to true, the entire plot is not drawn (for the sake of speed); in
    paticular new streams are not added and old ones not removed (DRAWFAST tells it to optimize for scrolling).
 */
 
-function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxisArray, axisData, offsets, loadingElem, drawFast) {
+function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxisArray, axisData, loadingElem, drawFast) {
     if (!drawFast && (streams.length == 0 || yAxisArray.length == 0)) {
         if (streams.length == 0) {
             loadingElem.html("Error: No streams are selected.");
@@ -622,6 +606,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     var HEIGHT = self.idata.HEIGHT;
     var pixelw = (domain[1] - domain[0]) / WIDTH * 1000000; // pixel width in nanoseconds
     var currpt;
+    var offset = self.idata.offset;
 
     for (i = 0; i < streams.length; i++) {
         currXPixel = -Infinity;
@@ -634,8 +619,8 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         mean = [];
         maxval = [];
         yScale = axisData[streamSettings[streams[i].uuid].axisid][2];
-        startTime = domain[0].getTime() - offsets[i];
-        endTime = domain[1].getTime() - offsets[i];
+        startTime = domain[0].getTime() - offset;
+        endTime = domain[1].getTime() - offset;
         startIndex = s3ui.binSearch(streamdata, startTime - 1, function (point) { return point[0]; });
         if (startIndex > 0 && streamdata[startIndex][0] > startTime - 1) {
             startIndex--; // plot the previous datapoint so the graph looks continuous (subtract 1000 in case nanoseconds push it into graph)
@@ -645,7 +630,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         noData = true;
         for (j = startIndex; j < streamdata.length; j++) {
             currpt = streamdata[j];
-            xPixel = xScale(currpt[0] + offsets[i]);
+            xPixel = xScale(currpt[0] + offset);
             // correct for nanoseconds
             xPixel += (currpt[1] / pixelw);
             mint = yScale(currpt[2]);
@@ -741,8 +726,8 @@ function showDataDensity(self, uuid) {
     var pixelw = (domain[1] - domain[0]) / WIDTH;
     var pw = Math.pow(2, self.idata.oldData[uuid][2]);
     pixelw *= 1000000;
-    var oldOffsets = self.idata.oldOffsets;
-    var startTime = domain[0].getTime() - oldOffsets[j];
+    var offset = self.idata.offset
+    var startTime = domain[0].getTime() - offset;
     var totalmax;
     var xPixel;
     var prevIntervalEnd;
@@ -761,7 +746,7 @@ function showDataDensity(self, uuid) {
         totalmax = streamdata[startIndex][5];
         lastiteration = false;
         for (var i = startIndex; i < streamdata.length; i++) {
-            xPixel = oldXScale(streamdata[i][0] + oldOffsets[j]);
+            xPixel = oldXScale(streamdata[i][0] + offset);
             xPixel += ((streamdata[i][1] - pw/2) / pixelw);
             if (xPixel < 0) {
                 xPixel = 0;
@@ -773,7 +758,7 @@ function showDataDensity(self, uuid) {
             if (i == 0 || ((streamdata[i][0] - streamdata[i - 1][0]) * 1000000) + streamdata[i][1] - streamdata[i - 1][1] <= pw) {
                 toDraw.push([xPixel, toDraw[toDraw.length - 1][1]]);
             } else {
-                prevIntervalEnd = Math.max(0, oldXScale(streamdata[i - 1][0] + oldOffsets[j]) + ((streamdata[i - 1][1] + (pw/2)) / pixelw));
+                prevIntervalEnd = Math.max(0, oldXScale(streamdata[i - 1][0] + offset) + ((streamdata[i - 1][1] + (pw/2)) / pixelw));
                 if (prevIntervalEnd != 0) {
                     if (i == startIndex) {
                         toDraw.pop();
@@ -793,7 +778,7 @@ function showDataDensity(self, uuid) {
                 break;
             }
         }
-        if (!lastiteration && ((oldXScale.domain()[1] - oldOffsets[j] - streamdata[i - 1][0]) * 1000000) + streamdata[i - 1][1] > pw) {
+        if (!lastiteration && ((oldXScale.domain()[1] - offset - streamdata[i - 1][0]) * 1000000) + streamdata[i - 1][1] > pw) {
             toDraw.push([toDraw[toDraw.length - 1][0], 0]);
             toDraw.push([WIDTH, 0]);
         }
