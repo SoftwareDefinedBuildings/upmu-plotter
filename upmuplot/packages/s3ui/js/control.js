@@ -73,10 +73,9 @@ function setTimezone(tz) {
 
 /* To create another y-axis, call "addYAxis". */
 
-/* Removes the y-axis with the id ID. If the ID is "y1", no action will be
-   taken (removing that axis will surely result in an error). */
+/* Removes the y-axis with the id ID. */
 function removeAxis(id) {
-    if (id !== "y1" && this.idata.axisMap.hasOwnProperty(id)) {
+    if (this.idata.axisMap.hasOwnProperty(id)) {
         s3ui.removeYAxis(this, this.idata.axisMap[id]);
     }
 }

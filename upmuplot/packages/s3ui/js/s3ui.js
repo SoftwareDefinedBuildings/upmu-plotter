@@ -103,7 +103,6 @@ function setCSSRule(self, options, rule, attr) {
 function init_graph(self, c1, c2) {
     // Finish building the graph components
     s3ui.addYAxis(self);
-    self.$(".removebutton").remove(); // Get rid of the remove button for the first axis
     
     // first callback
     c1(self);

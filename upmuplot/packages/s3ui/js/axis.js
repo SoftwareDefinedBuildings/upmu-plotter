@@ -157,16 +157,20 @@ function addYAxis(self) {
 
 /* Delete the y-axis specified by the Axis object AXIS. */
 function removeYAxis(self, axis) {
+    if (self.idata.yAxes.length == 1) {
+        return; // The user can't remove the last axis
+    }
+    var moveTo = axis.axisid == self.idata.yAxes[0].axisid ? 1 : 0;
     var streamList = axis.streams;
     var i;
     var selectbox;
     var mustUpdate = (streamList.length > 0);
     for (i = streamList.length - 1; i >= 0; i--) {
         selectbox = self.find(".axis-select-" + streamList[i].uuid);
-        selectbox.selectedIndex = 0;
+        selectbox.selectedIndex = moveTo;
         selectbox.onchange(null, true); // We update the graph ONCE at the end, not after each stream is moved
     }
-    updateYAxis(self, "y1");
+    updateYAxis(self, self.idata.yAxes[moveTo].axisid);
     delete self.idata.axisMap[axis.axisid];
     var yAxes = self.idata.yAxes;
     for (i = 0; i < yAxes.length; i++) {
