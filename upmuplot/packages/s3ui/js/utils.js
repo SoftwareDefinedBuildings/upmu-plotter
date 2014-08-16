@@ -34,15 +34,15 @@ function getURL(url, success_callback, type) {
 
 
 function makeMenuMaker() {
-    var colors = ["black", "blue", "red", "green", "purple", "navy", "maroon", "fuchsia", "aqua", "gray", "olive", "lime", "teal", "silver", "yellow"];
+    var colors = [["black", "#000000"], ["blue", "#0000FF"], ["red", "#FF0000"], ["green", "#008000"], ["purple", "#800080"], ["navy", "#000080"], ["maroon", "#800000"], ["fuchsia", "#FF00FF"], ["aqua", "#00FFFF"], ["gray", "#808080"], ["olive", "#808000"], ["lime", "#00FF00"], ["teal", "#008080"], ["silver", "#C0C0C0"], ["yellow", "#FFFF00"]];
     var colorIndex = 0;
     return function makeColorMenu () {
         var menu = document.createElement("select");
         var option;
         for (var i = 0; i < colors.length; i++) {
             option = document.createElement("option");
-            option.value = colors[i];
-            option.innerHTML = colors[i];
+            option.value = colors[i][1];
+            option.innerHTML = colors[i][0];
             menu.appendChild(option);
         }
         menu.selectedIndex = colorIndex;
@@ -97,7 +97,7 @@ function nanosToUnit(numValue) {
     } else {
         unit = ' ns';
     }
-    return numValue + unit;
+    return numValue.toFixed(3) + unit;
 }
 
 s3ui.getFilepath = getFilepath;

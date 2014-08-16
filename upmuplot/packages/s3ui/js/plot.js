@@ -32,6 +32,7 @@ function init_plot(self) {
     self.idata.oldYAxisArray = undefined;
     self.idata.oldAxisData = undefined;
     self.idata.offset = undefined;
+    self.idata.oldDomain = undefined;
 
     // Keeps track of whether the graph is drawn on the screen
     self.idata.onscreen = false;
@@ -44,6 +45,8 @@ function init_plot(self) {
 
     // The uuid of the relevant stream if a data density plot is being shown, undefined otherwise
     self.idata.showingDensity = undefined;
+    // Keeps track of whether the previous draw of the data density plot could be completed
+    self.idata.drawnBefore = true;
 
     // The HTML elements showing the title of the x-axis, and the start and end dates
     self.idata.xTitle = undefined;
@@ -115,7 +118,7 @@ function repaintZoomNewData(self, callback, stopCache) {
             self.idata.oldData[stream.uuid] = [stream, data, pwe];
             numResponses++;
             if (!stopCache) {
-                s3ui.setStreamMessage(self, stream.uuid, undefined, 4);
+                s3ui.setStreamMessage(self, stream.uuid, undefined, 5);
                 s3ui.setStreamMessage(self, stream.uuid, "Caching data...", 1);
                 setTimeout(function () { cacheData(self, stream.uuid, thisID, pwe, startTime, endTime); }, 0); // do it asynchronously
             }
@@ -130,7 +133,7 @@ function repaintZoomNewData(self, callback, stopCache) {
         self.idata.drawRequestID = -1;
     }
     for (var i = 0; i < selectedStreams.length; i++) {
-        s3ui.setStreamMessage(self, selectedStreams[i].uuid, "Fetching data...", 4);
+        s3ui.setStreamMessage(self, selectedStreams[i].uuid, "Fetching data...", 5);
         s3ui.ensureData(self, selectedStreams[i].uuid, pwe, domain[0] - self.idata.offset, domain[1] - self.idata.offset, makeDataCallback(selectedStreams[i], domain[0] - self.idata.offset, domain[1] - self.idata.offset));
     }
     if (selectedStreams.length == 0) {
@@ -234,6 +237,7 @@ function initPlot(self) {
 /* Updates the size of the chart based on changes to the margins The width will
    be changed to best match self.idata.TARGETWIDTH. */
 function updateSize(self, redraw) {
+    var oldwidth = self.idata.WIDTH;
     var margin = self.idata.margin;
     self.idata.WIDTH = Math.max(self.idata.widthmin, self.idata.TARGETWIDTH - margin.left - margin.right);
     var WIDTH = self.idata.WIDTH;
@@ -268,13 +272,20 @@ function updateSize(self, redraw) {
         });
     self.$("g.y-axes").attr("transform", "translate(0, " + margin.top + ")");
     self.$("g.y-axes-right").attr("transform", "translate(" + (margin.left + WIDTH) + ", 0)");
-    if (!self.idata.initialized) {
+    if (oldwidth == WIDTH || !self.idata.initialized) {
         return;
     }
+    var zoom = self.idata.zoom;
+    zoom.size([WIDTH, HEIGHT]);
     self.idata.xTitle.setAttribute("x", WIDTH / 2);
     self.idata.xEnd.setAttribute("x", WIDTH);
+    var oldXScale = self.idata.oldXScale;
     if (self.idata.oldXScale != undefined) {
-        self.idata.oldXScale.range([0, WIDTH]);
+        var scale = zoom.scale();
+        var translate = zoom.translate()[0];
+        oldXScale.domain(self.idata.oldDomain);
+        oldXScale.range([0, WIDTH]);
+        zoom.x(oldXScale).scale(scale).translate([translate / oldwidth * WIDTH, 0]);
         self.idata.oldXAxis(d3.select(self.find("g.x-axis")));
     }
     if (redraw) {
@@ -372,6 +383,7 @@ function drawPlot(self) {
     
     self.idata.xTitle.innerHTML = "Time [" + selectedTimezone + "]";
     
+    self.idata.oldDomain = [startDate + self.idata.offset, endDate + self.idata.offset];
     // Create the xScale and axis if we need to
     var xScale, xAxis;
     if (!sameTimeRange) {
@@ -702,17 +714,23 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     }
     
     if (self.idata.showingDensity != undefined) {
-        s3ui.setStreamMessage(self, self.idata.showingDensity, "Interval width: " + s3ui.nanosToUnit(Math.pow(2, self.idata.oldData[self.idata.showingDensity][2])), 5);
+        s3ui.setStreamMessage(self, self.idata.showingDensity, "Interval width: " + s3ui.nanosToUnit(Math.pow(2, self.idata.oldData[self.idata.showingDensity][2])), 4);
         self.$("svg.chart g.data-density-plot polyline").remove();
         showDataDensity(self, self.idata.showingDensity);
     }
 }
 
 function showDataDensity(self, uuid) {
+    var oldShowingDensity = self.idata.showingDensity;
     self.idata.showingDensity = uuid;
     if (!self.idata.onscreen || !self.idata.oldData.hasOwnProperty(uuid)) {
+        self.idata.drawnBefore = false;
         return;
     }
+    if (oldShowingDensity != uuid || !self.idata.drawnBefore) {
+        $("g.series-" + uuid).attr({"stroke-width": 3, "fill-opacity": 0.5});
+    }
+    self.idata.drawnBefore = true;
     var domain = self.idata.oldXScale.domain();
     var streamdata = self.idata.oldData[uuid][1];
     var j;
@@ -804,6 +822,7 @@ function showDataDensity(self, uuid) {
     }
     var ddplot = d3.select(self.find("svg.chart g.data-density-plot"));
     ddplot.append("polyline")
+        .attr("class", "density-" + uuid)
         .attr("points", toDraw.join(" "))
         .attr("fill", "none")
         .attr("stroke", self.idata.streamSettings[uuid].color);
@@ -823,6 +842,7 @@ function showDataDensity(self, uuid) {
 function hideDataDensity(self) {
     self.$("svg.chart g.data-density-plot polyline").remove();
     self.$("svg.chart g.data-density-plot g.data-density-axis").empty();
+    $("svg.chart g.series-" + self.idata.showingDensity).attr({"stroke-width": 1, "fill-opacity": 0.3});
     self.idata.showingDensity = undefined;
 }
 

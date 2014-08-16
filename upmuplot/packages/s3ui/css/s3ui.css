@@ -43,3 +43,6 @@ div.permalink {
 .legend td, .axes td, .axisLegend th {
     padding: 2px;
 }
+.streamName {
+    cursor: pointer;
+}

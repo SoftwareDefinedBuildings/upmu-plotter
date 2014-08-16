@@ -13,6 +13,7 @@ function init_frontend(self) {
     self.idata.otherChange = undefined;
     self.idata.automaticAxisUpdate = false; // True if axes will be updated without the need for an "Update Axes" button
     self.idata.initPermalink = window.location.hostname + (function (port) { if (port === '') { return ''; } return ':' + port; })(window.location.port) + window.location.pathname + '?'; // The start of the permalink
+    self.idata.selectedLegendEntry = undefined; // The currently selected legend entry
     self.idata.chart = self.find("svg.chart");
     self.idata.widthFunction = function () { return window.innerWidth * 0.75; };
 }
@@ -39,29 +40,61 @@ function toggleLegend (self, show, streamdata, update) {
             .attr("class", function (d) { return "color-" + d.uuid; })
           .node();
         colorMenu.onchange = function () {
-                  var newColor = this[this.selectedIndex].value;
-                  var streamGroup= self.$("g.series-" + streamdata.uuid);
-                  streamGroup.attr("stroke", newColor);
-                  streamGroup.attr("fill", newColor);
-                  streamSettings[streamdata.uuid].color = newColor;
-              };
+                var newColor = this[this.selectedIndex].value;
+                self.$("g.series-" + streamdata.uuid).attr({
+                        "stroke": newColor,
+                        "fill": newColor
+                    });
+                self.$("polyline.density-" + streamdata.uuid).attr("stroke", newColor);
+                color = [parseInt(newColor.slice(1, 3), 16), parseInt(newColor.slice(3, 5), 16), parseInt(newColor.slice(5, 7), 16)].join(", ");
+                if (self.idata.selectedLegendEntry == nameElem) {
+                    nameCell.style("background-color", "rgba(" + color + ", 0.3)");
+                }
+                streamSettings[streamdata.uuid].color = newColor;
+            };
         streamSettings[streamdata.uuid] = { color: colorMenu[colorMenu.selectedIndex].value, axisid: "y1", active: true }; // axisid is changed
         self.idata.streamMessages[streamdata.uuid] = [{0: ""}, 0];
-        var nameElem = row.append("td")
+        var color = streamSettings[streamdata.uuid].color;
+        color = [parseInt(color.slice(1, 3), 16), parseInt(color.slice(3, 5), 16), parseInt(color.slice(5, 7), 16)].join(", ");
+        var nameCell = row.append("td")
             .html(function (d) { return s3ui.getFilepath(d); })
-          .node();
-        nameElem.onmouseover = function () {
-                if (self.idata.oldData.hasOwnProperty(streamdata.uuid)) {
-                    self.$("g.series-" + streamdata.uuid).attr({"stroke-width": 3, "fill-opacity": 0.5});
-                    var xdomain = self.idata.oldXScale.domain();
-                    setStreamMessage(self, streamdata.uuid, "Interval width: " + s3ui.nanosToUnit(Math.pow(2, self.idata.oldData[streamdata.uuid][2])), 5);
+            .attr("class", "streamName");
+        var nameElem = nameCell.node();
+        nameElem.onclick = function () {
+                if (self.idata.selectedLegendEntry == nameElem) {
+                    self.idata.selectedLegendEntry = undefined;
+                    setStreamMessage(self, streamdata.uuid, undefined, 4);
+                    s3ui.hideDataDensity(self);
+                    nameCell.style("background-color", "rgba(" + color + ", 0.1)");
+                } else {
+                    if (self.idata.selectedLegendEntry != undefined) {
+                        var oldSelection = self.idata.selectedLegendEntry;
+                        oldSelection.onclick(); //deselect the previous selection
+                        self.idata.selectedLegendEntry = nameElem;
+                        oldSelection.onmouseout();
+                    } else {
+                        self.idata.selectedLegendEntry = nameElem;
+                    }
+                    if (self.idata.oldData.hasOwnProperty(streamdata.uuid)) {
+                        var xdomain = self.idata.oldXScale.domain();
+                        setStreamMessage(self, streamdata.uuid, "Interval width: " + s3ui.nanosToUnit(Math.pow(2, self.idata.oldData[streamdata.uuid][2])), 4);
+                    }
                     s3ui.showDataDensity(self, streamdata.uuid);
+                    nameCell.style("background-color", "rgba(" + color + ", 0.3)");
+                }
+            };
+        var hovered = false;
+        nameElem.onmouseover = function () {
+                hovered = true;
+                if (self.idata.selectedLegendEntry != nameElem) {
+                    nameCell.style("background-color", "rgba(" + color + ", 0.1)");
                 }
             };
         nameElem.onmouseout = function () {
-                self.$("g.series-" + streamdata.uuid).attr({"stroke-width": 1, "fill-opacity": 0.3});
-                setStreamMessage(self, streamdata.uuid, undefined, 5);
-                s3ui.hideDataDensity(self);
+                hovered = false;
+                if (self.idata.selectedLegendEntry != nameElem) {
+                    nameCell.style("background-color", "");
+                }
             };
         var selectElem = row.append("td")
           .append("select")
