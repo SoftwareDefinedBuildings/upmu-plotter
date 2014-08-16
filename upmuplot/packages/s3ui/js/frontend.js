@@ -25,7 +25,9 @@ function toggleLegend (self, show, streamdata, update) {
     if (update == undefined) {
         update = true;
     }
+    self.idata.drawnBefore = false;
     var streamSettings = self.idata.streamSettings;
+    var nameElem;
     if (show) {
         if (streamSettings.hasOwnProperty(streamdata.uuid) && streamSettings[streamdata.uuid].active) {
             return;
@@ -58,8 +60,8 @@ function toggleLegend (self, show, streamdata, update) {
         color = [parseInt(color.slice(1, 3), 16), parseInt(color.slice(3, 5), 16), parseInt(color.slice(5, 7), 16)].join(", ");
         var nameCell = row.append("td")
             .html(function (d) { return s3ui.getFilepath(d); })
-            .attr("class", "streamName");
-        var nameElem = nameCell.node();
+            .attr("class", "streamName streamName-" + streamdata.uuid);
+        nameElem = nameCell.node();
         nameElem.onclick = function () {
                 if (self.idata.selectedLegendEntry == nameElem) {
                     self.idata.selectedLegendEntry = undefined;
@@ -131,6 +133,11 @@ function toggleLegend (self, show, streamdata, update) {
     } else {
         if (!streamSettings.hasOwnProperty(streamdata.uuid) || !streamSettings[streamdata.uuid].active) {
             return;
+        }
+        nameElem = self.idata.selectedLegendEntry;
+        if (nameElem != undefined && nameElem.className == "streamName streamName-" + streamdata.uuid) {
+            nameElem.onclick();
+            nameElem.onmouseout(); // Deselect the stream before removing it
         }
         var toRemove = self.find(".legend-" + streamdata.uuid);
         var selectElem = d3.select(toRemove).select('.axis-select').node();
