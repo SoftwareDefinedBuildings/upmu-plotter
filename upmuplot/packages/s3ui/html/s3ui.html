@@ -29,18 +29,18 @@
                         <div class="col-md-7">
                             {{> s3plot_axisLegend}}
                         </div>
-
                     </div>
                     <div class="row">
-                        {{> s3plot_automaticUpdate}}
+                        &nbsp;&nbsp;{{> s3plot_automaticUpdate}}
                     </div>
                 </div>
-                <div class="well well-sm">
+                <div class="well">
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-4 metadataDisplay"></div>
+                        <div class="col-md-3">
                             {{> s3plot_graphExport}}
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-5">
                             {{> s3plot_permalink}}
                         </div>
                     </div>
@@ -97,7 +97,7 @@
 
 <template name="s3plot_graphExport">
     <div class="graphExport">
-        <button class="makeGraph">Export Current Graph to SVG Image</button>
+        <button class="makeGraph">Export Graph to SVG Image</button>
         <div class="download-graph"></div>
     </div>
 </template>

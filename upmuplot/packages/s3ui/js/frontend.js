@@ -68,6 +68,7 @@ function toggleLegend (self, show, streamdata, update) {
                     setStreamMessage(self, streamdata.uuid, undefined, 4);
                     s3ui.hideDataDensity(self);
                     nameCell.style("background-color", "rgba(" + color + ", 0.1)");
+                    $(self.find(".metadataDisplay")).empty();
                 } else {
                     if (self.idata.selectedLegendEntry != undefined) {
                         var oldSelection = self.idata.selectedLegendEntry;
@@ -83,6 +84,7 @@ function toggleLegend (self, show, streamdata, update) {
                     }
                     s3ui.showDataDensity(self, streamdata.uuid);
                     nameCell.style("background-color", "rgba(" + color + ", 0.3)");
+                    self.find(".metadataDisplay").innerHTML = "<h3>Stream Metadata</h3>" + s3ui.getInfo(streamdata, "<br>");
                 }
             };
         var hovered = false;
@@ -225,7 +227,7 @@ function createPermalink(self) {
     } else {
         coerce_stream = function (stream) { return stream.uuid; };
     }
-    var permalink = 'streams=' + $.map(self.idata.selectedStreams, function (d) { return encodeURIComponent(coerce_stream(d)) + "_" + self.idata.streamSettings[d.uuid].color; }).join(',');
+    var permalink = 'streams=' + $.map(self.idata.selectedStreams, function (d) { return encodeURIComponent(coerce_stream(d) + "_" + self.idata.streamSettings[d.uuid].color); }).join(',');
     permalink += '&start=' + (self.idata.oldStartDate / 1000) + '&end=' + (self.idata.oldEndDate / 1000) + '&tz=' + encodeURIComponent(self.idata.oldTimezone) + '&zoom=' + encodeURIComponent(self.idata.zoom.scale()) + '&translate=' + encodeURIComponent(self.idata.zoom.translate()[0]) + '&autoupdate=' + self.idata.automaticAxisUpdate + '&axes=';
     var axes = $.map(self.idata.yAxes, function (d) {
             return {

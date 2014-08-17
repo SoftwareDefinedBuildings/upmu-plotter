@@ -46,3 +46,6 @@ div.permalink {
 .streamName {
     cursor: pointer;
 }
+.metadataDisplay > h3 {
+    margin-top: 0px;
+}

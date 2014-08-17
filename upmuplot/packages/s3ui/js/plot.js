@@ -507,7 +507,9 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
     var rightYAxes = [];
     var rightYObjs = [];
     for (i = 0; i < toDraw.length; i++) {
-        if (toDraw[i].right) {
+        if (toDraw[i].right === null) {
+            continue;
+        } else if (toDraw[i].right) {
             rightYAxes.push(yAxisArray[i]);
             rightYObjs.push(toDraw[i]);
         } else {

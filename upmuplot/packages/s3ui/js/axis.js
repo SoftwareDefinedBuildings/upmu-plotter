@@ -128,7 +128,7 @@ function addYAxis(self) {
         .attr("name", "side-" + id + "i" + self.idata.instanceid)
         .attr("checked", true)
         .node().onclick = function () {
-                if (axisObj.right) {
+                if (axisObj.right !== false) {
                     axisObj.right = false;
                     s3ui.applySettings(self);
                 }
@@ -140,13 +140,25 @@ function addYAxis(self) {
         .attr("type", "radio")
         .attr("name", "side-" + id + "i" + self.idata.instanceid)
         .node().onclick = function () {
-                if (!axisObj.right) {
+                if (axisObj.right !== true) {
                     axisObj.right = true;
                     s3ui.applySettings(self);
                 }
             };
     div.append("span")
         .html("Right");
+    div = sideElem.append("div");
+    div.append("input")
+        .attr("type", "radio")
+        .attr("name", "side-" + id + "i" + self.idata.instanceid)
+        .node().onclick = function () {
+                if (axisObj.right !== null) {
+                    axisObj.right = null;
+                    s3ui.applySettings(self);
+                }
+            };
+    div.append("span")
+        .html("Hide");
     d3.selectAll(self.$("select.axis-select"))
       .append("option")
         .attr("class", "option-" + axisObj.axisid)

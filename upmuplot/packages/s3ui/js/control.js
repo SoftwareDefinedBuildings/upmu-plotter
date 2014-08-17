@@ -90,13 +90,20 @@ function renameAxis(id, newName) {
 }
 
 /* Sets the side of the axis with the specified ID. If LEFT is true, sets its
-   side to "Left"; otherwise, sets its side to "Right". */
+   side to "Left"; if false, sets its side to "Right". If LEFT is null, the
+   axis is hidden. */
 function setAxisSide(id, left) {
     if (!this.idata.axisMap.hasOwnProperty(id)) {
         return;
     }
     var radButton = this.find(".axis-" + id).lastChild;
-    radButton = left ? radButton.firstChild.firstChild : radButton.lastChild.firstChild;
+    if (left === null) {
+        radButton = radButton.lastChild.firstChild;
+    } else if (left) {
+        radButton = radButton.firstChild.firstChild;
+    } else {
+        radButton = radButton.firstChild.nextSibling.firstChild;
+    }
     if (!radButton.checked) {
         radButton.checked = true;
         radButton.onclick();
@@ -381,8 +388,8 @@ function finishExecutingPermalink(self, streams, colors, args) {
             if (axis.scale !== false) {
                 self.imethods.setAxisScale(id, axis.scale[0], axis.scale[1]);
             }
-            if (axis.rightside) {
-                self.imethods.setAxisSide(id, false);
+            if (axis.rightside !== false) {
+                self.imethods.setAxisSide(id, axis.rightside === null ? null : !axis.rightside);
             }
         }
     }
