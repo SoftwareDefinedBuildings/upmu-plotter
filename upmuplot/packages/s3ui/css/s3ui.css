@@ -37,6 +37,9 @@ rect.clickscreen {
     position: relative;
     z-index: 49999; /* So the tree isn't covered by the something accidentally. */
 }
+.streamTree * {
+    background-color: white;
+}
 div.permalink {
     word-wrap: break-word;
 }
