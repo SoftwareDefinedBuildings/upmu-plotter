@@ -294,14 +294,14 @@ function updateSize(self, redraw) {
 }
 
 function disableInputs(self) {
-    self.idata.inputs = [self.$("input, button, select"), self.find(".streamTree")];
+    self.idata.inputs = [self.$("input, button, select"), self.$(".btn, .streamTree")];
     self.idata.inputs[0].prop("disabled", true);
-    self.idata.inputs[1].style["pointer-events"] = "none";
+    self.idata.inputs[1].css("pointer-events", "none");
 }
 
 function enableInputs(self) {
     self.idata.inputs[0].prop("disabled", false);
-    self.idata.inputs[1].style["pointer-events"] = "";
+    self.idata.inputs[1].css("pointer-events", "");
 }
 
 function updatePlot(self) {
