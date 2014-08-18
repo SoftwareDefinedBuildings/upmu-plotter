@@ -82,7 +82,7 @@ function addYAxis(self) {
         .attr("class", "axisrange")
         .node().onchange = function () {
                 axisObj.manualscale[0] = parseFloat(this.value.trim());
-                s3ui.applySettings(self);
+                s3ui.applySettings(self, false);
             };
     selectElem.append("span")
         .text(" to ");
@@ -91,7 +91,7 @@ function addYAxis(self) {
         .attr("class", "axisrange")
         .node().onchange = function () {
                 axisObj.manualscale[1] = parseFloat(this.value.trim());
-                s3ui.applySettings(self);
+                s3ui.applySettings(self, false);
             };
         
     var rangeElem = row.append("td");
@@ -103,7 +103,7 @@ function addYAxis(self) {
                 axisObj.autoscale = this.checked;
                 if (this.checked) {
                    thisRow.parentNode.removeChild(thisRow.nextSibling);
-                   s3ui.applySettings(self);
+                   s3ui.applySettings(self, false);
                 } else {
                     thisRow.parentNode.insertBefore(rangeRow, thisRow.nextSibling);
                     var fields = selectElem.node().getElementsByClassName("axisrange");
@@ -130,7 +130,7 @@ function addYAxis(self) {
         .node().onclick = function () {
                 if (axisObj.right !== false) {
                     axisObj.right = false;
-                    s3ui.applySettings(self);
+                    s3ui.applySettings(self, false);
                 }
             };
     div.append("span")
@@ -142,7 +142,7 @@ function addYAxis(self) {
         .node().onclick = function () {
                 if (axisObj.right !== true) {
                     axisObj.right = true;
-                    s3ui.applySettings(self);
+                    s3ui.applySettings(self, false);
                 }
             };
     div.append("span")
@@ -154,7 +154,7 @@ function addYAxis(self) {
         .node().onclick = function () {
                 if (axisObj.right !== null) {
                     axisObj.right = null;
-                    s3ui.applySettings(self);
+                    s3ui.applySettings(self, false);
                 }
             };
     div.append("span")
@@ -192,7 +192,7 @@ function removeYAxis(self, axis) {
         }
     }
     if (mustUpdate) {
-        s3ui.applySettings(self);
+        s3ui.applySettings(self, false);
     }
     var row = self.find("tr.axis-" + axis.axisid);
     if (!axis.autoscale) {

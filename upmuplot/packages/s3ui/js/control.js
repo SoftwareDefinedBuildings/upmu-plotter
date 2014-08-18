@@ -240,7 +240,7 @@ function selectStreams(data_lst) {
              streamTree.select_node(node, false, true);
          }
      }
-     s3ui.applySettings(this);
+     s3ui.applySettings(this, true);
 }
 
 /* Given DATA_LST, a list of stream objects, deselects the corresponding
@@ -273,7 +273,7 @@ function deselectStreams(data_lst) {
             streamTree.deselect_node(node);
         }
     }
-    s3ui.applySettings(this);
+    s3ui.applySettings(this, false);
 }
 
 /* Given LINK, the portion of a hyperlink that occurs after the question mark

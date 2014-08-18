@@ -123,14 +123,14 @@ function toggleLegend (self, show, streamdata, update) {
                 s3ui.changeAxis(self, streamdata, this.getAttribute("data-prevselect"), newID);
                 this.setAttribute("data-prevselect", newID);
                 if (suppressUpdate == undefined) {
-                    s3ui.applySettings(self);
+                    s3ui.applySettings(self, false);
                 }
             };
         var intervalWidth = row.append("td").attr("class", "message-" + streamdata.uuid).node();
         s3ui.changeAxis(self, streamdata, null, selectNode[selectNode.selectedIndex].value);
         $("select.color-" + streamdata.uuid).simplecolorpicker({picker: true});
         if (update) { // Go ahead and display the stream
-            s3ui.applySettings(self);
+            s3ui.applySettings(self, true);
         }
     } else {
         if (!streamSettings.hasOwnProperty(streamdata.uuid) || !streamSettings[streamdata.uuid].active) {
@@ -155,7 +155,7 @@ function toggleLegend (self, show, streamdata, update) {
             }
         }
         if (update) {
-            s3ui.applySettings(self); // Make stream removal visible on the graph
+            s3ui.applySettings(self, false); // Make stream removal visible on the graph
         }
     }
 }

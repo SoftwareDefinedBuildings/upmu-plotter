@@ -25,7 +25,7 @@ function updateStreamList(self) {
             s3ui.selectNode(self, self.idata.streamTree, false, self.idata.streamTree.get_node(roots[i]));
         }
         self.idata.streamTree.destroy(true);
-        s3ui.applySettings(self);
+        s3ui.applySettings(self, false);
     }
     
     var streamTreeDiv = $(self.find("div.streamTree"));
@@ -42,13 +42,13 @@ function updateStreamList(self) {
             }
             selectNode(self, streamTree, true, data.node);
             if (self.idata.pendingRequests == 0) {
-                s3ui.applySettings(self);
+                s3ui.applySettings(self, true);
             }
         });
     streamTreeDiv.on("deselect_node.jstree", function (event, data) {
             selectNode(self, streamTree, false, data.node);
             if (self.idata.pendingRequests == 0) {
-                s3ui.applySettings(self);
+                s3ui.applySettings(self, false);
             }
         });
     
@@ -268,7 +268,7 @@ function selectNode(self, tree, select, node) { // unfortunately there's no simp
                         s3ui.toggleLegend(self, select, node.data.streamdata, false);
                     }
                     if (self.idata.pendingRequests == 0) {
-                        s3ui.applySettings(self);
+                        s3ui.applySettings(self, true);
                     }
                 });
         } else {

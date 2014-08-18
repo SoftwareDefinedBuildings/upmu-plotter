@@ -311,22 +311,21 @@ function updatePlot(self) {
     if (!self.idata.initialized) {
         initPlot(self);
     }
-    disableInputs(self);
     drawPlot(self);
 }
 
-function applySettings(self) {
+function applySettings(self, loadData) {
     if (self.idata.onscreen) {
         if (!self.idata.automaticAxisUpdate) {
             otherChange = true;
             s3ui.updatePlotMessage(self);
         } else {
-            disableInputs(self);
-            repaintZoomNewData(self, function () {
-                    setTimeout(function () {
-                            drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, self.idata.loadingElem);
-                        }, 50);
-                });
+            if (loadData) {
+                repaintZoomNewData(self, function () {
+                        drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, self.idata.loadingElem);
+                    });
+            }
+            drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, self.idata.loadingElem);
         }
     }
 }
@@ -334,6 +333,8 @@ function applySettings(self) {
 function drawPlot(self) {
     // Get the time range we are going to plot
     // dateConverter is defined in plotter.html
+    disableInputs(self);
+    
     var loadingElem = self.idata.loadingElem;
     loadingElem.html("Verifying date range...");
     var startText = self.find(".startdate").value;
@@ -414,9 +415,9 @@ function drawPlot(self) {
                 d3.select(self.find("g.x-axis"))
                     .call(xAxis);
             }
-            loadingElem.html("Computing axes...");
-            // Set a timeout so the new message (Computing axes...) actually shows
-            setTimeout(function () { drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, startDate, endDate, xScale, loadingElem); }, 50);
+            loadingElem.html("Drawing graph...");
+            // Set a timeout so the new message (Drawing graph...) actually shows
+            setTimeout(function () { enableInputs(self); drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, startDate, endDate, xScale, loadingElem); }, 50);
         });
 }
 
@@ -581,14 +582,13 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
              })())
         .html(function (d) { return d.axisname; });
     update.exit().remove();
-    loadingElem.html("Drawing graph...");
-    setTimeout(function () { drawStreams(self, data, streams, streamSettings, xScale, yScales, yAxisArray, axisData, loadingElem, false); }, 50);
+    
+    drawStreams(self, data, streams, streamSettings, xScale, yScales, yAxisArray, axisData, loadingElem, false);
 }
 
 /* Render the graph on the screen. If DRAWFAST is set to true, the entire plot is not drawn (for the sake of speed); in
    paticular new streams are not added and old ones not removed (DRAWFAST tells it to optimize for scrolling).
 */
-
 function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxisArray, axisData, loadingElem, drawFast) {
     if (!drawFast && (streams.length == 0 || yAxisArray.length == 0)) {
         if (streams.length == 0) {
@@ -711,7 +711,6 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     
     if (!drawFast) {
         s3ui.updatePlotMessage(self);
-        enableInputs(self);
         self.idata.onscreen = true;
     }
     

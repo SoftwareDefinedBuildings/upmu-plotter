@@ -145,7 +145,7 @@ function init_graph(self, c1, c2) {
             if (self.idata.automaticAxisUpdate) {
                 self.idata.selectedStreams = self.idata.selectedStreamsBuffer;
                 if (self.idata.otherChange || self.idata.addedStreams) {
-                    s3ui.applySettings(self);
+                    s3ui.applySettings(self, true);
                 }
             } else {
                 s3ui.updatePlotMessage(self);
