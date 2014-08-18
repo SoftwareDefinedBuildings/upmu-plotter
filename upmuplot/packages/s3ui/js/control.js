@@ -96,7 +96,8 @@ function setAxisSide(id, left) {
     if (!this.idata.axisMap.hasOwnProperty(id)) {
         return;
     }
-    var radButton = this.find(".axis-" + id).lastChild;
+    var radButton = this.find(".axis-" + id).lastChild.firstChild;
+    $(radButton).children().removeClass("active");
     if (left === null) {
         radButton = radButton.lastChild.firstChild;
     } else if (left) {
@@ -105,8 +106,9 @@ function setAxisSide(id, left) {
         radButton = radButton.firstChild.nextSibling.firstChild;
     }
     if (!radButton.checked) {
+        $(radButton.parentNode).addClass("active");
         radButton.checked = true;
-        radButton.onclick();
+        radButton.onchange();
     }
 }
 
@@ -128,14 +130,18 @@ function setAxisScale(id, low, high) {
             return;
         } else {
             // Check "Autoscale"
-            checkbox = row.lastChild.previousSibling.previousSibling.firstChild;
+            checkbox = row.lastChild.previousSibling.previousSibling.firstChild.firstChild;
+            $(checkbox).addClass("active");
+            checkbox = checkbox.firstChild;
             checkbox.checked = true;
             checkbox.onchange();
         }
     } else {
         if (currautoscale) {
             // Uncheck "Autoscale"
-            checkbox = row.lastChild.previousSibling.previousSibling.firstChild;
+            checkbox = row.lastChild.previousSibling.previousSibling.firstChild.firstChild;
+            $(checkbox).removeClass("active");
+            checkbox = checkbox.firstChild;
             checkbox.checked = false;
             checkbox.onchange();
         }

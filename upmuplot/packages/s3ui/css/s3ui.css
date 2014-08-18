@@ -11,9 +11,6 @@ input.datefield {
 input.axisname {
     width: 75px;
 }
-input.axisrange {
-    width: 50px;
-}
 td.axisrangeselect {
     text-align: right;
 }
@@ -51,4 +48,8 @@ div.permalink {
 }
 .metadataDisplay > h3 {
     margin-top: 0px;
+}
+input.thin-margin-text {
+    padding-left: 5px;
+    padding-right: 5px;
 }

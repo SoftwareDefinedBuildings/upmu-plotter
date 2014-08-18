@@ -58,7 +58,7 @@ function addYAxis(self) {
     row.append("td")
       .append("input")
         .attr("type", "text")
-        .attr("class", "axisname")
+        .attr("class", "axisname form-control thin-margin-text")
         .attr("value", id)
         .node().onchange = function () {
                 axisObj.axisname = this.value;
@@ -73,13 +73,14 @@ function addYAxis(self) {
     // Create the DOM element for selecting the range
     var rangeRow = document.createElement("tr");
     var selectElem = d3.select(rangeRow).append("td")
-        .attr("class", "axisrangeselect")
+        .attr("class", "axisrangeselect form-inline")
         .attr("colspan", "4");
     selectElem.append("span")
         .text("Scale: ");
     selectElem.append("input")
         .attr("type", "text")
-        .attr("class", "axisrange")
+        .attr("class", "axisrange form-control thin-margin-text")
+        .attr("style", "width: 50px;")
         .node().onchange = function () {
                 axisObj.manualscale[0] = parseFloat(this.value.trim());
                 s3ui.applySettings(self, false);
@@ -88,18 +89,24 @@ function addYAxis(self) {
         .text(" to ");
     selectElem.append("input")
         .attr("type", "text")
-        .attr("class", "axisrange")
+        .attr("class", "axisrange form-control thin-margin-text")
+        .attr("style", "width: 50px;")
         .node().onchange = function () {
                 axisObj.manualscale[1] = parseFloat(this.value.trim());
                 s3ui.applySettings(self, false);
             };
         
-    var rangeElem = row.append("td");
+    var rangeElem = row.append("td")
+      .append("div")
+        .attr("class", "btn-group")
+        .attr("data-toggle", "buttons")
+      .append("label")
+        .attr("class", "btn btn-info active");
     rangeElem.append("input")
         .attr("type", "checkbox")
         .property("checked", true)
         .node().onchange = function () {
-                var thisRow = this.parentNode.parentNode;
+                var thisRow = this.parentNode.parentNode.parentNode.parentNode;
                 axisObj.autoscale = this.checked;
                 if (this.checked) {
                    thisRow.parentNode.removeChild(thisRow.nextSibling);
@@ -114,20 +121,24 @@ function addYAxis(self) {
     rangeElem.append("span")
       .text("Autoscale");
     row.append("td")
-      .append("button")
+      .append("div")
         .html("Remove")
-        .attr("class", "removebutton")
+        .attr("class", "removebutton btn btn-danger")
         .node().onclick = function () {
                 removeYAxis(self, axisObj);
             };
             
-    var sideElem = row.append("td");
-    var div = sideElem.append("div");
+    var sideElem = row.append("td")
+      .append("div")
+        .attr("class", "btn-group-vertical btn-group-xs")
+        .attr("data-toggle", "buttons");
+    var div = sideElem.append("label")
+        .attr("class", "btn btn-info active");
     div.append("input")
         .attr("type", "radio")
         .attr("name", "side-" + id + "i" + self.idata.instanceid)
         .attr("checked", true)
-        .node().onclick = function () {
+        .node().onchange = function () {
                 if (axisObj.right !== false) {
                     axisObj.right = false;
                     s3ui.applySettings(self, false);
@@ -135,11 +146,12 @@ function addYAxis(self) {
             };
     div.append("span")
         .html("Left");
-    div = sideElem.append("div");
+    div = sideElem.append("label")
+        .attr("class", "btn btn-info");
     div.append("input")
         .attr("type", "radio")
         .attr("name", "side-" + id + "i" + self.idata.instanceid)
-        .node().onclick = function () {
+        .node().onchange = function () {
                 if (axisObj.right !== true) {
                     axisObj.right = true;
                     s3ui.applySettings(self, false);
@@ -147,11 +159,12 @@ function addYAxis(self) {
             };
     div.append("span")
         .html("Right");
-    div = sideElem.append("div");
+    div = sideElem.append("label")
+        .attr("class", "btn btn-info");
     div.append("input")
         .attr("type", "radio")
         .attr("name", "side-" + id + "i" + self.idata.instanceid)
-        .node().onclick = function () {
+        .node().onchange = function () {
                 if (axisObj.right !== null) {
                     axisObj.right = null;
                     s3ui.applySettings(self, false);

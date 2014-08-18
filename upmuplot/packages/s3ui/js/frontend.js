@@ -102,7 +102,7 @@ function toggleLegend (self, show, streamdata, update) {
             };
         var selectElem = row.append("td")
           .append("select")
-            .attr("class", "axis-select axis-select-" + streamdata.uuid);
+            .attr("class", "axis-select form-control axis-select-" + streamdata.uuid);
         selectElem.selectAll("option")
           .data(self.idata.yAxes)
           .enter()
