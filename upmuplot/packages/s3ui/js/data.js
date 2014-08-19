@@ -10,6 +10,9 @@ function init_data(self) {
     self.idata.loadedStreams = {}; // maps a stream's uuid to the total number of points that have been cached for that stream
     
     self.idata.dataURLStart = 'http://bunker.cs.berkeley.edu/backend/api/data/uuid/';
+    
+    self.idata.queryLow = -1152921504606; // in milliseconds
+    self.idata.queryHigh = 3458764513820; // in milliseconds
 }
 
 /* The start time and end time are in MILLISECONDS, not NANOSECONDS! */
@@ -109,6 +112,10 @@ function validateContiguous(cacheEntry, pwe) {
    that stream will not result in a GET request (so this function doesn't fall
    behind user input). */
 function ensureData(self, uuid, pointwidthexp, startTime, endTime, callback) {
+    var halfPWnanos = Math.pow(2, pointwidthexp - 1) - 1;
+    var halfPWmillis = halfPWnanos / 1000000;
+    startTime = Math.min(Math.max(startTime, self.idata.queryLow - Math.floor(halfPWmillis)), self.idata.queryHigh - Math.ceil(halfPWmillis) - 1);
+    endTime = Math.min(Math.max(endTime, self.idata.queryLow + Math.ceil(halfPWmillis) + 1), self.idata.queryHigh + Math.floor(halfPWmillis));
     var dataCache = self.idata.dataCache;
     // Create the mapping for this stream if it isn't already present
     if (!dataCache.hasOwnProperty(uuid)) {
@@ -159,7 +166,7 @@ function ensureData(self, uuid, pointwidthexp, startTime, endTime, callback) {
             };
         
         if (numRequests == 1) {
-            makeDataRequest(self, uuid, queryStart, queryEnd, pointwidthexp, urlCallback);
+            makeDataRequest(self, uuid, queryStart, queryEnd, pointwidthexp, halfPWnanos, urlCallback);
         } else {
             if (startsBefore) {
                 i--;
@@ -167,23 +174,23 @@ function ensureData(self, uuid, pointwidthexp, startTime, endTime, callback) {
             if (endsAfter) {
                 j++;
             }
-            makeDataRequest(self, uuid, queryStart, cache[i + 1].start_time, pointwidthexp, urlCallback);
+            makeDataRequest(self, uuid, queryStart, cache[i + 1].start_time, pointwidthexp, halfPWnanos, urlCallback);
             for (var k = i + 1; k < j - 1; k++) {
-                makeDataRequest(self, uuid, cache[k].end_time, cache[k + 1].start_time, pointwidthexp, urlCallback);
+                makeDataRequest(self, uuid, cache[k].end_time, cache[k + 1].start_time, pointwidthexp, halfPWnanos, urlCallback);
             }
-            makeDataRequest(self, uuid, cache[j - 1].end_time, queryEnd, pointwidthexp, urlCallback);
+            makeDataRequest(self, uuid, cache[j - 1].end_time, queryEnd, pointwidthexp, halfPWnanos, urlCallback);
         }
     }
 }
 
 /* Gets all the points where the middle of the interval is between queryStart
-   and queryEnd, including queryStart but not queryEnd. */
-function makeDataRequest(self, uuid, queryStart, queryEnd, pointwidthexp, callback) {
+   and queryEnd, including queryStart but not queryEnd. HALFPWNANOS should be
+   Math.pow(2, pointwidthexp - 1) - 1. */
+function makeDataRequest(self, uuid, queryStart, queryEnd, pointwidthexp, halfpwnanos, callback) {
     /* queryStart and queryEnd are the start and end of the query I want,
     in terms of the midpoints of the intervals I get back; the real archiver
     will give me back all intervals that touch the query range. So I shrink
     the range by half a pointwidth on each side to compensate for that. */
-    var halfpwnanos = Math.pow(2, pointwidthexp - 1) - 1;
     var halfpwmillisStart = Math.floor(halfpwnanos / 1000000);
     var halfpwnanosStart = halfpwnanos - (1000000 * halfpwmillisStart);
     var halfpwmillisEnd = Math.ceil(halfpwnanos / 1000000);

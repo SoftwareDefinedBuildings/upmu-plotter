@@ -48,6 +48,12 @@ s3ui.__init__ = function (self) {
             if (self.data[0].permalinkStart != undefined) {
                 self.idata.initPermalink = self.data[0].permalinkStart;
             }
+            if (self.data[0].queryLow != undefined) {
+                self.idata.queryLow = self.data[0].queryLow;
+            }
+            if (self.data[0].queryHigh != undefined) {
+                self.idata.queryHigh = self.data[0].queryHigh;
+            }
             self.imethods.changeVisuals = function (options) {
                     init_visuals(self, options);
                 };

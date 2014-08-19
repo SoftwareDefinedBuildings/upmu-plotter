@@ -417,13 +417,12 @@ function drawPlot(self) {
             }
             loadingElem.html("Drawing graph...");
             // Set a timeout so the new message (Drawing graph...) actually shows
-            setTimeout(function () { enableInputs(self); drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, startDate, endDate, xScale, loadingElem); }, 50);
+            setTimeout(function () { enableInputs(self); drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, loadingElem); }, 50);
         });
 }
 
 function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xScale, loadingElem) {
     otherChange = false;
-    self.idata.oldData = data;
     
     var yAxes = self.idata.yAxes;
     
