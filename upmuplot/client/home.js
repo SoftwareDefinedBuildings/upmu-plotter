@@ -7,7 +7,7 @@ if (Meteor.isClient) {
     Template.home.plot_data = [
         {
             tagsURL: localtest ? 'http://localhost:7856' : 'http://quasar.cal-sdb.org:4523/backend/api/query?',
-            dataURLStart: localtest ? 'http://localhost:7856/data/uuid' : 'http://quasar.cal-sdb.org:9000/data/uuid/',
+            dataURLStart: localtest ? 'http://localhost:7856/data/uuid/' : 'http://quasar.cal-sdb.org:9000/data/uuid/',
             width: function () {
                     var $parent = $(instances[0].find('.chartContainer'))
                     var width = $parent.css("width");

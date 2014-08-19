@@ -35,10 +35,10 @@ rect.clickscreen {
 }
 .jstree-node {
     position: relative;
-    z-index: 49999; /* So the tree isn't covered by the something accidentally. */
+    z-index: 49999; /* So the tree isn't covered by something accidentally. */
 }
-.streamTree * {
-    background-color: white;
+.streamTree a {
+    background-color: white; /* So the entries remain readable if they go over something */
 }
 div.permalink {
     word-wrap: break-word;
