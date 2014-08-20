@@ -48,6 +48,12 @@ s3ui.__init__ = function (self) {
             if (self.data[0].permalinkStart != undefined) {
                 self.idata.initPermalink = self.data[0].permalinkStart;
             }
+            if (self.data[0].queryLow != undefined) {
+                self.idata.queryLow = self.data[0].queryLow;
+            }
+            if (self.data[0].queryHigh != undefined) {
+                self.idata.queryHigh = self.data[0].queryHigh;
+            }
             self.imethods.changeVisuals = function (options) {
                     init_visuals(self, options);
                 };
@@ -108,12 +114,8 @@ function init_graph(self, c1, c2) {
     c1(self);
     
     // Make the window resize dynamically
-    self.idata.TARGETWIDTH = self.idata.widthFunction();
-    s3ui.updateSize(self, false);
-    $(window).resize(function () {
-            self.idata.TARGETWIDTH = self.idata.widthFunction();
-            s3ui.updateSize(self, true);
-        });
+    self.imethods.updateGraphSize();
+    $(window).resize(self.imethods.updateGraphSize);
     
     // For some reason, Any+Time requires the text elements to have IDs.
     // So, I'm going to give them IDs that are unique across all instances

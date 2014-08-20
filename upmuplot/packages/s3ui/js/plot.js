@@ -40,9 +40,6 @@ function init_plot(self) {
     self.idata.selectedStreams = []; // The streams that are being displayed on the graph
     self.idata.drawRequestID = -1; // The ID of a request for "repaintZoomNewData"; if a later request is made and processed before an earlier one is processed, the earlier one is not processed
 
-    // Elements disabled while loading data and enabled afterwards
-    self.idata.inputs = undefined;
-
     // The uuid of the relevant stream if a data density plot is being shown, undefined otherwise
     self.idata.showingDensity = undefined;
     // Keeps track of whether the previous draw of the data density plot could be completed
@@ -93,11 +90,11 @@ function cacheData(self, uuid, drawID, pwe, startTime, endTime) {
                         if (drawID != self.idata.drawRequestID) {
                             return;
                         }
-                        s3ui.ensureData(self, uuid, pwe - 2, startTime - sideCache, endTime + sideCache, function () { s3ui.setStreamMessage(self, uuid, undefined, 1); });
-                    });
-                });
-            });
-        });
+                        s3ui.ensureData(self, uuid, pwe - 2, startTime - sideCache, endTime + sideCache, function () { s3ui.setStreamMessage(self, uuid, undefined, 1); }, true);
+                    }, true);
+                }, true);
+            }, true);
+        }, true);
 }
 
 function repaintZoomNewData(self, callback, stopCache) {
@@ -293,17 +290,6 @@ function updateSize(self, redraw) {
     }
 }
 
-function disableInputs(self) {
-    self.idata.inputs = [self.$("input, button, select"), self.$(".btn, .streamTree")];
-    self.idata.inputs[0].prop("disabled", true);
-    self.idata.inputs[1].css("pointer-events", "none");
-}
-
-function enableInputs(self) {
-    self.idata.inputs[0].prop("disabled", false);
-    self.idata.inputs[1].css("pointer-events", "");
-}
-
 function updatePlot(self) {
     if (!self.idata.automaticAxisUpdate) {
         self.idata.selectedStreams = self.idata.selectedStreamsBuffer.slice();
@@ -333,8 +319,6 @@ function applySettings(self, loadData) {
 function drawPlot(self) {
     // Get the time range we are going to plot
     // dateConverter is defined in plotter.html
-    disableInputs(self);
-    
     var loadingElem = self.idata.loadingElem;
     loadingElem.html("Verifying date range...");
     var startText = self.find(".startdate").value;
@@ -359,12 +343,10 @@ function drawPlot(self) {
         var endDate = endDateObj.getTime();
     } catch (err) {
         loadingElem.html(err);
-        enableInputs(self);
         return;
     }
     if (startDate >= endDate) {
         loadingElem.html("Error: Selected date range is invalid.");
-        enableInputs(self);
         return;
     }
     
@@ -376,7 +358,6 @@ function drawPlot(self) {
     var numstreams = self.idata.selectedStreams.length;
     if (numstreams == 0) {
         loadingElem.html("Error: No streams are selected.");
-        enableInputs(self);
         return;
     }
     
@@ -417,13 +398,12 @@ function drawPlot(self) {
             }
             loadingElem.html("Drawing graph...");
             // Set a timeout so the new message (Drawing graph...) actually shows
-            setTimeout(function () { enableInputs(self); drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, startDate, endDate, xScale, loadingElem); }, 50);
+            setTimeout(function () { drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, loadingElem); }, 50);
         });
 }
 
 function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xScale, loadingElem) {
     otherChange = false;
-    self.idata.oldData = data;
     
     var yAxes = self.idata.yAxes;
     

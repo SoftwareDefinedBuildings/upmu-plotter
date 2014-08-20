@@ -24,10 +24,12 @@ function getInfoHelper(datum, prefix, linebreak) {
     return toReturn;
 }
 
-function getURL(url, success_callback, type) {
+function getURL(url, success_callback, type, error_callback) {
     Meteor.call("processQuery", url, type, function (error, result) {
             if (error == undefined) {
                 success_callback(result);
+            } else if (error_callback != undefined) {
+                error_callback(error, result);
             }
         });
 }

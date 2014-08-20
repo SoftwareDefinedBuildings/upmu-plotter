@@ -44,6 +44,8 @@ The object of parameters may have the following properties (all optional):
 * width - A function that returns the targed width of the graph (_not_ just the chart area) to use. Defaults to function () { return 0.75 * window.innerWidth; }
 * widthmin - The minimum width, in pixels, of the width of the chart area (_not_ the whole graph). Defaults to 300.
 * height - Specifies the height of the chart area (_not_ the whole graph). Defaults to 300.
+* queryLow - The earliest time, in milliseconds since the epoch, when data can be queried. Defaults to -1152921504606. queryHigh - queryLow should be at least 2 ms.
+* queryHigh - The latest time, in milliseconds since the epoch, when data can be queried. Defaults to 3458764513820. queryHigh - queryLow should be at least 2 ms.
 
 When the graph has been displayed, but before any interactivity is added, the
 first callback function is invoked with a single argument, namely the template

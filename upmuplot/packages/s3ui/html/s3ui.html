@@ -2,52 +2,56 @@
     {{> s3plot_plotStyles}}
     <style class="dynamicStyles">
     </style>
-    <div class="container-fluid">
-        <div class="row" style="margin-left: 0px">
-            <div class="col-sm-3 col-md-2" style="padding: 5px;">
-                {{> s3plot_timeSelection}}
-                <div class="btn-group-vertical" style="width: 100%">
-                    <div class="plotButton btn btn-primary">Apply and Plot</div>
-                    <div class="resetZoom btn btn-default">Reset Zoom</div>
-                </div>
-                <div class="plotLoading" style="width: 100%; margin-top: 20px; font-size: 1.25em;"></div> <!-- Displays details about how the plot is loading -->
-                {{> s3plot_streamSelection}}
-            </div>
-            <div class="col-sm-9 col-md-10">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="well chartContainer">
-                            {{> s3plot_chart}}
-                        </div>
+    <table class="dispTable" width="99%">
+        <tr>
+            <td width="20%">
+                <div style="margin-left: 20px; margin-right: 25px;">
+                    {{> s3plot_timeSelection}}
+                    <div class="btn-group-vertical" style="width: 100%">
+                        <div class="plotButton btn btn-primary">Apply and Plot</div>
+                        <div class="resetZoom btn btn-default">Reset Zoom</div>
                     </div>
+                    <div class="plotLoading" style="width: 100%; margin-top: 20px; font-size: 1.25em;"></div> <!-- Displays details about how the plot is loading -->
+                    {{> s3plot_streamSelection}}
                 </div>
-                <div class="well">
+            </td>
+            <td width="80%">
+                <div class="container-fluid">
                     <div class="row">
-                        <div class="col-md-5">
-                            {{> s3plot_streamLegend}} 
-                        </div>
-                        <div class="col-md-7">
-                            {{> s3plot_axisLegend}}
+                        <div class="col-md-12">
+                            <div class="well chartContainer">
+                                {{> s3plot_chart}}
+                            </div>
                         </div>
                     </div>
-                    <div class="row">
-                        &nbsp;&nbsp;{{> s3plot_automaticUpdate}}
+                    <div class="well">
+                        <div class="row">
+                            <div class="col-md-5">
+                                {{> s3plot_streamLegend}} 
+                            </div>
+                            <div class="col-md-7">
+                                {{> s3plot_axisLegend}}
+                            </div>
+                        </div>
+                        <div class="row">
+                            &nbsp;&nbsp;{{> s3plot_automaticUpdate}}
+                        </div>
+                    </div>
+                    <div class="well">
+                        <div class="row">
+                            <div class="col-md-4 metadataDisplay"></div>
+                            <div class="col-md-3">
+                                {{> s3plot_graphExport}}
+                            </div>
+                            <div class="col-md-5">
+                                {{> s3plot_permalink}}
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="well">
-                    <div class="row">
-                        <div class="col-md-4 metadataDisplay"></div>
-                        <div class="col-md-3">
-                            {{> s3plot_graphExport}}
-                        </div>
-                        <div class="col-md-5">
-                            {{> s3plot_permalink}}
-                        </div>
-                    </div>
-                </div>
-            </div> 
-        </div>
-    </div>
+            </td>
+        </tr>
+    </table>
 </template>
 
 <template name="s3plot_plotStyles">
