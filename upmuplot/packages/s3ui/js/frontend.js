@@ -228,7 +228,7 @@ function createPermalink(self) {
         coerce_stream = function (stream) { return stream.uuid; };
     }
     var permalink = 'streams=' + $.map(self.idata.selectedStreams, function (d) { return encodeURIComponent(coerce_stream(d) + "_" + self.idata.streamSettings[d.uuid].color); }).join(',');
-    permalink += '&start=' + (self.idata.oldStartDate / 1000) + '&end=' + (self.idata.oldEndDate / 1000) + '&tz=' + encodeURIComponent(self.idata.oldTimezone) + '&zoom=' + encodeURIComponent(self.idata.zoom.scale()) + '&translate=' + encodeURIComponent(self.idata.zoom.translate()[0]) + '&autoupdate=' + self.idata.automaticAxisUpdate + '&axes=';
+    permalink += '&start=' + (self.idata.oldStartDate / 1000) + '&end=' + (self.idata.oldEndDate / 1000) + '&tz=' + encodeURIComponent(self.idata.oldTimezone) + '&zoom=' + encodeURIComponent(self.idata.zoom.scale()) + '&translate=' + encodeURIComponent(self.idata.zoom.translate()[0] / self.idata.WIDTH) + '&autoupdate=' + self.idata.automaticAxisUpdate + '&axes=';
     var axes = $.map(self.idata.yAxes, function (d) {
             return {
                     axisname: d.axisname,

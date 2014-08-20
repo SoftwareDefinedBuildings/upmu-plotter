@@ -357,7 +357,7 @@ function finishExecutingPermalink(self, streams, colors, args) {
         self.idata.initzoom = parseFloat(decodeURIComponent(args.zoom));
     }
     if (args.hasOwnProperty('translate')) {
-        self.idata.inittrans = parseFloat(decodeURIComponent(args.translate));
+        self.idata.inittrans = parseFloat(decodeURIComponent(args.translate * self.idata.WIDTH));
     }
     if (args.hasOwnProperty('autoupdate')) {
         if (!args.autoupdate) {
