@@ -22,6 +22,10 @@ if (Meteor.isClient) {
         function (inst) 
         { 
             instances.push(inst);
+            $(inst.find(".dispTable")).colResizable({
+                    minWidth: 100,
+                    onResize: inst.imethods.updateGraphSize
+                });
         },
         window.location.search.length == 0 ? '' : window.location.search.slice(1)];
         //function () 
