@@ -22,17 +22,12 @@ if (Meteor.isClient) {
         function (inst) 
         { 
             instances.push(inst);
-            var resetColWidth = function () {
-                    if (window.innerWidth > 1475) {
-                        $(inst.find(".left-column")).removeClass("col-lg-3").addClass("col-lg-2");
-                        $(inst.find(".right-column")).removeClass("col-lg-9").addClass("col-lg-10");
-                    } else {
-                        $(inst.find(".left-column")).removeClass("col-lg-2").addClass("col-lg-3");
-                        $(inst.find(".right-column")).removeClass("col-lg-10").addClass("col-lg-9");
-                    }
-                };
-            resetColWidth();
-            $(window).resize(resetColWidth);
+            $(inst.find(".dispTable")).colResizable({
+                    hoverCursor: "ew-resize",
+                    dragCursor: "ew-resize",
+                    minWidth: 0,
+                    onResize: inst.imethods.updateGraphSize
+                });
         },
         window.location.search.length == 0 ? '' : window.location.search.slice(1)];
         //function () 

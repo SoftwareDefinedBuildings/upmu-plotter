@@ -55,3 +55,6 @@ tr.axissetting > td {
 .metadataDisplay > h3 {
     margin-top: 0px;
 }
+table.dispTable > tr > td {
+    vertical-align: top;
+}

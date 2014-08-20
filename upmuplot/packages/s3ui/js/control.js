@@ -21,6 +21,7 @@ function init_control(self) {
     self.imethods.toggleEmbedMetadata = bind_method(toggleEmbedMetadata, self);
     self.imethods.selectStreams = bind_method(selectStreams, self);
     self.imethods.deselectStreams = bind_method(deselectStreams, self);
+    self.imethods.updateGraphSize = bind_method(updateGraphSize, self);
 }
 
 /* Given DATE, a date object, sets the start time to be the day/time it
@@ -274,6 +275,11 @@ function deselectStreams(data_lst) {
         }
     }
     s3ui.applySettings(this, false);
+}
+
+function updateGraphSize() {
+    this.idata.TARGETWIDTH = this.idata.widthFunction();
+    s3ui.updateSize(this, true);
 }
 
 /* Given LINK, the portion of a hyperlink that occurs after the question mark

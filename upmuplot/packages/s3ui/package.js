@@ -10,6 +10,7 @@ Package.on_use(function (api) {
   api.use('anytime');
   api.use('templating');
   api.use('newd3');
+  api.use('colResizable');
 
   var path = Npm.require('path');
   var asset_path = path.join('.');
