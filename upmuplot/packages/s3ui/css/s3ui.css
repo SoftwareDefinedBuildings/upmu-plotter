@@ -43,6 +43,9 @@ rect.clickscreen {
 div.permalink {
     word-wrap: break-word;
 }
+.legend td, .axes td, .axisLegend th {
+    padding: 2px;
+}
 tr.axissetting > td {
     padding-top: 1.5em;
 }
@@ -54,7 +57,4 @@ tr.axissetting > td {
 }
 table.dispTable > tr > td {
     vertical-align: top;
-}
-.legend td, .axes td, .axisLegend th {
-    padding: 2px;
 }
