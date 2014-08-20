@@ -13,6 +13,13 @@ function init_data(self) {
     
     self.idata.queryLow = -1152921504606; // in milliseconds
     self.idata.queryHigh = 3458764513820; // in milliseconds
+    
+    // The following fields are for rate control
+    self.idata.currPWE = undefined;
+    self.idata.secondaryPWE = undefined;
+    self.idata.pendingSecondaryRequests = 0;
+    self.idata.pendingSecondaryRequestData = {};
+    self.idata.pendingRequests = 0;
 }
 
 /* The start time and end time are in MILLISECONDS, not NANOSECONDS! */
@@ -111,7 +118,7 @@ function validateContiguous(cacheEntry, pwe) {
    requested data from the server) for a certain stream, any more calls for
    that stream will not result in a GET request (so this function doesn't fall
    behind user input). */
-function ensureData(self, uuid, pointwidthexp, startTime, endTime, callback) {
+function ensureData(self, uuid, pointwidthexp, startTime, endTime, callback, caching) {
     var halfPWnanos = Math.pow(2, pointwidthexp - 1) - 1;
     var halfPWmillis = halfPWnanos / 1000000;
     startTime = Math.min(Math.max(startTime, self.idata.queryLow - Math.floor(halfPWmillis)), self.idata.queryHigh - Math.ceil(halfPWmillis) - 1);
@@ -166,7 +173,7 @@ function ensureData(self, uuid, pointwidthexp, startTime, endTime, callback) {
             };
         
         if (numRequests == 1) {
-            makeDataRequest(self, uuid, queryStart, queryEnd, pointwidthexp, halfPWnanos, urlCallback);
+            makeDataRequest(self, uuid, queryStart, queryEnd, pointwidthexp, halfPWnanos, urlCallback, caching);
         } else {
             if (startsBefore) {
                 i--;
@@ -174,11 +181,11 @@ function ensureData(self, uuid, pointwidthexp, startTime, endTime, callback) {
             if (endsAfter) {
                 j++;
             }
-            makeDataRequest(self, uuid, queryStart, cache[i + 1].start_time, pointwidthexp, halfPWnanos, urlCallback);
+            makeDataRequest(self, uuid, queryStart, cache[i + 1].start_time, pointwidthexp, halfPWnanos, urlCallback, caching);
             for (var k = i + 1; k < j - 1; k++) {
-                makeDataRequest(self, uuid, cache[k].end_time, cache[k + 1].start_time, pointwidthexp, halfPWnanos, urlCallback);
+                makeDataRequest(self, uuid, cache[k].end_time, cache[k + 1].start_time, pointwidthexp, halfPWnanos, urlCallback, caching);
             }
-            makeDataRequest(self, uuid, cache[j - 1].end_time, queryEnd, pointwidthexp, halfPWnanos, urlCallback);
+            makeDataRequest(self, uuid, cache[j - 1].end_time, queryEnd, pointwidthexp, halfPWnanos, urlCallback, caching);
         }
     }
 }
@@ -186,7 +193,7 @@ function ensureData(self, uuid, pointwidthexp, startTime, endTime, callback) {
 /* Gets all the points where the middle of the interval is between queryStart
    and queryEnd, including queryStart but not queryEnd. HALFPWNANOS should be
    Math.pow(2, pointwidthexp - 1) - 1. */
-function makeDataRequest(self, uuid, queryStart, queryEnd, pointwidthexp, halfpwnanos, callback) {
+function makeDataRequest(self, uuid, queryStart, queryEnd, pointwidthexp, halfpwnanos, callback, caching) {
     /* queryStart and queryEnd are the start and end of the query I want,
     in terms of the midpoints of the intervals I get back; the real archiver
     will give me back all intervals that touch the query range. So I shrink
@@ -198,9 +205,81 @@ function makeDataRequest(self, uuid, queryStart, queryEnd, pointwidthexp, halfpw
     halfpwnanosStart = (1000000 + halfpwnanosStart).toString().slice(1);
     halfpwnanosEnd = (1000000 + halfpwnanosEnd).toString().slice(1);
     var url = self.idata.dataURLStart + uuid + '?starttime=' + (queryStart + halfpwmillisStart) + halfpwnanosStart + '&endtime=' + (queryEnd - halfpwmillisEnd) + halfpwnanosEnd + '&unitoftime=ns&pw=' + pointwidthexp;
-    s3ui.getURL(url, function (data) {
-            callback(data, queryStart, queryEnd);
-        }, 'text');
+    if (caching) {
+        s3ui.getURL(url, function (data) {
+                callback(data, queryStart, queryEnd);
+            }, 'text');
+    } else {
+        queueRequest(self, url, function (data) {
+                callback(data, queryStart, queryEnd);
+            }, 'text', pointwidthexp);
+    }
+}
+
+function queueRequest(self, url, callback, datatype, pwe) {
+    if (self.idata.pendingRequests == 0) {
+        self.idata.currPWE = pwe;
+    }
+    if (self.idata.currPWE == pwe) {
+        self.idata.pendingRequests++;
+        s3ui.getURL(url, function (data) {
+                self.idata.pendingRequests--;
+                callback(data);
+                if (self.idata.pendingRequests == 0) {
+                    effectSecondaryRequests(self);
+                }
+            }, datatype, function () {
+                self.idata.pendingRequests--;
+                if (self.idata.pendingRequests == 0) {
+                    effectSecondaryRequests(self);
+                }
+            });
+    } else {
+        if (pwe != self.idata.secondaryPWE) {
+            self.idata.secondaryPWE = pwe;
+            self.idata.pendingSecondaryRequests = 0;
+            self.idata.pendingSecondaryRequestData = {};
+        }
+        self.idata.pendingSecondaryRequests++;
+        var id = setTimeout(function () {
+                if (self.idata.pendingSecondaryRequestData.hasOwnProperty(id)) {
+                    console.log("Sent request: " + url);
+                    s3ui.getURL(url, function (data) {
+                            callback(data);
+                        }, datatype);
+                    self.idata.pendingSecondaryRequests--;
+                    delete self.idata.pendingSecondaryRequestData[id];
+                }
+            }, 1000);
+        self.idata.pendingSecondaryRequestData[id] = [url, callback, datatype];
+    }
+}
+
+function effectSecondaryRequests(self) {
+    if (self.idata.secondaryPWE == undefined || self.idata.pendingSecondaryRequests == 0) {
+        return;
+    }
+    self.idata.currPWE = self.idata.secondaryPWE;
+    self.idata.pendingRequests = self.idata.pendingSecondaryRequests;
+    self.idata.secondaryPWE = undefined;
+    var entry;
+    var pendingData = self.idata.pendingSecondaryRequestData;
+    for (var id in pendingData) {
+        if (pendingData.hasOwnProperty(id)) {
+            clearTimeout(id);
+            entry = pendingData[id];
+            s3ui.getURL(entry[0], (function (cb) {
+                    return function (data) {
+                            self.idata.pendingRequests--;
+                            cb(data);
+                        };
+                })(entry[1]), entry[2], function () {
+                    self.idata.pendingRequests--;
+                });
+        }
+    }
+    self.idata.pendingSecondaryRequestData = {};
+    self.idata.pendingSecondaryRequests = 0;
 }
 
 function insertData(self, uuid, cache, data, dataStart, dataEnd, callback) {

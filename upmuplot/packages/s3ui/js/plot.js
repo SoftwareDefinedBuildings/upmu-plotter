@@ -90,11 +90,11 @@ function cacheData(self, uuid, drawID, pwe, startTime, endTime) {
                         if (drawID != self.idata.drawRequestID) {
                             return;
                         }
-                        s3ui.ensureData(self, uuid, pwe - 2, startTime - sideCache, endTime + sideCache, function () { s3ui.setStreamMessage(self, uuid, undefined, 1); });
-                    });
-                });
-            });
-        });
+                        s3ui.ensureData(self, uuid, pwe - 2, startTime - sideCache, endTime + sideCache, function () { s3ui.setStreamMessage(self, uuid, undefined, 1); }, true);
+                    }, true);
+                }, true);
+            }, true);
+        }, true);
 }
 
 function repaintZoomNewData(self, callback, stopCache) {
@@ -115,7 +115,7 @@ function repaintZoomNewData(self, callback, stopCache) {
             self.idata.oldData[stream.uuid] = [stream, data, pwe];
             numResponses++;
             s3ui.setStreamMessage(self, stream.uuid, undefined, 5);
-            if (!stopCache) {
+            if (!stopCache && false) {
                 s3ui.setStreamMessage(self, stream.uuid, "Caching data...", 1);
                 setTimeout(function () { cacheData(self, stream.uuid, thisID, pwe, startTime, endTime); }, 0); // do it asynchronously
             }
