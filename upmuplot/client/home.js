@@ -23,7 +23,9 @@ if (Meteor.isClient) {
         { 
             instances.push(inst);
             $(inst.find(".dispTable")).colResizable({
-                    minWidth: 100,
+                    hoverCursor: "ew-resize",
+                    dragCursor: "ew-resize",
+                    minWidth: 0,
                     onResize: inst.imethods.updateGraphSize
                 });
         },
