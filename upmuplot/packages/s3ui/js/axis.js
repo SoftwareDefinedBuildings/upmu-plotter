@@ -145,7 +145,7 @@ function addYAxis(self) {
                 }
             };
     div.append("span")
-        .html("Left");
+        .attr("class", "glyphicon glyphicon-arrow-left");
     div = sideElem.append("label")
         .attr("class", "btn btn-info");
     div.append("input")
@@ -158,7 +158,7 @@ function addYAxis(self) {
                 }
             };
     div.append("span")
-        .html("Right");
+        .attr("class", "glyphicon glyphicon-arrow-right");
     div = sideElem.append("label")
         .attr("class", "btn btn-info");
     div.append("input")
@@ -171,7 +171,7 @@ function addYAxis(self) {
                 }
             };
     div.append("span")
-        .html("Hide");
+        .attr("class", "glyphicon glyphicon-eye-close");
     d3.selectAll(self.$("select.axis-select"))
       .append("option")
         .attr("class", "option-" + axisObj.axisid)
