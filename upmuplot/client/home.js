@@ -3,7 +3,7 @@ function parsePixelsToInt(q) {
 }
 
 if (Meteor.isClient) {
-    var localtest = false;
+    var localtest = true;
     Template.home.plot_data = [
         {
             tagsURL: localtest ? 'http://localhost:7856' : 'http://quasar.cal-sdb.org:4523/backend/api/query?',
@@ -22,6 +22,17 @@ if (Meteor.isClient) {
         function (inst) 
         { 
             instances.push(inst);
+            var resetColWidth = function () {
+                    if (window.innerWidth > 1475) {
+                        $(inst.find(".left-column")).removeClass("col-lg-3").addClass("col-lg-2");
+                        $(inst.find(".right-column")).removeClass("col-lg-9").addClass("col-lg-10");
+                    } else {
+                        $(inst.find(".left-column")).removeClass("col-lg-2").addClass("col-lg-3");
+                        $(inst.find(".right-column")).removeClass("col-lg-10").addClass("col-lg-9");
+                    }
+                };
+            resetColWidth();
+            $(window).resize(resetColWidth);
         },
         window.location.search.length == 0 ? '' : window.location.search.slice(1)];
         //function () 
