@@ -92,7 +92,7 @@
 
 <template name="s3plot_permalink">
     <div class="permalinkGenerate">
-        <button class="getPermalink">Generate Permalink</button>
+        <div class="getPermalink btn btn-default">Generate Permalink</div>
         <input type="checkbox" class="includeMetadata" />
         <span>Embed Stream Metadata</span>
         <div class="permalink"></div>
@@ -101,7 +101,7 @@
 
 <template name="s3plot_graphExport">
     <div class="graphExport">
-        <button class="makeGraph">Export Graph to SVG Image</button>
+        <div class="makeGraph btn btn-default">Export Graph to SVG Image</div>
         <div class="download-graph"></div>
     </div>
 </template>
@@ -137,13 +137,14 @@
 <template name="s3plot_axisLegend">
     <div class="axisLegend">
         <h3>Axes</h3>
-        <button class="addAxis">Add a Y-Axis</button>
-        <table>
+        <div class="addAxis btn btn-success">Add a Y-Axis</div>
+        <table class="table table-striped">
             <thead>
                 <tr>
                     <th>Name</th>
                     <th>Streams</th>
                     <th>Units</th>
+                    <th>Settings</th>
                 </tr>
             </thead>
             <tbody class="axes"></tbody>
