@@ -40,7 +40,7 @@ rect.clickscreen {
 .streamTree a {
     background-color: white; /* So the entries remain readable if they go over something */
 }
-div.permalink {
+div.permalink, .legend .streamName, .axes .axisstreams {
     word-wrap: break-word;
 }
 .legend td, .axes td, .axisLegend th {
