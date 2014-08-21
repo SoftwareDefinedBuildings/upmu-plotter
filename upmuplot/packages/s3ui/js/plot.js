@@ -222,7 +222,6 @@ function initPlot(self) {
         .attr("width", self.idata.WIDTH)
         .attr("height", self.idata.HEIGHT)
         .attr("transform", "translate(" + self.idata.margin.left + ", " + self.idata.margin.top + ")")
-        .call(self.idata.zoom)
         .attr("onmousedown", "$(this).attr('class', 'clickscreen clickedchart');")
         .attr("onmouseup", "$(this).attr('class', 'clickscreen unclickedchart');")
         .attr("fill", "none")
@@ -396,7 +395,7 @@ function drawPlot(self) {
             }
             loadingElem.html("Drawing graph...");
             // Set a timeout so the new message (Drawing graph...) actually shows
-            setTimeout(function () { drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, loadingElem); }, 50);
+            setTimeout(function () { d3.select(".clickscreen").call(self.idata.zoom); drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, loadingElem); }, 50);
         });
 }
 
