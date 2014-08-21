@@ -575,7 +575,6 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             loadingElem.html("Error: All selected streams have no data.");
         }
         self.$("g.chartarea > g").remove();
-        enableInputs(self);
         return;
     }
     // Render the graph

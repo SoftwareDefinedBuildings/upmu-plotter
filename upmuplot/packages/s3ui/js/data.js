@@ -243,7 +243,6 @@ function queueRequest(self, url, callback, datatype, pwe) {
         self.idata.pendingSecondaryRequests++;
         var id = setTimeout(function () {
                 if (self.idata.pendingSecondaryRequestData.hasOwnProperty(id)) {
-                    console.log("Sent request: " + url);
                     s3ui.getURL(url, function (data) {
                             callback(data);
                         }, datatype);
