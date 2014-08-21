@@ -115,4 +115,5 @@ The bound methods provided are:
 * applyAllSettings() - Programmatically clicks the "Apply All Settings and Update Plot" button.
 * resetZoom() - Programmatically clicks the "Reset Zoom" button.
 * toggleAutomaticUpdate() - Programmatically checks or unchecks the "Automatically apply stream removals and changes to axis settings" checkbox.
+* updateGraphSize() - Uses the width function to recompute the width of the graph.
 * changeVisuals(options) - Reinitializes the visuals with the specified OPTIONS, according to the parameters specified (from the list above). The only differences between this function and the instantiation of the graph is that the "width" and "height" properties are ignored, and the new default values are those currently applied.
