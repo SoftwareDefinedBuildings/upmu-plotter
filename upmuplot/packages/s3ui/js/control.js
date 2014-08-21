@@ -97,14 +97,14 @@ function setAxisSide(id, left) {
     if (!this.idata.axisMap.hasOwnProperty(id)) {
         return;
     }
-    var radButton = this.find(".axis-" + id).lastChild.firstChild;
+    var radButton = this.find(".axis-" + id + " .axisside");
     $(radButton).children().removeClass("active");
     if (left === null) {
-        radButton = radButton.lastChild.firstChild;
+        radButton = radButton.firstChild.nextSibling.firstChild;
     } else if (left) {
         radButton = radButton.firstChild.firstChild;
     } else {
-        radButton = radButton.firstChild.nextSibling.firstChild;
+        radButton = radButton.lastChild.firstChild;
     }
     if (!radButton.checked) {
         $(radButton.parentNode).addClass("active");
@@ -123,7 +123,7 @@ function setAxisScale(id, low, high) {
     }
     var autoscale = low == undefined && high == undefined;
     var currautoscale = this.idata.axisMap[id].autoscale;
-    var row = this.find(".axis-" + id);
+    var row = this.find(".axis-" + id + " .axissettingtable");
     var checkbox;
     var endpoints;
     if (autoscale) {
@@ -131,7 +131,7 @@ function setAxisScale(id, low, high) {
             return;
         } else {
             // Check "Autoscale"
-            checkbox = row.lastChild.previousSibling.previousSibling.firstChild.firstChild;
+            checkbox = row.querySelector(".autoscalebutton");
             $(checkbox).addClass("active");
             checkbox = checkbox.firstChild;
             checkbox.checked = true;
@@ -140,14 +140,14 @@ function setAxisScale(id, low, high) {
     } else {
         if (currautoscale) {
             // Uncheck "Autoscale"
-            checkbox = row.lastChild.previousSibling.previousSibling.firstChild.firstChild;
+            checkbox = row.querySelector(".autoscalebutton");
             $(checkbox).removeClass("active");
             checkbox = checkbox.firstChild;
             checkbox.checked = false;
             checkbox.onchange();
         }
         // Set the endpoints to those specified
-        endpoints = row.nextSibling.querySelectorAll("input.axisrange");
+        endpoints = row.querySelectorAll("input.axisrange");
         if (low != undefined && endpoints[0].value != low) {
             endpoints[0].value = low;
             endpoints[0].onchange();
