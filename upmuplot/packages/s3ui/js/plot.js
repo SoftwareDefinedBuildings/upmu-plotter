@@ -576,6 +576,10 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         self.$("g.chartarea > g").remove();
         return;
     }
+    if (yAxisArray == undefined) {
+        return;
+    }
+    self.idata.onscreen = true;
     // Render the graph
     var update;
     var uuid;
@@ -687,7 +691,6 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     
     if (!drawFast) {
         s3ui.updatePlotMessage(self);
-        self.idata.onscreen = true;
     }
     
     if (self.idata.showingDensity != undefined) {
