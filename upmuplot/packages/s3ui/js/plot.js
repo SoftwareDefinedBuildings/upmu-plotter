@@ -325,11 +325,9 @@ function drawPlot(self) {
     var endText = self.find(".enddate").value;
     if (startText == "") {
         loadingElem.html("Error: Start date is not selected.");
-        enableInputs(self);
         return;
     } else if (endText == "") {
         loadingElem.html("Error: End date is not selected.");
-        enableInputs(self);
         return;
     }
     var selectedTimezone = s3ui.getSelectedTimezone(self);
