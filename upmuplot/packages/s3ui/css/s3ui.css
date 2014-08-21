@@ -40,14 +40,6 @@ rect.clickscreen {
 div.permalink {
     word-wrap: break-word;
 }
-/*
-.legend td, .axes td, .axisLegend th {
-    padding: 2px;
-}
-tr.axissetting > td {
-    padding-top: 1.5em;
-}
-(no longer needed due to bootstrap's striped format) */
 .legend td {
     padding: 2px;
 }
