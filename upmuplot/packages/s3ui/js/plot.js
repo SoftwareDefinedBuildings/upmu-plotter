@@ -631,7 +631,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             if (xPixel >= WIDTH) {
                 break;
             } else if (xPixel >= 0) {
-                outOfRange = outOfRange && (mint <= 0 || mint >= HEIGHT) && (maxt <= 0 || maxt >= HEIGHT) && (mint < HEIGHT || maxt > 0);
+                outOfRange = outOfRange && (mint < 0 || mint > HEIGHT) && (maxt < 0 || maxt > HEIGHT) && (mint < HEIGHT || maxt > 0);
                 noData = false;
             }
         }
