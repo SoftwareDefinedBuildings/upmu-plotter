@@ -374,7 +374,7 @@ function drawPlot(self) {
         self.idata.oldEndDate = endDate;
         self.idata.oldXScale = xScale;
         self.idata.oldXAxis = xAxis;
-        self.idata.zoom.scaleExtent([0, endDate - startDate]); // So we don't zoom in past 1 ms
+        self.idata.zoom.scaleExtent([(endDate - startDate) / 315360000000000, endDate - startDate]); // So we don't zoom in past 1 ms, or zoom out past 10000 years
     } else {
         xScale = self.idata.oldXScale;
         xAxis = self.idata.oldXAxis;

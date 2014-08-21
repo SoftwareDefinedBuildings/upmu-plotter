@@ -46,6 +46,7 @@ The object of parameters may have the following properties (all optional):
 * height - Specifies the height of the chart area (_not_ the whole graph). Defaults to 300.
 * queryLow - The earliest time, in milliseconds since the epoch, when data can be queried. Defaults to -1152921504606. queryHigh - queryLow should be at least 2 ms.
 * queryHigh - The latest time, in milliseconds since the epoch, when data can be queried. Defaults to 3458764513820. queryHigh - queryLow should be at least 2 ms.
+* pweHigh- The highest point width exponent with which data can be queried.
 
 When the graph has been displayed, but before any interactivity is added, the
 first callback function is invoked with a single argument, namely the template

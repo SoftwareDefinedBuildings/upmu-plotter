@@ -54,6 +54,9 @@ s3ui.__init__ = function (self) {
             if (self.data[0].queryHigh != undefined) {
                 self.idata.queryHigh = self.data[0].queryHigh;
             }
+            if (self.data[0].pweHigh != undefined) {
+                self.idata.pweHigh = self.data[0].pweHigh;
+            }
             self.imethods.changeVisuals = function (options) {
                     init_visuals(self, options);
                 };

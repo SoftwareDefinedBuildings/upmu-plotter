@@ -11,8 +11,9 @@ function init_data(self) {
     
     self.idata.dataURLStart = 'http://bunker.cs.berkeley.edu/backend/api/data/uuid/';
     
-    self.idata.queryLow = -1152921504606; // in milliseconds
+    self.idata.queryLow = 0;//-1152921504606; // in milliseconds
     self.idata.queryHigh = 3458764513820; // in milliseconds
+    self.idata.pweHigh = 61;
     
     // The following fields are for rate control
     self.idata.currPWE = undefined;
@@ -119,6 +120,7 @@ function validateContiguous(cacheEntry, pwe) {
    that stream will not result in a GET request (so this function doesn't fall
    behind user input). */
 function ensureData(self, uuid, pointwidthexp, startTime, endTime, callback, caching) {
+    pointwidthexp = Math.min(self.idata.pweHigh, pointwidthexp);
     var halfPWnanos = Math.pow(2, pointwidthexp - 1) - 1;
     var halfPWmillis = halfPWnanos / 1000000;
     startTime = Math.min(Math.max(startTime, self.idata.queryLow - Math.floor(halfPWmillis)), self.idata.queryHigh - Math.ceil(halfPWmillis) - 1);
