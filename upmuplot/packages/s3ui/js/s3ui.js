@@ -200,6 +200,10 @@ function init_graph(self, c1, c2) {
     if (typeof c2 == "function") {
         c2();
     } else {
-        s3ui.executePermalink(self, c2);
+        var jsonPermalink = Meteor.call("retrievePermalink", c2, function (error, result) {
+                if (error == undefined && result != undefined) {
+                    s3ui.executePermalink(self, result);
+                }
+            });
     }
 }

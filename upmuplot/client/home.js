@@ -3,7 +3,7 @@ function parsePixelsToInt(q) {
 }
 
 if (Meteor.isClient) {
-    var localtest = false;
+    var localtest = true;
     Template.home.plot_data = [
         {
             tagsURL: localtest ? 'http://localhost:7856' : 'http://miranda.cs.berkeley.edu:4523/',

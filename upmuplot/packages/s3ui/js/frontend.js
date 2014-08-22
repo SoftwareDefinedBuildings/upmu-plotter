@@ -224,28 +224,40 @@ function createPlotDownload(self) {
 function createPermalink(self) {
     var coerce_stream;
     if (self.find(".includeMetadata").checked) {
-        coerce_stream = JSON.stringify;
+        coerce_stream = function (stream) { return JSON.parse(JSON.stringify(stream)); };
     } else {
         coerce_stream = function (stream) { return stream.uuid; };
     }
-    var permalink = 'streams=' + $.map(self.idata.selectedStreams, function (d) { return encodeURIComponent(coerce_stream(d) + "_" + self.idata.streamSettings[d.uuid].color); }).join(',');
-    permalink += '&start=' + (self.idata.oldStartDate / 1000) + '&end=' + (self.idata.oldEndDate / 1000) + '&tz=' + encodeURIComponent(self.idata.oldTimezone) + '&zoom=' + encodeURIComponent(self.idata.zoom.scale()) + '&translate=' + encodeURIComponent(self.idata.zoom.translate()[0] / self.idata.WIDTH) + '&autoupdate=' + self.idata.automaticAxisUpdate + '&axes=';
-    var axes = $.map(self.idata.yAxes, function (d) {
-            return {
-                    axisname: d.axisname,
-                    streams: $.map(d.streams, function (s) { return s.uuid; }),
-                    scale: d.manualscale, // even if it's autoscale, we want to make sure it isn't corrected for scrolling
-                    rightside: d.right
-                };
+    var streams = [];
+    var permalink = {
+            streams: self.idata.selectedStreams.map(function (d) { return {stream: coerce_stream(d), color: self.idata.streamSettings[d.uuid].color}; }),
+            start: self.idata.oldStartDate / 1000,
+            end: self.idata.oldEndDate / 1000,
+            tz: self.idata.oldTimezone,
+            zoom: self.idata.zoom.scale(),
+            translate: self.idata.zoom.translate()[0] / self.idata.WIDTH,
+            autoupdate: self.idata.automaticAxisUpdate,
+            axes: $.map(self.idata.yAxes, function (d) {
+                    return {
+                            axisname: d.axisname,
+                            streams: $.map(d.streams, function (s) { return s.uuid; }),
+                            scale: d.manualscale, // even if it's autoscale, we want to make sure it isn't corrected for scrolling
+                            rightside: d.right
+                        };
+                })
+        };
+    Meteor.call("createPermalink", permalink, function (error, result) {
+            if (error == undefined) {
+                var id = result;
+                var URL = self.idata.initPermalink + id;
+                var anchor = document.createElement("a");
+                anchor.innerHTML = URL;
+                anchor.setAttribute("href", URL);
+                var permalocation = self.find(".permalink");
+                permalocation.innerHTML = "";
+                permalocation.insertBefore(anchor, null);
+            }
         });
-    permalink += encodeURIComponent(JSON.stringify(axes));
-    var URL = self.idata.initPermalink + permalink;
-    var anchor = document.createElement("a");
-    anchor.innerHTML = URL;
-    anchor.setAttribute("href", URL);
-    var permalocation = self.find(".permalink");
-    permalocation.innerHTML = "";
-    permalocation.insertBefore(anchor, null);
 }
 
 s3ui.init_frontend = init_frontend;

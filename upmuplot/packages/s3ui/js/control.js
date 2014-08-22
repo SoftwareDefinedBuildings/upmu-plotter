@@ -292,21 +292,8 @@ function updateGraphSize() {
    in a url, creates the state of the graph it describes. This function assumes
    that the graph has just been loaded, with no streams selected or custom
    settings applied. */
-function executePermalink(self, link) {
-    if (link === "") {
-        return;
-    }
-    // Turn the data in LINK into an object
-    var args = {}; // Maps argument name to the value it was given
-    var kws = link.split("&");
-    var kw;
-    var i;
-    for (i = 0; i < kws.length; i++) {
-        kw = kws[i].split('=');
-        args[kw[0]] = kw[1];
-    }
-    
-    var streams = (args.streams || args.streamids).split(',');
+function executePermalink(self, args) {
+    var streams = (args.streams || args.streamids);
     var streamObjs = [];
     var stream;
     var colors = [];
@@ -314,17 +301,16 @@ function executePermalink(self, link) {
     var uuidMap = {}; // Maps uuid to an index in the array
     var query = ' select * where';
     for (i = 0; i < streams.length; i++) {
-        stream = decodeURIComponent(streams[i]).split('_');
-        colors.push(stream.pop());
-        stream = stream.join('_');
-        if (stream.charAt(0) == '{') {
-            streamObjs[i] = JSON.parse(stream);
+        stream = streams[i];
+        colors.push(stream.color);
+        if (typeof stream.stream == 'object') {
+            streamObjs[i] = stream.stream;
         } else {
-            uuidMap[stream] = i;
+            uuidMap[stream.stream] = i;
             if (!noRequest) {
                 query += ' or';
             }
-            query += ' uuid = "' + stream + '"';
+            query += ' uuid = "' + stream.stream + '"';
             noRequest = false;
         }
     }
@@ -363,13 +349,13 @@ function finishExecutingPermalink(self, streams, colors, args) {
     self.imethods.setStartTime(new Date(parseInt(args.start) * 1000));
     self.imethods.setEndTime(new Date(parseInt(args.end) * 1000));
     if (args.hasOwnProperty('tz')) {
-        self.imethods.setTimezone(decodeURIComponent(args.tz));
+        self.imethods.setTimezone(args.tz);
     }
     if (args.hasOwnProperty('zoom')) {
-        self.idata.initzoom = parseFloat(decodeURIComponent(args.zoom));
+        self.idata.initzoom = parseFloat(args.zoom);
     }
     if (args.hasOwnProperty('translate')) {
-        self.idata.inittrans = parseFloat(decodeURIComponent(args.translate * self.idata.WIDTH));
+        self.idata.inittrans = parseFloat(args.translate * self.idata.WIDTH);
     }
     if (args.hasOwnProperty('autoupdate')) {
         if (!args.autoupdate) {
@@ -377,7 +363,7 @@ function finishExecutingPermalink(self, streams, colors, args) {
         }
     }
     if (args.hasOwnProperty('axes')) {
-        var axes = JSON.parse(decodeURIComponent(args.axes));
+        var axes = args.axes;
         var yAxes = self.idata.yAxes;
         while (axes.length > yAxes.length) {
             self.imethods.addAxis();
