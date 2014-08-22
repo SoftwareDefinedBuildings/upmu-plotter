@@ -1,6 +1,6 @@
 // This code is to be run on the Meteor server (all other files in this package are to be run on the client)
 
-s3ui_permalinks = new Meteor.Collection("s3ui-permalinks");
+s3ui_permalinks = new Meteor.Collection("s3ui_permalinks");
 
 Meteor.methods({
         processQuery: function (query, type) {
@@ -40,4 +40,44 @@ Meteor.methods({
                 }
                 return obj;
             }
+    });
+    
+Router.map(function () {
+        this.route('permalink_generator', {
+                path: '/s3ui_permalink',
+                where: 'server',
+                action: function () {
+                        this.response.statusCode = 400;
+                        this.response.setHeader('Content-Type', 'text/plain');
+                        if (this.request.method != "POST") {
+                            this.response.write("To create a permalink, send the data as a JSON document via a POST request. Use the following format:\n\npermalink_data=<JSON>");
+                            this.response.end();
+                            return;
+                        }
+                        var jsonPermalink = this.request.body.permalink_data;
+                        var id;
+                        if (jsonPermalink == undefined) {
+                            this.response.write("Error: required key 'permalink_data' is not present");
+                            this.response.end();
+                        } else {
+                            try {
+                                jsonPermalink = JSON.parse(jsonPermalink);
+                            } catch (exception) {
+                                this.response.write("Error: received invalid JSON: " + exception);
+                                this.response.end();
+                                return;
+                            }
+                            try {
+                                id = Meteor.call('createPermalink', jsonPermalink);
+                            } catch (exception) {
+                                this.response.write("Error: document could not be inserted into Mongo database: " + exception);
+                                this.response.end();
+                                return;
+                            }
+                            this.response.statusCode = 200;
+                            this.response.write(id);
+                            this.response.end();
+                        }
+                    }
+            });
     });

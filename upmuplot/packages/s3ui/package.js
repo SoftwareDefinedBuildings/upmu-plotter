@@ -11,6 +11,7 @@ Package.on_use(function (api) {
   api.use('templating');
   api.use('newd3');
   api.use('colResizable');
+  api.use('iron-router');
 
   var path = Npm.require('path');
   var asset_path = path.join('.');
