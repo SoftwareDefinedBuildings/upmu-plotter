@@ -421,6 +421,9 @@ function setTimeZoom(self, start, end, resetStart, resetEnd, tz) {
         resetStart = Math.round(resetStart / 1000000);
         resetEnd = Math.round(resetEnd / 1000000);
     }
+    if (resetStart === resetEnd) {
+        resetEnd++;
+    }
     self.idata.inittrans = (resetStart - start) / (end - start) * self.idata.WIDTH;
     self.idata.initzoom = (resetEnd - resetStart) / (end - start);
     var offset = 60000 * ((new Date()).getTimezoneOffset() - (new timezoneJS.Date(tz)).getTimezoneOffset());

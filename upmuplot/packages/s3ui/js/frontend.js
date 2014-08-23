@@ -166,17 +166,24 @@ function toggleLegend (self, show, streamdata, update) {
 function setStreamMessage(self, uuid, message, importance) {
     var messages = self.idata.streamMessages[uuid];
     messages[0][importance] = message;
+    var messageLoc;
     if (message == undefined) {
         if (importance == messages[1]) {
             while (messages[0][importance] == undefined) {
                 importance--;
             }
             messages[1] = importance;
-            self.find(".message-" + uuid).innerHTML = messages[0][importance];
+            messageLoc = self.find(".message-" + uuid);
+            if (messageLoc != null) {
+                messageLoc.innerHTML = messages[0][importance];
+            }
         }
     } else if (importance >= messages[1]) {
         messages[1] = importance;
-        self.find(".message-" + uuid).innerHTML = message;
+        messageLoc = self.find(".message-" + uuid)
+        if (messageLoc != null) {
+            messageLoc.innerHTML = message;
+        }
     }
 }
 

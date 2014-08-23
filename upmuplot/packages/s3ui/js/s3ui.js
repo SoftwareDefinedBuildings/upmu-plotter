@@ -45,6 +45,9 @@ s3ui.__init__ = function (self) {
             if (self.data[0].tagsURL != undefined) {
                 self.idata.tagsURL = self.data[0].tagsURL;
             }
+            if (self.data[0].bracketURL != undefined) {
+                self.idata.bracketURL = self.data[0].bracketURL;
+            }
             if (self.data[0].permalinkStart != undefined) {
                 self.idata.initPermalink = self.data[0].permalinkStart;
             }
@@ -144,6 +147,26 @@ function init_graph(self, c1, c2) {
         };
     self.find(".resetZoom").onclick = function () {
             s3ui.resetZoom(self);
+        };
+    self.find(".showAll").onclick = function () {
+            if (self.idata.selectedStreamsBuffer.length > 0) {
+                self.imethods.resetZoom();
+                s3ui.getURL("SENDPOST " + self.idata.bracketURL + " " + JSON.stringify({"UUIDS": self.idata.selectedStreamsBuffer.map(function (s) { return s.uuid; })}), function (data) {
+                        var range;
+                        try {
+                            range = JSON.parse(data).Merged;
+                        } catch (err) {
+                            console.log("Autozoom error: " + err.message);
+                            return;
+                        }
+                        var offset = 60000 * ((new Date()).getTimezoneOffset() - (new timezoneJS.Date(s3ui.getSelectedTimezone(self))).getTimezoneOffset());
+                        self.imethods.setStartTime(new Date(Math.floor(range[0] / 1000000) + offset));
+                        self.imethods.setEndTime(new Date(Math.floor(range[1] / 1000000) + offset));
+                        self.imethods.applyAllSettings();
+                    });
+            } else {
+                self.find(".plotLoading").innerHTML = "Error: No streams are selected.";
+            }
         };
     self.find(".automaticAxisSetting").onchange = function () {
             self.idata.automaticAxisUpdate = !self.idata.automaticAxisUpdate;
