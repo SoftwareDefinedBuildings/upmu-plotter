@@ -5,6 +5,7 @@ function bind_method(func, self) {
 }
 
 function init_control(self) {
+    self.idata.bracketURL = 'http://quasar.cal-sdb.org:9000/q/bracket';
     self.imethods.setStartTime = bind_method(setStartTime, self);
     self.imethods.setEndTime = bind_method(setEndTime, self);
     self.imethods.setTimezone = bind_method(setTimezone, self);
@@ -346,10 +347,10 @@ function finishExecutingPermalink(self, streams, colors, args) {
             }
         }
     }
-    self.imethods.setStartTime(new Date(parseInt(args.start) * 1000));
-    self.imethods.setEndTime(new Date(parseInt(args.end) * 1000));
     if (args.hasOwnProperty('tz')) {
         self.imethods.setTimezone(args.tz);
+    } else {
+        args.tz = s3ui.getSelectedTimezone(self);
     }
     if (args.hasOwnProperty('zoom')) {
         self.idata.initzoom = parseFloat(args.zoom);
@@ -391,6 +392,40 @@ function finishExecutingPermalink(self, streams, colors, args) {
             }
         }
     }
+    var start;
+    var end;
+    var resetStart;
+    var resetEnd;
+    if (args.window_type == "now") {
+        var currTime = new Date();
+        end = currTime.getTime() + (currTime.getTimezoneOffset() * 60000) - ((new timezoneJS.Date(args.tz)).getTimezoneOffset() * 60000);
+        start = end - Math.round(args.window_width / 1000000);
+    } else if (args.window_type == "last") {
+        s3ui.getURL("SENDPOST " + self.idata.bracketURL + " " + JSON.stringify({"UUIDS": self.idata.selectedStreamsBuffer.map(function (s) { return s.uuid; })}), function (data) {
+                var response = JSON.parse(data);
+                end = Math.round(response.Merged[1] / 1000000) + ((new Date()).getTimezoneOffset() * 60000) - ((new timezoneJS.Date(args.tz)).getTimezoneOffset() * 60000);
+                start = end - Math.ceil(args.window_width / 1000000);
+                setTimeZoom(self, start, end, args.resetStart, args.resetEnd, args.tz);
+            }, 'text/json');
+    } else {
+        start = Math.round(args.start / 1000000);
+        end = Math.round(args.end / 1000000);
+    }
+    setTimeZoom(self, start, end, args.resetStart, args.resetEnd, args.tz);
+}
+
+function setTimeZoom(self, start, end, resetStart, resetEnd, tz) {
+    if (resetStart == undefined || resetEnd == undefined) {
+        resetStart = Math.floor(start / 1000) * 1000;
+        resetEnd = Math.ceil(end / 1000) * 1000;
+    } else {
+        resetStart = Math.round(resetStart / 1000000);
+        resetEnd = Math.round(resetEnd / 1000000);
+    }
+    self.idata.inittrans = (resetStart - start) / (end - start) * self.idata.WIDTH;
+    self.idata.initzoom = (resetEnd - resetStart) / (end - start);
+    self.imethods.setStartTime(new Date(resetStart + 60000 * (new Date()).getTimezoneOffset() - 60000 * (new timezoneJS.Date(tz)).getTimezoneOffset()));
+    self.imethods.setEndTime(new Date(resetEnd + 60000 * (new Date()).getTimezoneOffset() - 60000 * (new timezoneJS.Date(tz)).getTimezoneOffset()));
     self.imethods.applyAllSettings();
 }
 

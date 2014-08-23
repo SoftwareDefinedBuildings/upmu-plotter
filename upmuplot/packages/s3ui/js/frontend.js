@@ -228,14 +228,15 @@ function createPermalink(self) {
     } else {
         coerce_stream = function (stream) { return stream.uuid; };
     }
+    var domain = self.idata.oldXScale.domain();
     var streams = [];
     var permalink = {
             streams: self.idata.selectedStreams.map(function (d) { return {stream: coerce_stream(d), color: self.idata.streamSettings[d.uuid].color}; }),
-            start: self.idata.oldStartDate / 1000,
-            end: self.idata.oldEndDate / 1000,
+            resetStart: self.idata.oldStartDate * 1000000,
+            resetEnd: self.idata.oldEndDate * 1000000,
             tz: self.idata.oldTimezone,
-            zoom: self.idata.zoom.scale(),
-            translate: self.idata.zoom.translate()[0] / self.idata.WIDTH,
+            start: (domain[0].getTime() - self.idata.offset) * 1000000,
+            end: (domain[1].getTime() - self.idata.offset) * 1000000,
             autoupdate: self.idata.automaticAxisUpdate,
             axes: $.map(self.idata.yAxes, function (d) {
                     return {
