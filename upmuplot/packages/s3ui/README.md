@@ -17,10 +17,9 @@ operator in a data context:
 {{/with}}</code></pre>
 
 If "somecontext" is an array (or array-like object) with an object at index 0,
-a function at index 1, and either a function or string at index 2, the object
-at index 0 is interpreted as specifying parameters and the functions at indices
-1 and 2 are interpreted as callback functions. If a string is specified at
-index 2, it is interpreted as a Permalink.
+a function at index 1, and a function at index 2, the object at index 0 is
+interpreted as specifying parameters and the functions at indices 1 and 2 are
+interpreted as callback functions.
 
 The object of parameters may have the following properties (all optional):
 
@@ -40,9 +39,9 @@ The object of parameters may have the following properties (all optional):
 * disable\_color\_selection - TRUE if the color selection menu within the legend is to be disabled. Defaults to FALSE.
 * permalinkStart - Specifies the start of the permalink URL. Defaults to the current window location of the browser, excluding any seach queries in the URL, but including the question mark.
 * dataURLStart - Specifies the start of the url where to get data. Defaults to "http://bunker.cs.berkeley.edu/backend/api/data/uuid/".
-* tagsURL - Specifies the url to query to get stream info. Defaults "http://new.openbms.org/backend/api/query?".
-* bracketURL - Specifies the url to query to find the time range in which streams have data.
-* width - A function that returns the targed width of the graph (_not_ just the chart area) to use. Defaults to function () { return 0.75 * window.innerWidth; }
+* tagsURL - Specifies the url to query to get stream info. Defaults to "http://new.openbms.org/backend/api/query?".
+* bracketURL - Specifies the url to query to find the time range in which streams have data. Defaults to "http://quasar.cal-sdb.org:9000/q/brackets".
+* width - A function that returns the targed width of the graph (_not_ just the chart area) to use. Defaults to a function that sizes the graph to the well it is in ("div.chartContainer"). If you plan to override this with a custom setting, the s3ui.pixelsToInt helper function may be of interest to you.
 * widthmin - The minimum width, in pixels, of the width of the chart area (_not_ the whole graph). Defaults to 300.
 * height - Specifies the height of the chart area (_not_ the whole graph). Defaults to 300.
 * queryLow - The earliest time, in milliseconds since the epoch, when data can be queried. Defaults to 0. queryHigh - queryLow should be at least 2 ms, and queryLow must be at least 0 for correct performance.
@@ -61,7 +60,16 @@ customized layout.
 
 The second callback function is called when the tree of streams is initialized,
 not fully loaded. Here, streams and settings can be selected programmatically.
-If a string is passed here instead, it is executed as a permalink.
+
+The defaults for the callbacks are included in the global s3ui object as
+s3ui.default\_cb1 and s3ui.default\_cb2. The default first callback makes the
+left column in the default layout resizable. The default second callback reads
+the page's URL and executes a permalink if present. These callback functions
+can be overriden by instantiating the graph with different functions. If
+one desires to use options (see above) but keep the callback functions the
+same, one can simply put s3ui.default\_cb1 and s3ui.default\_cb2 into the
+array. One can also do a partial override, i.e. use a function that calls the
+default callback and does additional work.
 
 Custom Layouts
 --------------
@@ -76,6 +84,7 @@ To make creating the HTML layout easier, several sub-templates are included.
 They are:
 
 * s3plot_plotStyles
+* s3plot_permalink
 * s3plot_graphExport
 * s3plot_chart
 * s3plot_streamLegend
@@ -85,12 +94,15 @@ They are:
 * s3plot_streamSelection
 
 These templates can be included in the custom template. But if you want a
-higher degree of customization, you can include the template components
-directly (though be aware that the relative positioning of the components
+higher degree of customization, you can write your own template components
+from scratch (though be aware that the relative positioning of the components
 of the stream and axis legends may be necessary for the correctness of the
 graph). If you do not want all of the features of the graph, you _must_ still
-include all of the templates; use the appropriate parameters upon instantiation
+include all of the components; use the appropriate parameters on instantiation
 to hide the components you do not need (see above).
+
+As a rule of thumb, any element in the "s3plot" template that has a class not
+provided by Bootstrap contributes to the functioning of the graph in some way.
 
 Programmatically Changing the Graph
 -----------------------------------

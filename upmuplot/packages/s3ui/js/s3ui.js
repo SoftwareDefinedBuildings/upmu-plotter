@@ -1,7 +1,34 @@
 s3ui = {instances: [], instanceid: -1}; // stores functions used in multiple files
 
+s3ui.parsePixelsToInt = function (q) {
+    return parseFloat(q.slice(0, q.length - 2));
+}
+
+s3ui.default_cb1 = function (inst) {
+        $(inst.find(".dispTable")).colResizable({
+                    hoverCursor: "ew-resize",
+                    dragCursor: "ew-resize",
+                    minWidth: 0,
+                    onResize: inst.imethods.updateGraphSize
+                });
+    };
+    
+s3ui.default_cb2 = function (inst) {
+        if (window.location.search.length > 0) {
+            s3ui.exec_permalink(inst, window.location.search.slice(1));
+        }
+    };
+
 Template.s3plot.rendered = function () {
         s3ui.__init__(this);
+    };
+    
+s3ui.exec_permalink = function (self, link_id) {
+        Meteor.call("retrievePermalink", link_id, function (error, result) {
+                if (error == undefined && result != undefined) {
+                    s3ui.executePermalink(self, result);
+                }
+            });
     };
     
 s3ui.__init__ = function (self) {
@@ -66,8 +93,8 @@ s3ui.__init__ = function (self) {
             c1 = self.data[1];
             c2 = self.data[2];
         } else {
-            c1 = function () {};
-            c2 = c1;
+            c1 = s3ui.default_cb1;
+            c2 = s3ui.default_cb2;
         }
         
         init_graph(self, c1, c2);
@@ -220,13 +247,6 @@ function init_graph(self, c1, c2) {
     
     s3ui.updateStreamList(self);
     
-    if (typeof c2 == "function") {
-        c2();
-    } else {
-        var jsonPermalink = Meteor.call("retrievePermalink", c2, function (error, result) {
-                if (error == undefined && result != undefined) {
-                    s3ui.executePermalink(self, result);
-                }
-            });
-    }
+    // Second callback
+    c2(self);
 }
