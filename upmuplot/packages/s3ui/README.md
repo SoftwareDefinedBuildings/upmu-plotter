@@ -28,13 +28,14 @@ The object of parameters may have the following properties (all optional):
 * hide\_stream\_legend - TRUE if the legend displaying streams is to be hidden. Defaults to FALSE.
 * hide\_axis\_legend - TRUE if the legend displaying axes is to be hidden. Defaults to FALSE.
 * hide\_automatic\_update - TRUE if the checkbox specifying whether stream removals and axis changes should be applied automatically is to be hidden. Defaults to FALSE.
-* hide\_apply\_button - TRUE if the "Apply all Settings and Plot Now" button is to be hidden. Defaults to FALSE.
+* hide\_apply\_button - TRUE if the "Apply and Plot" button is to be hidden. Defaults to FALSE.
 * hide\_reset\_button - TRUE if the "Reset Zoom" button is to be hidden. Defaults to FALSE.
+* hide\_autozoom\_button - True if the "Autozoom and Plot" button is to be hiddn. Defaults to FALSE.
 * hide\_info\_bar - TRUE if the area where general messages are displayed is to be hidden. Defaults to FALSE.
 * hide\_time\_selection - TRUE if the menu to select the start and end times is to be hidden. Defaults to FALSE.
 * hide\_stream\_tree - TRUE if the tree used to select streams is to be hidden. Defaults to FALSE.
 * hide\_plot\_directions - TRUE if the directions for how to use the interface are to be hidden. Defaults to FALSE
-* hide\_refresh\button - TRUE if the "Refresh Stream Tree" button is to be hidden. Defaults to FALSE.
+* hide\_refresh\_button - TRUE if the "Refresh Stream Tree" button is to be hidden. Defaults to FALSE.
 * hide\_axis\_selection - TRUE if the axis selection menu within the legend is to be hidden. Defaults to FALSE.
 * disable\_color\_selection - TRUE if the color selection menu within the legend is to be disabled. Defaults to FALSE.
 * permalinkStart - Specifies the start of the permalink URL. Defaults to the current window location of the browser, excluding any seach queries in the URL, but including the question mark.
