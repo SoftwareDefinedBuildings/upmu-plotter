@@ -397,13 +397,12 @@ function finishExecutingPermalink(self, streams, colors, args) {
     var resetStart;
     var resetEnd;
     if (args.window_type == "now") {
-        var currTime = new Date();
-        end = currTime.getTime() + (currTime.getTimezoneOffset() * 60000) - ((new timezoneJS.Date(args.tz)).getTimezoneOffset() * 60000);
+        end = (new Date()).getTime();
         start = end - Math.round(args.window_width / 1000000);
     } else if (args.window_type == "last") {
         s3ui.getURL("SENDPOST " + self.idata.bracketURL + " " + JSON.stringify({"UUIDS": self.idata.selectedStreamsBuffer.map(function (s) { return s.uuid; })}), function (data) {
                 var response = JSON.parse(data);
-                end = Math.round(response.Merged[1] / 1000000) + ((new Date()).getTimezoneOffset() * 60000) - ((new timezoneJS.Date(args.tz)).getTimezoneOffset() * 60000);
+                end = Math.round(response.Merged[1] / 1000000);
                 start = end - Math.ceil(args.window_width / 1000000);
                 setTimeZoom(self, start, end, args.resetStart, args.resetEnd, args.tz);
             }, 'text/json');
@@ -424,8 +423,9 @@ function setTimeZoom(self, start, end, resetStart, resetEnd, tz) {
     }
     self.idata.inittrans = (resetStart - start) / (end - start) * self.idata.WIDTH;
     self.idata.initzoom = (resetEnd - resetStart) / (end - start);
-    self.imethods.setStartTime(new Date(resetStart + 60000 * (new Date()).getTimezoneOffset() - 60000 * (new timezoneJS.Date(tz)).getTimezoneOffset()));
-    self.imethods.setEndTime(new Date(resetEnd + 60000 * (new Date()).getTimezoneOffset() - 60000 * (new timezoneJS.Date(tz)).getTimezoneOffset()));
+    var offset = 60000 * ((new Date()).getTimezoneOffset() - (new timezoneJS.Date(tz)).getTimezoneOffset());
+    self.imethods.setStartTime(new Date(resetStart + offset));
+    self.imethods.setEndTime(new Date(resetEnd + offset));
     self.imethods.applyAllSettings();
 }
 
