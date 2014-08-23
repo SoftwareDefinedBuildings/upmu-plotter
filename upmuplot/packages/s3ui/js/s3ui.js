@@ -187,6 +187,10 @@ function init_graph(self, c1, c2) {
                             console.log("Autozoom error: " + err.message);
                             return;
                         }
+                        if (range == undefined) {
+                            self.find(".plotLoading").innerHTML = "Error: Selected streams have no data.";
+                            return;
+                        }
                         var offset = 60000 * ((new Date()).getTimezoneOffset() - (new timezoneJS.Date(s3ui.getSelectedTimezone(self))).getTimezoneOffset());
                         self.imethods.setStartTime(new Date(Math.floor(range[0] / 1000000) + offset));
                         self.imethods.setEndTime(new Date(Math.floor(range[1] / 1000000) + offset));

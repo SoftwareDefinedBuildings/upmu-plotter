@@ -154,6 +154,9 @@ starts a fixed number of nanoseconds before that. Finally, a permalink of type
 "last" always ends at the last data point of the streams being displayed, and
 starts a fixed number of nanoseconds before that.
 
+In order that the graph be displayed correctly, the final start and end times
+must be in the current UNIX epoch (i.e., Jan 01, 1970, UTC or later).
+
 For the permalink, the following fields are may be specified in the JSON object:
 
 * autoupdate (optional) - Determines whether or nor the "Automatically apply settings" checkbox is checked. Defaults to TRUE.
