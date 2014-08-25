@@ -106,9 +106,10 @@ function init_visuals(self, options) {
     setVisibility(self, options, "div.streamLegend-" + self.idata.instanceid, "hide_stream_legend");
     setVisibility(self, options, "div.axisLegend", "hide_axis_legend");
     setVisibility(self, options, "span.automaticUpdate", "hide_automatic_update");
-    setVisibility(self, options, "button.plotButton", "hide_apply_button");
-    setVisibility(self, options, "button.resetZoom", "hide_reset_button");
-    setVisibility(self, options, "span.plotLoading", "hide_info_bar");
+    setVisibility(self, options, "div.plotButton", "hide_apply_button");
+    setVisibility(self, options, "div.resetZoom", "hide_reset_button");
+    setVisibility(self, options, "div.showAll", "hide_autozoom_button");
+    setVisibility(self, options, "div.plotLoading", "hide_info_bar");
     setVisibility(self, options, "div.timeSelection", "hide_time_selection");
     setVisibility(self, options, "div.streamSelection", "hide_stream_tree");
     setVisibility(self, options, "g.plotDirections", "hide_plot_directions");
@@ -184,6 +185,10 @@ function init_graph(self, c1, c2) {
                             range = JSON.parse(data).Merged;
                         } catch (err) {
                             console.log("Autozoom error: " + err.message);
+                            return;
+                        }
+                        if (range == undefined) {
+                            self.find(".plotLoading").innerHTML = "Error: Selected streams have no data.";
                             return;
                         }
                         var offset = 60000 * ((new Date()).getTimezoneOffset() - (new timezoneJS.Date(s3ui.getSelectedTimezone(self))).getTimezoneOffset());

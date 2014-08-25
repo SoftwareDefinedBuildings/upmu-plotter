@@ -29,6 +29,7 @@ function getURL(url, success_callback, type, error_callback) {
             if (error == undefined) {
                 success_callback(result);
             } else if (error_callback != undefined) {
+                console.log(result);
                 error_callback(error, result);
             }
         });

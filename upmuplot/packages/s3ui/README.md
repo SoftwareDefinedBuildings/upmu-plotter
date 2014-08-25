@@ -28,13 +28,14 @@ The object of parameters may have the following properties (all optional):
 * hide\_stream\_legend - TRUE if the legend displaying streams is to be hidden. Defaults to FALSE.
 * hide\_axis\_legend - TRUE if the legend displaying axes is to be hidden. Defaults to FALSE.
 * hide\_automatic\_update - TRUE if the checkbox specifying whether stream removals and axis changes should be applied automatically is to be hidden. Defaults to FALSE.
-* hide\_apply\_button - TRUE if the "Apply all Settings and Plot Now" button is to be hidden. Defaults to FALSE.
+* hide\_apply\_button - TRUE if the "Apply and Plot" button is to be hidden. Defaults to FALSE.
 * hide\_reset\_button - TRUE if the "Reset Zoom" button is to be hidden. Defaults to FALSE.
+* hide\_autozoom\_button - True if the "Autozoom and Plot" button is to be hiddn. Defaults to FALSE.
 * hide\_info\_bar - TRUE if the area where general messages are displayed is to be hidden. Defaults to FALSE.
 * hide\_time\_selection - TRUE if the menu to select the start and end times is to be hidden. Defaults to FALSE.
 * hide\_stream\_tree - TRUE if the tree used to select streams is to be hidden. Defaults to FALSE.
 * hide\_plot\_directions - TRUE if the directions for how to use the interface are to be hidden. Defaults to FALSE
-* hide\_refresh\button - TRUE if the "Refresh Stream Tree" button is to be hidden. Defaults to FALSE.
+* hide\_refresh\_button - TRUE if the "Refresh Stream Tree" button is to be hidden. Defaults to FALSE.
 * hide\_axis\_selection - TRUE if the axis selection menu within the legend is to be hidden. Defaults to FALSE.
 * disable\_color\_selection - TRUE if the color selection menu within the legend is to be disabled. Defaults to FALSE.
 * permalinkStart - Specifies the start of the permalink URL. Defaults to the current window location of the browser, excluding any seach queries in the URL, but including the question mark.
@@ -44,7 +45,7 @@ The object of parameters may have the following properties (all optional):
 * width - A function that returns the targed width of the graph (_not_ just the chart area) to use. Defaults to a function that sizes the graph to the well it is in ("div.chartContainer"). If you plan to override this with a custom setting, the s3ui.pixelsToInt helper function may be of interest to you.
 * widthmin - The minimum width, in pixels, of the width of the chart area (_not_ the whole graph). Defaults to 300.
 * height - Specifies the height of the chart area (_not_ the whole graph). Defaults to 300.
-* queryLow - The earliest time, in milliseconds since the epoch, when data can be queried. Defaults to 0. queryHigh - queryLow should be at least 2 ms, and queryLow must be at least 0 for correct performance.
+* queryLow - The earliest time, in milliseconds since the epoch, when data can be queried. Defaults to 0. queryHigh - queryLow should be at least 2 ms, and queryLow must be at least 0 for correct functionality.
 * queryHigh - The latest time, in milliseconds since the epoch, when data can be queried. Defaults to 3458764513820. queryHigh - queryLow should be at least 2 ms.
 * pweHigh- The highest point width exponent with which data can be queried.
 
@@ -123,7 +124,7 @@ The bound methods provided are:
 * removeAxis(id) - Removes the axis with the specified ID, reassigning streams as necessary. The axis with the id "y1" cannot be removed.
 * renameAxis(id, newName) - Assigns the name NEWNAME to the axis with the specified ID.
 * setAxisSide(id, leftOrRight) - Sets the side of the chart area where the axis with the specified ID will be displayed. If LEFTORRIGHT is true, it is set to the left side; otherwise it is set to the right side.
-* setAxisScale(id, low, high) - Sets the scale of the axis with the specifed ID to the interval [LOW, HIGH]. If one of LOW and HIGH is undefined, only the other endpoint of the interval is set; if both are undefined, the "Autoscale" feature is turned on for that axis.
+* setAxisScale(id, low, high) - Sets the scale of the axis with the specifed ID to have the specified LOW and HIGH values. If one of LOW and HIGH is undefined, only the other endpoint of the interval is set; if both are undefined, the "Autoscale" feature is turned on for that axis.
 * setStreamAxis(uuid, id) - Assigns the stream with the specifed UUID to the axis with the specified ID.
 * setStreamColor(uuid, color) - Sets the color for the stream with the specified UUID to COLOR.
 * applyAllSettings() - Programmatically clicks the "Apply All Settings and Update Plot" button.
@@ -131,3 +132,140 @@ The bound methods provided are:
 * toggleAutomaticUpdate() - Programmatically checks or unchecks the "Automatically apply stream removals and changes to axis settings" checkbox.
 * updateGraphSize() - Uses the width function to recompute the width of the graph.
 * changeVisuals(options) - Reinitializes the visuals with the specified OPTIONS, according to the parameters specified (from the list above). The only differences between this function and the instantiation of the graph is that the "width" and "height" properties are ignored, and the new default values are those currently applied.
+
+Permalinks
+----------
+The permalink feature allows one to save the state of the graph and load it
+later using a generated permalink. To generate a permalink, click the "Generate
+Permalink" button on the graph UI.
+
+If you would prefer to generate a permalink programmatically by specifying the
+settings of the graph rather than by creating the graph by hand, you should
+instead send a POST request to {domain}/s3ui\_permalink. The payload of the
+POST request should be of the form
+<pre><code>permalink_data={JSON}</code></pre>
+where data specifying the settings of the graph are specified in {JSON}.
+
+The permalink API allows three methods for specifying a permalink. A permalink
+may be specified as "fixed", meaning that the start and end times are specified
+in the number of nanoseconds since the UNIX epoch (Jan 1, 1970, UTC). A
+permalink of type "now" always ends at the time the permalink is executed, and
+starts a fixed number of nanoseconds before that. Finally, a permalink of type
+"last" always ends at the last data point of the streams being displayed, and
+starts a fixed number of nanoseconds before that.
+
+In order that the graph be displayed correctly, the final start and end times
+must be in the current UNIX epoch (i.e., Jan 01, 1970, UTC or later).
+
+For the permalink, the following fields are may be specified in the JSON object:
+
+* autoupdate (optional) - Determines whether or nor the "Automatically apply settings" checkbox is checked. Defaults to TRUE.
+* axes (optional) - A list of axis objects (see below for the schema of these objects) that specify the settings of the axes. If not specified, a reasonable default is chosen at runtime; all axes are on the left side of the graph, the axis names are just y1, y2, etc., streams are assigned to axes based on their units, and the scales of the axes are chosen based on the ranges of the streams assigned.
+* resetStart (optional) - The start time that should be used when the "Reset Zoom" button is clicked. If not specified, a default value close to the start time initially displayed is chosen. For consistency, this value is specified in nanoseconds since the UNIX epoch in UTC time, but the value used is only precise up to the second.
+* resetEnd (optional) - The end time that should be used when the "Reset Zoom" button is clicked. If not specified, a default value close to the end time initially displayed is chosen. For consistency, this value is specified in nanoseconds since the UNIX epoch in UTC time, but the value used is only precise up to the second.
+* tz (optional) - The time zone in which the graph should be displayed. Defaults to "America/Los_Angeles". All dates in the permalink are specified in nanoseconds since the epoch in UTC time, regardless of the value of this parameter.
+* streams (required) - A list of objects specifying streams (see below for the schema of these objects).
+* window\_type (optional) - A string specifying the type of window to be used. The possible values are "fixed", "last", and "now". If an invalid string is used or the key is omitted altogether, defaults to "fixed".
+* window\_width (conditional) - The width of the window, specified in nanoseconds since the epoch (but precise to milliseconds). Required if the window\_type is "last" or "now", otherwise ignored.
+* start (conditional) - The start time of the window, specified in nanoseconds since the epoch (but precise to milliseconds). Required if the window\_type if "fixed", otherwise ignored.
+* end (conditional) - The start time of the window, specified in nanoseconds since the epoch (but precise to milliseconds). Required if the window\_type if "fixed", otherwise ignored.
+
+The axis objects require the following fields:
+
+* axisname - A string specifying the name of the axis.
+* streams - An array of UUIDS of streams to be displayed on this axis.
+* scale - A two element array specifying the lowest and highest values (in that order) to be displayed on this axis.
+* rightside - Specifies where this axis should be drawn. TRUE means the axis should be drawn on the right side of the chart area, FALSE means the axis should be drawn on the left side of the chart area, and NULL means that the axis should be drawn in the graph.
+
+The objects specifying streams may have the following fields:
+
+* stream (required) - Specifies which stream should be drawn here, either as a UUID in the form of a string, or as an object containing all of the metadata of the stream.
+* color (optional) - Specifies with what color the stream should be drawn, as a string with a pound sign (#) and a six-digit hexadecimal number specifying the color. This color _must_ be one of the colors that it is possible to pick with the color picker in the graph's UI. Defaults to one of the possible colors, depening of the stream's position in the legend.
+
+Below is an example of permalink data that uses a fixed window:
+<pre><code>{
+	"autoupdate" : true,
+	"axes" : [
+		{
+			"axisname" : "y1", 
+			"streams" : [
+				"49129d4a-335e-4c81-a8a4-27f5d8c45646"
+			],
+			"scale" : [
+				-1,
+				1
+			],
+			"rightside" : false
+		},
+		{
+			"axisname" : "y2",
+			"streams" : [
+				"571ce598-3ffd-499b-be6c-0df52e597c93"
+			],
+			"scale" : [
+				-2,
+				2
+			],
+			"rightside" : null
+		}
+	],
+	"end" : 1408234686223000000,
+	"resetEnd" : 1408746931000000000,
+	"resetStart" : 1377210944000000000,
+	"start" : 1408234676466000000,
+	"streams" : [
+		{
+			"stream" : "49129d4a-335e-4c81-a8a4-27f5d8c45646",
+			"color" : "#000000"
+		},
+		{
+			"stream" : "571ce598-3ffd-499b-be6c-0df52e597c93",
+			"color" : "#0000FF"
+		}
+	],
+	"tz" : "America/Los_Angeles"
+}</code></pre>
+
+Below is an example of permalink data that uses a window of type "now" (a window of type "last" would be very similar):
+<pre><code>{
+	"autoupdate" : true,
+	"axes" : [
+		{
+			"axisname" : "y1", 
+			"streams" : [
+				"49129d4a-335e-4c81-a8a4-27f5d8c45646"
+			],
+			"scale" : [
+				-1,
+				1
+			],
+			"rightside" : false
+		},
+		{
+			"axisname" : "y2",
+			"streams" : [
+				"571ce598-3ffd-499b-be6c-0df52e597c93"
+			],
+			"scale" : [
+				-2,
+				2
+			],
+			"rightside" : null
+		}
+	],
+	"window_type" : "now",
+	"window_width" : 60000000000,
+	"resetEnd" : 1408746931000000000,
+	"resetStart" : 1377210944000000000,
+	"streams" : [
+		{
+			"stream" : "49129d4a-335e-4c81-a8a4-27f5d8c45646",
+			"color" : "#000000"
+		},
+		{
+			"stream" : "571ce598-3ffd-499b-be6c-0df52e597c93",
+			"color" : "#0000FF"
+		}
+	],
+	"tz" : "America/Los_Angeles"
+}</code></pre>

@@ -352,12 +352,6 @@ function finishExecutingPermalink(self, streams, colors, args) {
     } else {
         args.tz = s3ui.getSelectedTimezone(self);
     }
-    if (args.hasOwnProperty('zoom')) {
-        self.idata.initzoom = parseFloat(args.zoom);
-    }
-    if (args.hasOwnProperty('translate')) {
-        self.idata.inittrans = parseFloat(args.translate * self.idata.WIDTH);
-    }
     if (args.hasOwnProperty('autoupdate')) {
         if (!args.autoupdate) {
             self.toggleAutomaticUpdate();
@@ -398,17 +392,37 @@ function finishExecutingPermalink(self, streams, colors, args) {
     var resetEnd;
     if (args.window_type == "now") {
         end = (new Date()).getTime();
-        start = end - Math.round(args.window_width / 1000000);
+        start = end - nanos_to_millis(args.window_width);
+        if ((end - start) * 1000000 < args.window_width) {
+            start--;
+        }
     } else if (args.window_type == "last") {
         s3ui.getURL("SENDPOST " + self.idata.bracketURL + " " + JSON.stringify({"UUIDS": self.idata.selectedStreamsBuffer.map(function (s) { return s.uuid; })}), function (data) {
                 var response = JSON.parse(data);
-                end = Math.round(response.Merged[1] / 1000000);
-                start = end - Math.ceil(args.window_width / 1000000);
+                console.log(response);
+                end = nanos_to_millis(response.Merged[1]);
+                start = end - nanos_to_millis(args.window_width);
+                if (end * 1000000 < response.Merged[1]) {
+                    end++;
+                }
+                if ((end - start) * 1000000 < args.window_width) {
+                    start--;
+                }
+                console.log(start);
+                console.log(end);
                 setTimeZoom(self, start, end, args.resetStart, args.resetEnd, args.tz);
             }, 'text/json');
+        return;
     } else {
-        start = Math.round(args.start / 1000000);
-        end = Math.round(args.end / 1000000);
+        start = nanos_to_millis(args.start);
+        end = nanos_to_millis(args.end);
+        if (start == end) {
+            if (start * 1000000 <= args.start) {
+                end++;
+            } else {
+                start--;
+            }
+        }
     }
     setTimeZoom(self, start, end, args.resetStart, args.resetEnd, args.tz);
 }
@@ -417,19 +431,41 @@ function setTimeZoom(self, start, end, resetStart, resetEnd, tz) {
     if (resetStart == undefined || resetEnd == undefined) {
         resetStart = Math.floor(start / 1000) * 1000;
         resetEnd = Math.ceil(end / 1000) * 1000;
+        if (resetStart == resetEnd) {
+            resetEnd++;
+         }
     } else {
-        resetStart = Math.round(resetStart / 1000000);
-        resetEnd = Math.round(resetEnd / 1000000);
+        var oldResetStart = resetStart;
+        resetStart = nanos_to_millis(resetStart);
+        resetEnd = nanos_to_millis(resetEnd);
+        if (resetStart == resetEnd) {
+            if (resetStart * 1000000 <= oldResetStart) {
+                resetEnd++;
+            } else {
+                resetStart--;
+            }
+        }
     }
-    if (resetStart === resetEnd) {
-        resetEnd++;
-    }
+    console.log(resetStart);
+    console.log(resetEnd);
     self.idata.inittrans = (resetStart - start) / (end - start) * self.idata.WIDTH;
     self.idata.initzoom = (resetEnd - resetStart) / (end - start);
     var offset = 60000 * ((new Date()).getTimezoneOffset() - (new timezoneJS.Date(tz)).getTimezoneOffset());
     self.imethods.setStartTime(new Date(resetStart + offset));
     self.imethods.setEndTime(new Date(resetEnd + offset));
     self.imethods.applyAllSettings();
+}
+
+/* Converts nanoseconds to milliseconds. */
+function nanos_to_millis(num) {
+    num = num.toString();
+    var millis = num.slice(0, -6);
+    var nanos = num.slice(-6);
+    if (millis.length == 0) {
+        return floor ? 0 : 1;
+    } else {
+        return Number(millis) + (Number(nanos) < 500000 ? 0 : 1);
+    }
 }
 
 s3ui.init_control = init_control;

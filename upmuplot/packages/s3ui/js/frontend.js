@@ -245,11 +245,11 @@ function createPermalink(self) {
     var streams = [];
     var permalink = {
             streams: self.idata.selectedStreams.map(function (d) { return {stream: coerce_stream(d), color: self.idata.streamSettings[d.uuid].color}; }),
-            resetStart: self.idata.oldStartDate * 1000000,
-            resetEnd: self.idata.oldEndDate * 1000000,
+            resetStart: Number(self.idata.oldStartDate.toString() + '000000'),
+            resetEnd: Number(self.idata.oldEndDate.toString() + '000000'),
             tz: self.idata.oldTimezone,
-            start: (domain[0].getTime() - self.idata.offset) * 1000000,
-            end: (domain[1].getTime() - self.idata.offset) * 1000000,
+            start: Number((domain[0].getTime() - self.idata.offset).toString() + '000000'),
+            end: Number((domain[1].getTime() - self.idata.offset).toString() + '000000'),
             autoupdate: self.idata.automaticAxisUpdate,
             axes: $.map(self.idata.yAxes, function (d) {
                     return {
