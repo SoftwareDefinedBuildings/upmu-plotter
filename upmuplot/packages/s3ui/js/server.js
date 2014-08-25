@@ -2,12 +2,20 @@
 
 s3ui_permalinks = new Meteor.Collection("s3ui_permalinks");
 
+s3ui_server = {};
+s3ui_server.createPermalink = function (permalinkJSON) {
+                permalinkJSON.created = (new Date()).getTime();
+                permalinkJSON.lastAccessed = "never";
+                return s3ui_permalinks.insert(permalinkJSON);
+            };
+            
 Meteor.methods({
         processQuery: function (query, type) {
                 this.unblock();
                 var params = query.split(" ");
                 var url, payload, request;
                 if (params[0] === "SENDPOST") {
+                    console.log("full params: ", params);
                     url = params[1];
                     payload = params.slice(2).join(' ');
                     request = "POST";
@@ -26,11 +34,7 @@ Meteor.methods({
                     return '[]';
                 }
             },
-        createPermalink: function (permalinkJSON) {
-                permalinkJSON.created = (new Date()).getTime();
-                permalinkJSON.lastAccessed = "never";
-                return s3ui_permalinks.insert(permalinkJSON);
-            },
+        createPermalink: s3ui_server.createPermalink,
         retrievePermalink: function (permalinkID) {
                 var obj = s3ui_permalinks.findOne({"_id": permalinkID});
                 if (obj == undefined) {

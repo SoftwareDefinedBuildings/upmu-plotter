@@ -31,4 +31,5 @@ Package.on_use(function (api) {
   api.add_files(path.join(asset_path, 'js', 'control.js'), 'client');
   
   api.export('s3ui');
+  api.export('s3ui_server');
 });

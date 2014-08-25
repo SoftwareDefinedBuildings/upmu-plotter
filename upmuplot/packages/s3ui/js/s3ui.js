@@ -248,5 +248,7 @@ function init_graph(self, c1, c2) {
     s3ui.updateStreamList(self);
     
     // Second callback
-    c2(self);
+    if (typeof c2 == "function") {
+        c2(self);
+    }
 }
