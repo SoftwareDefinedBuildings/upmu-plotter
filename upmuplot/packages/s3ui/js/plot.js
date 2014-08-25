@@ -634,7 +634,8 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         for (j = startIndex; j < streamdata.length; j++) {
             currpt = streamdata[j];
             prevpt = streamdata[j - 1];
-            if (j == startIndex || (currpt[0] - prevpt[0]) * 1000000 + (currpt[1] - prevpt[1]) > pw) {
+            if (currLineChunk.meanval.length > 0 && (j == startIndex || (currpt[0] - prevpt[0]) * 1000000 + (currpt[1] - prevpt[1]) > pw)) {
+                extendIfNecessary(currLineChunk);
                 lineChunks.push(currLineChunk);
                 currLineChunk = new LineChunk();
             }
@@ -642,10 +643,10 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             // correct for nanoseconds
             xPixel += (currpt[1] / pixelw);
             mint = yScale(currpt[2]);
-            currLineChunk.minval.push(xPixel + "," + mint);
-            currLineChunk.meanval.push(xPixel + "," + yScale(currpt[3]));
+            currLineChunk.minval.push([xPixel, mint]);
+            currLineChunk.meanval.push([xPixel, yScale(currpt[3])]);
             maxt = yScale(currpt[4]);
-            currLineChunk.maxval.push(xPixel + "," + maxt);
+            currLineChunk.maxval.push([xPixel, maxt]);
             if (xPixel >= WIDTH) {
                 break;
             } else if (xPixel >= 0) {
@@ -653,6 +654,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
                 noData = false;
             }
         }
+        extendIfNecessary(currLineChunk);
         lineChunks.push(currLineChunk);
         if (noData) {
             s3ui.setStreamMessage(self, streams[i].uuid, "No data in specified time range", 3);
@@ -720,6 +722,21 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         s3ui.setStreamMessage(self, self.idata.showingDensity, "Interval width: " + s3ui.nanosToUnit(Math.pow(2, self.idata.oldData[self.idata.showingDensity][2])), 4);
         self.$("svg.chart g.data-density-plot polyline").remove();
         showDataDensity(self, self.idata.showingDensity);
+    }
+}
+
+function extendIfNecessary(lc) {
+    var minval, meanval, maxval;
+    if (lc.meanval.length == 1) {
+        minval = lc.minval;
+        meanval = lc.meanval;
+        maxval = lc.maxval;
+        minval[0][0] -= 0.5;
+        minval.push([minval[0][0] + 1, minval[0][1]]);
+        meanval[0][0] -= 0.5;
+        meanval.push([meanval[0][0] + 1, meanval[0][1]]);
+        maxval[0][0] -= 0.5;
+        maxval.push([maxval[0][0] + 1, maxval[0][1]]);
     }
 }
 
