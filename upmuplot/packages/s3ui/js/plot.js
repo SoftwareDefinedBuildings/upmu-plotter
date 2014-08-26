@@ -609,16 +609,21 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     var prevpt;
     var offset = self.idata.offset;
     var curXPixel;
-    var lineChunks = [];
-    var currLineChunk = new LineChunk();
+    var lineChunks;
+    var points;
+    var currLineChunk;
     var pw;
     var dataObj;
+    var j;
 
-    for (i = 0; i < streams.length; i++) {
+    for (var i = 0; i < streams.length; i++) {
         currXPixel = -Infinity;
         if (!data.hasOwnProperty(streams[i].uuid)) {
             continue;
         }
+        lineChunks = [];
+        points = [];
+        currLineChunk = new LineChunk();
         streamdata = data[streams[i].uuid][1];
         pw = Math.pow(2, data[streams[i].uuid][2]);
         yScale = axisData[streamSettings[streams[i].uuid].axisid][2];
@@ -635,8 +640,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             currpt = streamdata[j];
             prevpt = streamdata[j - 1];
             if (currLineChunk.meanval.length > 0 && (j == startIndex || (currpt[0] - prevpt[0]) * 1000000 + (currpt[1] - prevpt[1]) > pw)) {
-                extendIfNecessary(currLineChunk);
-                lineChunks.push(currLineChunk);
+                processLineChunk(currLineChunk, lineChunks, points);
                 currLineChunk = new LineChunk();
             }
             xPixel = xScale(currpt[0] + offset);
@@ -654,16 +658,15 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
                 noData = false;
             }
         }
-        extendIfNecessary(currLineChunk);
-        lineChunks.push(currLineChunk);
+        processLineChunk(currLineChunk, lineChunks, points);
         if (noData) {
             s3ui.setStreamMessage(self, streams[i].uuid, "No data in specified time range", 3);
         } else {
             s3ui.setStreamMessage(self, streams[i].uuid, undefined, 3);
         }
         color = streamSettings[streams[i].uuid].color;
-        dataObj = {color: color, uuid: streams[i].uuid};
-        dataObj.data = lineChunks.map(function (x) {
+        dataObj = {color: color, points: points, uuid: streams[i].uuid};
+        dataObj.linechunks = lineChunks.map(function (x) {
                 x.minval.reverse();
                 var mean = x.meanval.join(" ");
                 var outline = x.maxval.join(" ") + " " + x.minval.join(" ");
@@ -675,17 +678,18 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         } else {
             s3ui.setStreamMessage(self, streams[i].uuid, undefined, 2);
         }
-    }    
+    }
     update = d3.select(self.find("g.chartarea"))
-      .selectAll("g")
+      .selectAll("g.streamGroup")
       .data(dataArray);
         
     update.enter()
-      .append("g");
+      .append("g")
+      .attr("class", "streamGroup");
         
-    if (!drawFast) {
+    if (!drawFast || true) {
         update
-            .attr("class", function (dataObj) { return "series-" + dataObj.uuid; })
+            .attr("class", function (dataObj) { return "streamGroup series-" + dataObj.uuid; })
             .attr("stroke", function (d) { return d.color; })
             .attr("stroke-width", 1)
             .attr("fill", function (d) { return d.color; })
@@ -695,14 +699,18 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     update.exit()
         .remove();
         
+    var oldUpdate = update;
+        
     update = update.selectAll("g")
-      .data(function (d, i) { return dataArray[i].data; });
+      .data(function (d, i) { return dataArray[i].linechunks; });
       
     update.enter()
       .append("g");
       
     update.exit()
       .remove();
+    
+    update.selectAll("polyline").remove();
     
     update
       .append("polyline")
@@ -713,6 +721,21 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
       .append("polyline")
         .attr("class", "streamMean")
         .attr("points", function (d) { return d[1]; });
+        
+    update = oldUpdate
+      .selectAll("circle.streamPoint")
+      .data(function (d, i) { return dataArray[i].points; });
+      
+    update.enter()
+      .append("circle")
+      .attr("class", "streamPoint");
+      
+    update
+        .attr("cx", function (d) { return d[0]; })
+        .attr("cy", function (d) { return d[1]; })
+        .attr("r", 1);
+    
+    update.exit().remove();
     
     if (!drawFast) {
         s3ui.updatePlotMessage(self);
@@ -725,18 +748,25 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     }
 }
 
-function extendIfNecessary(lc) {
+function processLineChunk(lc, lineChunks, points) {
     var minval, meanval, maxval;
     if (lc.meanval.length == 1) {
         minval = lc.minval;
-        meanval = lc.meanval;
         maxval = lc.maxval;
-        minval[0][0] -= 0.5;
-        minval.push([minval[0][0] + 1, minval[0][1]]);
-        meanval[0][0] -= 0.5;
-        meanval.push([meanval[0][0] + 1, meanval[0][1]]);
-        maxval[0][0] -= 0.5;
-        maxval.push([maxval[0][0] + 1, maxval[0][1]]);
+        meanval = lc.meanval;
+        if (minval[0][1] == maxval[0][1]) {
+            points.push(meanval[0]);
+        } else {
+            minval[0][0] -= 0.5;
+            minval.push([minval[0][0] + 1, minval[0][1]]);
+            meanval[0][0] -= 0.5;
+            meanval.push([meanval[0][0] + 1, meanval[0][1]]);
+            maxval[0][0] -= 0.5;
+            maxval.push([maxval[0][0] + 1, maxval[0][1]]);
+            lineChunks.push(lc);
+        }
+    } else {
+        lineChunks.push(lc);
     }
 }
 
