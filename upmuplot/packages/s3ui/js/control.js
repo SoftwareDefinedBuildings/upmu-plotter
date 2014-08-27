@@ -408,8 +408,6 @@ function finishExecutingPermalink(self, streams, colors, args) {
                 if ((end - start) * 1000000 < args.window_width) {
                     start--;
                 }
-                console.log(start);
-                console.log(end);
                 setTimeZoom(self, start, end, args.resetStart, args.resetEnd, args.tz);
             }, 'text/json');
         return;
@@ -446,14 +444,17 @@ function setTimeZoom(self, start, end, resetStart, resetEnd, tz) {
             }
         }
     }
-    console.log(resetStart);
-    console.log(resetEnd);
     self.idata.inittrans = (resetStart - start) / (end - start) * self.idata.WIDTH;
     self.idata.initzoom = (resetEnd - resetStart) / (end - start);
-    var offset = 60000 * ((new Date()).getTimezoneOffset() - (new timezoneJS.Date(tz)).getTimezoneOffset());
-    self.imethods.setStartTime(new Date(resetStart + offset));
-    self.imethods.setEndTime(new Date(resetEnd + offset));
-    self.imethods.applyAllSettings();
+    var offset;
+    try {
+        offset = 60000 * ((new Date()).getTimezoneOffset() - (new timezoneJS.Date(tz)).getTimezoneOffset());
+        self.imethods.setStartTime(new Date(resetStart + offset));
+        self.imethods.setEndTime(new Date(resetEnd + offset));
+        self.imethods.applyAllSettings();
+    } catch (err) {
+        console.log("Could not execute permalink: " + err.message);
+    }
 }
 
 /* Converts nanoseconds to milliseconds. */
