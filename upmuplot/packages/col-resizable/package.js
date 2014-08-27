@@ -9,5 +9,5 @@ Package.on_use(function (api) {
   var path = Npm.require('path');
   var asset_path = path.join('.');
   api.add_files(path.join(asset_path, 'js', 'colResizable-1.3.med.js'), 'client');
-    api.add_files(path.join(asset_path, 'js', 'colResizable-1.3.source.js'), 'client');
+  api.add_files(path.join(asset_path, 'js', 'colResizable-1.3.source.js'), 'client');
 });
