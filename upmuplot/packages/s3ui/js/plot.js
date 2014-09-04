@@ -592,79 +592,87 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     var domain = xScale.domain();
     var startTime, endTime;
     var xPixel;
-    var lastIteration;
     var color;
     var mint, maxt;
-    var outOfRange, noData;
+    var outOfRange;
     var WIDTH = self.idata.WIDTH;
     var HEIGHT = self.idata.HEIGHT;
     var pixelw = (domain[1] - domain[0]) / WIDTH * 1000000; // pixel width in nanoseconds
     var currpt;
+    var prevpt;
     var offset = self.idata.offset;
+    var lineChunks;
+    var points;
+    var currLineChunk;
+    var pw;
+    var dataObj;
+    var j;
 
-    for (i = 0; i < streams.length; i++) {
-        currXPixel = -Infinity;
-        currPointList = [];
+    for (var i = 0; i < streams.length; i++) {
+        xPixel = -Infinity;
         if (!data.hasOwnProperty(streams[i].uuid)) {
             continue;
         }
+        lineChunks = [];
+        points = [];
+        currLineChunk = [[], [], []]; // first array is min points, second is mean points, third is max points
         streamdata = data[streams[i].uuid][1];
-        minval = [];
-        mean = [];
-        maxval = [];
+        pw = Math.pow(2, data[streams[i].uuid][2]);
         yScale = axisData[streamSettings[streams[i].uuid].axisid][2];
         startTime = domain[0].getTime() - offset;
         endTime = domain[1].getTime() - offset;
-        startIndex = s3ui.binSearch(streamdata, startTime - 1, function (point) { return point[0]; });
-        if (startIndex > 0 && streamdata[startIndex][0] > startTime - 1) {
-            startIndex--; // plot the previous datapoint so the graph looks continuous (subtract 1000 in case nanoseconds push it into graph)
+        startIndex = s3ui.binSearch(streamdata, startTime, function (point) { return point[0]; });
+        if (startIndex < streamdata.length && streamdata[startIndex][0] < startTime) {
+            startIndex++; // make sure we only plot data in the specified range
         }
-        lastIteration = false;
         outOfRange = true;
-        noData = true;
-        for (j = startIndex; j < streamdata.length; j++) {
-            currpt = streamdata[j];
-            xPixel = xScale(currpt[0] + offset);
+        for (j = startIndex; j < streamdata.length && (xPixel = xScale((currpt = streamdata[j])[0] + offset)) < WIDTH && xPixel >= 0; j++) {
+            prevpt = streamdata[j - 1];
+            if (currLineChunk[0].length > 0 && (j == startIndex || (currpt[0] - prevpt[0]) * 1000000 + (currpt[1] - prevpt[1]) > pw)) {
+                processLineChunk(currLineChunk, lineChunks, points);
+                currLineChunk = [[], [], []];
+            }
             // correct for nanoseconds
             xPixel += (currpt[1] / pixelw);
             mint = yScale(currpt[2]);
-            minval.push(xPixel + "," + mint);
-            mean.push(xPixel + "," + yScale(currpt[3]));
+            currLineChunk[0].push([xPixel, mint]);
+            currLineChunk[1].push([xPixel, yScale(currpt[3])]);
             maxt = yScale(currpt[4]);
-            maxval.push(xPixel + "," + maxt);
-            if (xPixel >= WIDTH) {
-                break;
-            } else if (xPixel >= 0) {
-                outOfRange = outOfRange && (mint < 0 || mint > HEIGHT) && (maxt < 0 || maxt > HEIGHT) && (mint < HEIGHT || maxt > 0);
-                noData = false;
-            }
+            currLineChunk[2].push([xPixel, maxt]);
+            outOfRange = outOfRange && (mint < 0 || mint > HEIGHT) && (maxt < 0 || maxt > HEIGHT) && (mint < HEIGHT || maxt > 0);
         }
-        if (noData) {
+        processLineChunk(currLineChunk, lineChunks, points);
+        if (lineChunks.length == 1 && lineChunks[0][0].length == 0) {
             s3ui.setStreamMessage(self, streams[i].uuid, "No data in specified time range", 3);
         } else {
             s3ui.setStreamMessage(self, streams[i].uuid, undefined, 3);
         }
-        minval.reverse();
-        mean = mean.join(" ");
-        maxval = maxval.join(" ") + " " + minval.join(" ");
         color = streamSettings[streams[i].uuid].color;
-        dataArray.push({color: color, data: [maxval, mean], uuid: streams[i].uuid});
+        dataObj = {color: color, points: points, uuid: streams[i].uuid};
+        dataObj.linechunks = lineChunks.map(function (x) {
+                x[0].reverse();
+                x[1] = x[1].join(" ");
+                x[0] = x.pop().join(" ") + " " + x[0].join(" ");
+                return x;
+            });
+        dataArray.push(dataObj);
         if (outOfRange) {
             s3ui.setStreamMessage(self, streams[i].uuid, "Data outside axis range; try rescaling y-axis", 2);
         } else {
             s3ui.setStreamMessage(self, streams[i].uuid, undefined, 2);
         }
-    }    
+    }
     update = d3.select(self.find("g.chartarea"))
-      .selectAll("g")
+      .selectAll("g.streamGroup")
       .data(dataArray);
         
     update.enter()
-      .append("g");
+      .append("g")
+      .attr("class", "streamGroup");
         
-    if (!drawFast) {
+    if (!drawFast || true) {
         update
-            .attr("class", function (dataObj) { return "series-" + dataObj.uuid; })
+            .attr("class", function (dataObj) { return "streamGroup series-" + dataObj.uuid; })
             .attr("stroke", function (d) { return d.color; })
             .attr("stroke-width", 1)
             .attr("fill", function (d) { return d.color; })
@@ -674,20 +682,43 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     update.exit()
         .remove();
         
-    update = d3.select(self.find("g.chartarea"))
-      .selectAll("g")
-      .selectAll("polyline")
-      .data(function (d, i) { return dataArray[i].data; });
+    var oldUpdate = update;
+        
+    update = update.selectAll("g")
+      .data(function (d, i) { return dataArray[i].linechunks; });
       
     update.enter()
-      .append("polyline");
+      .append("g");
+      
+    update.exit()
+      .remove();
+    
+    update.selectAll("polyline").remove();
     
     update
-        .attr("class", function (d, i) { return i == 1 ? "streamMean" : "streamRange"; })
-        .attr("points", function (d) { return d; });
+      .append("polyline")
+        .attr("class", "streamRange")
+        .attr("points", function (d) { return d[0]; });
         
-    update.exit()
-      .remove(); // I suspect I may not actually need this
+    update
+      .append("polyline")
+        .attr("class", "streamMean")
+        .attr("points", function (d) { return d[1]; });
+        
+    update = oldUpdate
+      .selectAll("circle.streamPoint")
+      .data(function (d, i) { return dataArray[i].points; });
+      
+    update.enter()
+      .append("circle")
+      .attr("class", "streamPoint");
+      
+    update
+        .attr("cx", function (d) { return d[0]; })
+        .attr("cy", function (d) { return d[1]; })
+        .attr("r", 1);
+    
+    update.exit().remove();
     
     if (!drawFast) {
         s3ui.updatePlotMessage(self);
@@ -697,6 +728,27 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         s3ui.setStreamMessage(self, self.idata.showingDensity, "Interval width: " + s3ui.nanosToUnit(Math.pow(2, self.idata.oldData[self.idata.showingDensity][2])), 4);
         self.$("svg.chart g.data-density-plot polyline").remove();
         showDataDensity(self, self.idata.showingDensity);
+    }
+}
+
+function processLineChunk(lc, lineChunks, points) {
+    if (lc[0].length == 1) {
+        var minval = lc[0];
+        var maxval = lc[2];
+        var meanval = lc[1];
+        if (minval[0][1] == maxval[0][1]) {
+            points.push(meanval[0]);
+        } else {
+            minval[0][0] -= 0.5;
+            minval.push([minval[0][0] + 1, minval[0][1]]);
+            meanval[0][0] -= 0.5;
+            meanval.push([meanval[0][0] + 1, meanval[0][1]]);
+            maxval[0][0] -= 0.5;
+            maxval.push([maxval[0][0] + 1, maxval[0][1]]);
+            lineChunks.push(lc);
+        }
+    } else {
+        lineChunks.push(lc);
     }
 }
 
