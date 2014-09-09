@@ -626,6 +626,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             startIndex++; // make sure we only plot data in the specified range
         }
         outOfRange = true;
+        console.log(startTime - streamdata[startIndex][0]);
         for (j = startIndex; j < streamdata.length && (xPixel = xScale((currpt = streamdata[j])[0] + offset)) < WIDTH && xPixel >= 0; j++) {
             prevpt = streamdata[j - 1];
             if (currLineChunk[0].length > 0 && (j == startIndex || (currpt[0] - prevpt[0]) * 1000000 + (currpt[1] - prevpt[1]) > pw)) {
@@ -635,10 +636,10 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             // correct for nanoseconds
             xPixel += (currpt[1] / pixelw);
             mint = yScale(currpt[2]);
-            currLineChunk[0].push([xPixel, mint]);
-            currLineChunk[1].push([xPixel, yScale(currpt[3])]);
+            currLineChunk[0].push(xPixel + "," + mint);
+            currLineChunk[1].push(xPixel + "," + yScale(currpt[3]));
             maxt = yScale(currpt[4]);
-            currLineChunk[2].push([xPixel, maxt]);
+            currLineChunk[2].push(xPixel + "," + maxt);
             outOfRange = outOfRange && (mint < 0 || mint > HEIGHT) && (maxt < 0 || maxt > HEIGHT) && (mint < HEIGHT || maxt > 0);
         }
         processLineChunk(currLineChunk, lineChunks, points);
@@ -649,6 +650,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         }
         color = streamSettings[streams[i].uuid].color;
         dataObj = {color: color, points: points, uuid: streams[i].uuid};
+        console.log(lineChunks);
         dataObj.linechunks = lineChunks.map(function (x) {
                 x[0].reverse();
                 x[1] = x[1].join(" ");
@@ -736,15 +738,19 @@ function processLineChunk(lc, lineChunks, points) {
         var minval = lc[0];
         var maxval = lc[2];
         var meanval = lc[1];
-        if (minval[0][1] == maxval[0][1]) {
-            points.push(meanval[0]);
+        if (minval[0] == maxval[0]) {
+            meanval = meanval[0].split(",");
+            points.push([parseFloat(meanval[0]), parseFloat(meanval[1])]);
         } else {
-            minval[0][0] -= 0.5;
-            minval.push([minval[0][0] + 1, minval[0][1]]);
-            meanval[0][0] -= 0.5;
-            meanval.push([meanval[0][0] + 1, meanval[0][1]]);
-            maxval[0][0] -= 0.5;
-            maxval.push([maxval[0][0] + 1, maxval[0][1]]);
+            var minv = minval[0].split(",");
+            var mint = parseFloat(minv[0]);
+            lc[0] = [(mint - 0.5) + "," + minv[1], (mint + 0.5) + "," + minv[1]];
+            var meanv = meanval[0].split(",");
+            var meant = parseFloat(meanv[0]);
+            lc[1] = [(meant - 0.5) + "," + meanv[1], (meant + 0.5) + "," + meanv[1]];
+            var maxv = maxval[0].split(",");
+            var maxt = parseFloat(maxv[0]);
+            lc[2] = [(maxt - 0.5) + "," + maxv[1], (maxt + 0.5) + "," + maxv[1]];
             lineChunks.push(lc);
         }
     } else {
