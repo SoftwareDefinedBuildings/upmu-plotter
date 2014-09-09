@@ -626,7 +626,6 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             startIndex++; // make sure we only plot data in the specified range
         }
         outOfRange = true;
-        console.log(startTime - streamdata[startIndex][0]);
         for (j = startIndex; j < streamdata.length && (xPixel = xScale((currpt = streamdata[j])[0] + offset)) < WIDTH && xPixel >= 0; j++) {
             prevpt = streamdata[j - 1];
             if (currLineChunk[0].length > 0 && (j == startIndex || (currpt[0] - prevpt[0]) * 1000000 + (currpt[1] - prevpt[1]) > pw)) {
@@ -650,7 +649,6 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         }
         color = streamSettings[streams[i].uuid].color;
         dataObj = {color: color, points: points, uuid: streams[i].uuid};
-        console.log(lineChunks);
         dataObj.linechunks = lineChunks.map(function (x) {
                 x[0].reverse();
                 x[1] = x[1].join(" ");
