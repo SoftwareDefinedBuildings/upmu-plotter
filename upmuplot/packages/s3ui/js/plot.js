@@ -634,10 +634,10 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             }
             // correct for nanoseconds
             xPixel += (currpt[1] / pixelw);
-            mint = Math.min(Math.max(yScale(currpt[2]), -2000000000), 2000000000);
+            mint = Math.min(Math.max(yScale(currpt[2]), -20000000), 2000000);
             currLineChunk[0].push(xPixel + "," + mint);
-            currLineChunk[1].push(xPixel + "," + Math.min(Math.max(yScale(currpt[3]), -2000000000), 2000000000));
-            maxt = Math.min(Math.max(yScale(currpt[4]), -2000000000), 2000000000);
+            currLineChunk[1].push(xPixel + "," + Math.min(Math.max(yScale(currpt[3]), -2000000), 2000000));
+            maxt = Math.min(Math.max(yScale(currpt[4]), -2000000), 2000000);
             currLineChunk[2].push(xPixel + "," + maxt);
             outOfRange = outOfRange && (mint < 0 || mint > HEIGHT) && (maxt < 0 || maxt > HEIGHT) && (mint < HEIGHT || maxt > 0);
         }
