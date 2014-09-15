@@ -186,7 +186,7 @@ function initPlot(self) {
         .attr("class", "xtitle title")
         .attr("text-anchor", "middle")
         .attr("x", self.idata.WIDTH / 2)
-        .attr("y", 45)
+        .attr("y", 53)
         .html("Time")
         .node();
     self.idata.xStart = xaxiscover.append("text")
