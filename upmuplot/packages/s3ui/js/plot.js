@@ -55,6 +55,8 @@ function init_plot(self) {
         .on("zoom", function () { repaintZoom(self); })
         .on("zoomend", function () { repaintZoomNewData(self); })
         .size([self.idata.WIDTH, self.idata.HEIGHT]);
+        
+    self.idata.testElem = undefined;
 }
 
 // Behavior for zooming and scrolling
@@ -141,6 +143,11 @@ function repaintZoomNewData(self, callback, stopCache) {
 function initPlot(self) {
     var chart = d3.select(self.find("svg.chart"));
     $(chart.node()).empty(); // Remove directions from inside the chart
+    self.idata.testElem = chart.append("g")
+        .attr("class", "tick")
+      .append("text")
+        .style("visibility", "none")
+        .node();
     chart.attr("width", self.idata.margin.left + self.idata.WIDTH + self.idata.margin.right)
         .attr("height", self.idata.margin.top + self.idata.HEIGHT + self.idata.margin.bottom)
       .append("rect")
@@ -406,7 +413,7 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
     
     // Find the minimum and maximum value in each stream to properly scale the axes
     var axisData = {}; // Maps axis ID to a 2-element array containing the minimum and maximum; later on a third element is added containing the y-Axis scale
-    var toDraw = []; // An array of streams that have no data;
+    var toDraw = [];
     var numstreams;
     var i, j, k;
     var streamdata;
@@ -497,9 +504,18 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
     }
     
     self.idata.oldYAxisArray = yAxisArray;
-    
-    self.idata.margin.left = Math.max(100, leftYAxes.length * 100);
-    self.idata.margin.right = Math.max(100, rightYAxes.length * 100);
+    var leftMargins = leftYAxes.map(function (axis) { var scale = axis.scale(); return 65 + Math.max(35, Math.max.apply(this, scale.ticks().map(function (d) { self.idata.testElem.innerHTML = scale.tickFormat()(d); return self.idata.testElem.getComputedTextLength(); }))); });
+    var rightMargins = rightYAxes.map(function (axis) { var scale = axis.scale(); return 65 + Math.max(35, Math.max.apply(this, scale.ticks().map(function (d) { self.idata.testElem.innerHTML = scale.tickFormat()(d); return self.idata.testElem.getComputedTextLength(); }))); });
+    for (i = 1; i < leftMargins.length; i++) {
+        leftMargins[i] += leftMargins[i - 1];
+    }
+    leftMargins.unshift(0);
+    for (i = 1; i < rightMargins.length; i++) {
+        rightMargins[i] += rightMargins[i - 1];
+    }
+    rightMargins.unshift(0);
+    self.idata.margin.left = Math.max(100, leftMargins[leftMargins.length - 1]);
+    self.idata.margin.right = Math.max(100, rightMargins[rightMargins.length - 1]);
     updateSize(self, false);
     
     // Draw the y-axes
@@ -511,7 +527,7 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
       .append("g")
         .attr("class", "y-axis-left axis");
     update
-        .attr("transform", function (d, i) { return "translate(" + (self.idata.margin.left - (100 * i)) + ", 0)"; })
+        .attr("transform", function (d, i) { return "translate(" + (self.idata.margin.left - leftMargins[i]) + ", 0)"; })
         .each(function (yAxis) { d3.select(this).call(yAxis.orient("left")); });
     update.exit().remove();
     
@@ -522,7 +538,7 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
       .append("g")
         .attr("class", "y-axis-right axis");
     update
-        .attr("transform", function (d, i) { return "translate(" + (100 * i) + ", 0)"; })
+        .attr("transform", function (d, i) { return "translate(" + rightMargins[i] + ", 0)"; })
         .each(function (yAxis) { d3.select(this).call(yAxis.orient("right")); });
     update.exit().remove();
     
@@ -538,7 +554,7 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
         .attr("transform", (function () {
                 var j = 0; // index of left axis
                 return function (d) {
-                    return "translate(" + (self.idata.margin.left - (100 * j++) - 60) + ", " + (self.idata.HEIGHT / 2) + ")rotate(-90)";
+                    return "translate(" + (self.idata.margin.left - leftMargins[++j] + 40) + ", " + (self.idata.HEIGHT / 2) + ")rotate(-90)";
                 };
              })())
         .html(function (d) { return d.axisname; });
@@ -554,7 +570,7 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
         .attr("transform", (function () {
                 var i = 0; // index of right axis
                 return function (d) {
-                    return "translate(" + ((100 * i++) + 60) + ", " + (self.idata.HEIGHT / 2) + ")rotate(90)";
+                    return "translate(" + (rightMargins[++i] - 40) + ", " + (self.idata.HEIGHT / 2) + ")rotate(90)";
                 };
              })())
         .html(function (d) { return d.axisname; });
@@ -634,7 +650,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             }
             // correct for nanoseconds
             xPixel += (currpt[1] / pixelw);
-            mint = Math.min(Math.max(yScale(currpt[2]), -20000000), 2000000);
+            mint = Math.min(Math.max(yScale(currpt[2]), -2000000), 2000000);
             currLineChunk[0].push(xPixel + "," + mint);
             currLineChunk[1].push(xPixel + "," + Math.min(Math.max(yScale(currpt[3]), -2000000), 2000000));
             maxt = Math.min(Math.max(yScale(currpt[4]), -2000000), 2000000);
