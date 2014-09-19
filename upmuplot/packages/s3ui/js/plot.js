@@ -610,7 +610,6 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     var xPixel;
     var color;
     var mint, maxt;
-    var outOfRange;
     var WIDTH = self.idata.WIDTH;
     var HEIGHT = self.idata.HEIGHT;
     var pixelw = (domain[1] - domain[0]) / WIDTH * 1000000; // pixel width in nanoseconds
@@ -641,7 +640,6 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         if (startIndex < streamdata.length && streamdata[startIndex][0] < startTime) {
             startIndex++; // make sure we only plot data in the specified range
         }
-        outOfRange = true;
         for (j = startIndex; j < streamdata.length && (xPixel = xScale((currpt = streamdata[j])[0] + offset)) < WIDTH && xPixel >= 0; j++) {
             prevpt = streamdata[j - 1];
             if (currLineChunk[0].length > 0 && (j == startIndex || (currpt[0] - prevpt[0]) * 1000000 + (currpt[1] - prevpt[1]) > pw)) {
@@ -655,7 +653,6 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             currLineChunk[1].push(xPixel + "," + Math.min(Math.max(yScale(currpt[3]), -2000000), 2000000));
             maxt = Math.min(Math.max(yScale(currpt[4]), -2000000), 2000000);
             currLineChunk[2].push(xPixel + "," + maxt);
-            outOfRange = outOfRange && (mint < 0 || mint > HEIGHT) && (maxt < 0 || maxt > HEIGHT) && (mint < HEIGHT || maxt > 0);
         }
         processLineChunk(currLineChunk, lineChunks, points);
         if (lineChunks.length == 1 && lineChunks[0][0].length == 0) {
@@ -672,11 +669,6 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
                 return x;
             });
         dataArray.push(dataObj);
-        if (outOfRange) {
-            s3ui.setStreamMessage(self, streams[i].uuid, "Data outside axis range; try rescaling y-axis", 2);
-        } else {
-            s3ui.setStreamMessage(self, streams[i].uuid, undefined, 2);
-        }
     }
     update = d3.select(self.find("g.chartarea"))
       .selectAll("g.streamGroup")
