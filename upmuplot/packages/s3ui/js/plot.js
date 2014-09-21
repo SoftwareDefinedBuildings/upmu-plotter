@@ -580,7 +580,7 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
     update.exit().remove();
     
     // If the axes were changed, we must dump the cache
-    self.idata.cachedLines = {};
+    self.idata.lineCache = {};
     
     drawStreams(self, data, streams, streamSettings, xScale, yScales, yAxisArray, axisData, loadingElem, false);
 }
@@ -627,7 +627,8 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     var currLineChunk;
     var pw;
     var dataObj;
-    var j;
+    var j, m;
+    var diff = 0;
     
     var cached;
     var fillAfter = false;
@@ -652,51 +653,79 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         endTime = domain[1].getTime() - offset;
         trueStart = startTime;
         trueEnd = endTime;
-        
+
         cached = self.idata.lineCache[streams[i].uuid];
-        wwidth = endTime - startTime;
         //console.log("iter");
         //if (cached != undefined) {
-        //    console.log(cached.start);
-        //    console.log(cached.end);
+        //    console.log(cached.window_width);
+        //    console.log(cached.end - cached.start);
         //}
-        //console.log(startTime);
-        //console.log(endTime);
-        if (cached != undefined && cached.window_width == (endTime - startTime) && cached.start <= endTime && cached.end >= startTime) {
+        wwidth = endTime - startTime;
+        if (cached != undefined && Math.abs(cached.window_width - wwidth) <= 1 && cached.start <= endTime && cached.end >= startTime) {
             // Cache hit!
-            var diff = (cached.start - startTime) * WIDTH / (domain[1] - domain[0]);
-            var k, m;
-            for (j = 0; j < cached.lines.length; j++) {
-                for (k = 0; k < 3; k++) {
-                    for (m = 0; m < cached.lines[j][k].length; m++) {
-                        cached.lines[j][k][m][0] += diff;
-                    }
-                }
-            }
-            for (j = 0; j < cached.points.length; j++) {
-                cached.points[j][0] += diff;
-            }
+            diff = cached.diff + (cached.start - startTime) * WIDTH / (domain[1] - domain[0]);
             if (cached.start > startTime) {
                 endTime = cached.start;
                 fillAfter = true;
+                if (cached.points.length > 0) {
+                    j = s3ui.binSearch(cached.points, WIDTH - diff, function (entry) { return entry[0]; });
+                    if (cached.points[j][0] >= WIDTH - diff) {
+                        j--;
+                    }
+                    cached.points = cached.points.slice(0, j + 1);
+                }
             } else {
                 startTime = cached.end;
                 if (cached.lines.length > 0) {
+                    j = cached.lines.length - 1;
+                    while (j > 0 && cached.lines[j][1][0][0] >= -diff) {
+                        j--;
+                    }
+                    if (j > 0) {
+                        cached.lines = cached.lines.slice(j);
+                    }
+                    m = cached.lines[0]; // the cache entry we have to trim
+                    j = s3ui.binSearch(m[1], -diff, function (entry) { return entry[0]; });
+                    if (m[1][j] < -diff) {
+                        j++;
+                    }
+                    m[0] = m[0].slice(j);
+                    m[1] = m[1].slice(j);
+                    m[2] = m[2].slice(j);
                     lineChunks = cached.lines;
-                    currLineChunk = lineChunks.pop();
                 }
-                //console.log(lineChunks);
-                points = cached.points;
+                if (cached.points.length > 0) {
+                    j = s3ui.binSearch(cached.points, -diff, function (entry) { return entry[0]; });
+                    if (cached.points[j][0] < -diff) {
+                        j++
+                    }
+                    points = cached.points.slice(j);
+                }
             }
         } else {
             // Cache miss
             cached = { window_width: wwidth };
             self.idata.lineCache[streams[i].uuid] = cached;
         }
-        
+        //console.log(startTime);
+        //console.log(endTime);
         startIndex = s3ui.binSearch(streamdata, startTime, function (point) { return point[0]; });
+        //console.log(startIndex);
+        //console.log(streamdata.length);
         if (startIndex < streamdata.length && streamdata[startIndex][0] < startTime) {
             startIndex++; // make sure we only plot data in the specified range
+        }
+        if (lineChunks.length > 0) {
+            if (startIndex < streamdata.length && (xScale(
+            streamdata[startIndex]
+            [0]
+             + offset) + 
+             (streamdata[startIndex][1] / pixelw) 
+            - diff - lineChunks[lineChunks.length - 1][1]
+            [lineChunks[lineChunks.length - 1][1].length - 1]
+            [0]) * pixelw < 1.5 * pw) {
+                currLineChunk = lineChunks.pop();
+            }
         }
         for (j = startIndex; j < streamdata.length && (xPixel = xScale((currpt = streamdata[j])[0] + offset)) >= 0 && currpt[0] < endTime; j++) {
             prevpt = streamdata[j - 1];
@@ -704,30 +733,45 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
                 processLineChunk(currLineChunk, lineChunks, points);
                 currLineChunk = [[], [], []];
             }
-            // correct for nanoseconds
-            xPixel += (currpt[1] / pixelw);
+            // correct for nanoseconds and translation
+            xPixel += (currpt[1] / pixelw) - diff;
             mint = Math.min(Math.max(yScale(currpt[2]), -2000000), 2000000);
             currLineChunk[0].push([xPixel, mint]);
             currLineChunk[1].push([xPixel, Math.min(Math.max(yScale(currpt[3]), -2000000), 2000000)]);
             maxt = Math.min(Math.max(yScale(currpt[4]), -2000000), 2000000);
             currLineChunk[2].push([xPixel, maxt]);
         }
-        if (fillAfter && cached.lines.length > 0) {
-            var lineIndex = 0;
-            if (currLineChunk[1].length > 0 && cached.lines[0][1][0] - currLineChunk[1][0] > pw * pixelw) {
-                processLineChunk(currLineChunk, lineChunks, points);
-            } else {
-                cached.lines[0][0] = currLineChunk[0].concat(cached.lines[0][0]);
-                cached.lines[0][1] = currLineChunk[1].concat(cached.lines[0][1]);
-                cached.lines[0][2] = currLineChunk[2].concat(cached.lines[0][2]);
-                cached.lines[0] = currLineChunk;
-                lineChunks = lineChunks.concat(cached.lines);
-                points = points.concat(cached.points);
+        if (fillAfter) {
+            if (cached.lines.length > 0) {
+                if (currLineChunk[1].length > 0 && (cached.lines[0][1][0] - currLineChunk[1][0]) * pixelw > pw * 1.5) {
+                    processLineChunk(currLineChunk, lineChunks, points);
+                } else {
+                    cached.lines[0][0] = $.merge(currLineChunk[0], cached.lines[0][0]);
+                    cached.lines[0][1] = $.merge(currLineChunk[1], cached.lines[0][1]);
+                    cached.lines[0][2] = $.merge(currLineChunk[2], cached.lines[0][2]);
+                }
+                j = 0;
+                while (j < cached.lines.length - 1 && cached.lines[j][1][cached.lines[j][1].length - 1][0] < WIDTH - diff) {
+                    j++;
+                }
+                if (j < cached.lines.length - 1) {
+                    cached.lines = cached.lines.slice(0, j + 1);
+                }
+                m = cached.lines[j]; // the cache entry we have to trim
+                j = s3ui.binSearch(m[1], WIDTH - diff, function (entry) { return entry[0]; });
+                if (m[1][j] >= WIDTH - diff) {
+                    j--;
+                }
+                m[0] = m[0].slice(0, j + 1);
+                m[1] = m[1].slice(0, j + 1);
+                m[2] = m[2].slice(0, j + 1);
+                $.merge(lineChunks, cached.lines);
             }
-        } else {
+            $.merge(points, cached.points);
+        } else if (currLineChunk[1].length > 0) {
             processLineChunk(currLineChunk, lineChunks, points);
         }
-        if (lineChunks.length == 1 && lineChunks[0][0].length == 0) {
+        if (lineChunks.length == 0 && points.length == 0) {
             s3ui.setStreamMessage(self, streams[i].uuid, "No data in specified time range", 3);
         } else {
             s3ui.setStreamMessage(self, streams[i].uuid, undefined, 3);
@@ -736,8 +780,9 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         cached.points = points;
         cached.start = trueStart;
         cached.end = trueEnd;
+        cached.diff = diff;
         color = streamSettings[streams[i].uuid].color;
-        dataObj = {color: color, points: points, uuid: streams[i].uuid};
+        dataObj = {color: color, points: points, uuid: streams[i].uuid, trans: diff};
         dataObj.linechunks = lineChunks.map(function (x) {
                 var arr = [x[2].join(" ") + " " + x[0].reverse().join(" "), x[1].join(" ")];
                 x[0].reverse();
@@ -759,7 +804,8 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             .attr("stroke", function (d) { return d.color; })
             .attr("stroke-width", 1)
             .attr("fill", function (d) { return d.color; })
-            .attr("fill-opacity", 0.3);
+            .attr("fill-opacity", 0.3)
+            .attr("transform", function (d) { return "translate(" + d.trans +", 0)"; });
     }
         
     update.exit()
