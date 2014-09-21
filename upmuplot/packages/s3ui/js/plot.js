@@ -672,7 +672,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
                     if (cached.points[j][0] >= WIDTH - diff) {
                         j--;
                     }
-                    cached.points = cached.points.slice(0, j + 1);
+                    cached.points.splice(j + 1, cached.points.length);
                 }
             } else {
                 startTime = cached.end;
@@ -682,16 +682,16 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
                         j--;
                     }
                     if (j > 0) {
-                        cached.lines = cached.lines.slice(j);
+                        cached.lines.splice(0, j);
                     }
                     m = cached.lines[0]; // the cache entry we have to trim
                     j = s3ui.binSearch(m[1], -diff, function (entry) { return entry[0]; });
                     if (m[1][j] < -diff) {
                         j++;
                     }
-                    m[0] = m[0].slice(j);
-                    m[1] = m[1].slice(j);
-                    m[2] = m[2].slice(j);
+                    m[0].splice(0, j);
+                    m[1].splice(0, j);
+                    m[2].splice(0, j);
                     lineChunks = cached.lines;
                 }
                 if (cached.points.length > 0) {
@@ -699,7 +699,8 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
                     if (cached.points[j][0] < -diff) {
                         j++
                     }
-                    points = cached.points.slice(j);
+                    cached.points.splice(0, j);
+                    points = cached.points;
                 }
             }
         } else {
@@ -755,16 +756,16 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
                     j++;
                 }
                 if (j < cached.lines.length - 1) {
-                    cached.lines = cached.lines.slice(0, j + 1);
+                    cached.lines.splice(j + 1, cached.lines.length);
                 }
                 m = cached.lines[j]; // the cache entry we have to trim
                 j = s3ui.binSearch(m[1], WIDTH - diff, function (entry) { return entry[0]; });
                 if (m[1][j] >= WIDTH - diff) {
                     j--;
                 }
-                m[0] = m[0].slice(0, j + 1);
-                m[1] = m[1].slice(0, j + 1);
-                m[2] = m[2].slice(0, j + 1);
+                m[0].splice(j + 1, m[0].length);
+                m[1].splice(j + 1, m[1].length);
+                m[2].splice(j + 1, m[2].length);
                 $.merge(lineChunks, cached.lines);
             }
             $.merge(points, cached.points);
