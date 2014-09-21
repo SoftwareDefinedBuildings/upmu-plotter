@@ -33,6 +33,9 @@ function init_plot(self) {
     self.idata.oldAxisData = undefined;
     self.idata.offset = undefined;
     self.idata.oldDomain = undefined;
+    
+    // Caches previous drawing iteration
+    self.idata.lineCache = {};
 
     // Keeps track of whether the graph is drawn on the screen
     self.idata.onscreen = false;
@@ -576,6 +579,9 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
         .html(function (d) { return d.axisname; });
     update.exit().remove();
     
+    // If the axes were changed, we must dump the cache
+    self.idata.cachedLines = {};
+    
     drawStreams(self, data, streams, streamSettings, xScale, yScales, yAxisArray, axisData, loadingElem, false);
 }
 
@@ -622,7 +628,15 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     var pw;
     var dataObj;
     var j;
-
+    
+    var cached;
+    var fillAfter = false;
+    var cachedLines = [];
+    var cachedPoints = [];
+    var trueStart;
+    var trueEnd;
+    var wwidth;
+    
     for (var i = 0; i < streams.length; i++) {
         xPixel = -Infinity;
         if (!data.hasOwnProperty(streams[i].uuid)) {
@@ -636,13 +650,57 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         yScale = axisData[streamSettings[streams[i].uuid].axisid][2];
         startTime = domain[0].getTime() - offset;
         endTime = domain[1].getTime() - offset;
+        trueStart = startTime;
+        trueEnd = endTime;
+        
+        cached = self.idata.lineCache[streams[i].uuid];
+        wwidth = endTime - startTime;
+        //console.log("iter");
+        //if (cached != undefined) {
+        //    console.log(cached.start);
+        //    console.log(cached.end);
+        //}
+        //console.log(startTime);
+        //console.log(endTime);
+        if (cached != undefined && cached.window_width == (endTime - startTime) && cached.start <= endTime && cached.end >= startTime) {
+            // Cache hit!
+            var diff = (cached.start - startTime) * WIDTH / (domain[1] - domain[0]);
+            var k, m;
+            for (j = 0; j < cached.lines.length; j++) {
+                for (k = 0; k < 3; k++) {
+                    for (m = 0; m < cached.lines[j][k].length; m++) {
+                        cached.lines[j][k][m][0] += diff;
+                    }
+                }
+            }
+            for (j = 0; j < cached.points.length; j++) {
+                cached.points[j][0] += diff;
+            }
+            if (cached.start > startTime) {
+                endTime = cached.start;
+                fillAfter = true;
+            } else {
+                startTime = cached.end;
+                if (cached.lines.length > 0) {
+                    lineChunks = cached.lines;
+                    currLineChunk = lineChunks.pop();
+                }
+                //console.log(lineChunks);
+                points = cached.points;
+            }
+        } else {
+            // Cache miss
+            cached = { window_width: wwidth };
+            self.idata.lineCache[streams[i].uuid] = cached;
+        }
+        
         startIndex = s3ui.binSearch(streamdata, startTime, function (point) { return point[0]; });
         if (startIndex < streamdata.length && streamdata[startIndex][0] < startTime) {
             startIndex++; // make sure we only plot data in the specified range
         }
-        for (j = startIndex; j < streamdata.length && (xPixel = xScale((currpt = streamdata[j])[0] + offset)) < WIDTH && xPixel >= 0; j++) {
+        for (j = startIndex; j < streamdata.length && (xPixel = xScale((currpt = streamdata[j])[0] + offset)) >= 0 && currpt[0] < endTime; j++) {
             prevpt = streamdata[j - 1];
-            if (currLineChunk[0].length > 0 && (j == startIndex || (currpt[0] - prevpt[0]) * 1000000 + (currpt[1] - prevpt[1]) > pw)) {
+            if (currLineChunk[0].length > 0 && j != 0 && ((currpt[0] - prevpt[0]) * 1000000 + (currpt[1] - prevpt[1]) > pw)) {
                 processLineChunk(currLineChunk, lineChunks, points);
                 currLineChunk = [[], [], []];
             }
@@ -654,19 +712,36 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             maxt = Math.min(Math.max(yScale(currpt[4]), -2000000), 2000000);
             currLineChunk[2].push([xPixel, maxt]);
         }
-        processLineChunk(currLineChunk, lineChunks, points);
+        if (fillAfter && cached.lines.length > 0) {
+            var lineIndex = 0;
+            if (currLineChunk[1].length > 0 && cached.lines[0][1][0] - currLineChunk[1][0] > pw * pixelw) {
+                processLineChunk(currLineChunk, lineChunks, points);
+            } else {
+                cached.lines[0][0] = currLineChunk[0].concat(cached.lines[0][0]);
+                cached.lines[0][1] = currLineChunk[1].concat(cached.lines[0][1]);
+                cached.lines[0][2] = currLineChunk[2].concat(cached.lines[0][2]);
+                cached.lines[0] = currLineChunk;
+                lineChunks = lineChunks.concat(cached.lines);
+                points = points.concat(cached.points);
+            }
+        } else {
+            processLineChunk(currLineChunk, lineChunks, points);
+        }
         if (lineChunks.length == 1 && lineChunks[0][0].length == 0) {
             s3ui.setStreamMessage(self, streams[i].uuid, "No data in specified time range", 3);
         } else {
             s3ui.setStreamMessage(self, streams[i].uuid, undefined, 3);
         }
+        cached.lines = lineChunks;
+        cached.points = points;
+        cached.start = trueStart;
+        cached.end = trueEnd;
         color = streamSettings[streams[i].uuid].color;
         dataObj = {color: color, points: points, uuid: streams[i].uuid};
         dataObj.linechunks = lineChunks.map(function (x) {
+                var arr = [x[2].join(" ") + " " + x[0].reverse().join(" "), x[1].join(" ")];
                 x[0].reverse();
-                x[1] = x[1].join(" ");
-                x[0] = x.pop().join(" ") + " " + x[0].join(" ");
-                return x;
+                return arr;
             });
         dataArray.push(dataObj);
     }
