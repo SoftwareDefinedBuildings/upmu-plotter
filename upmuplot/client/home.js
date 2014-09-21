@@ -2,9 +2,9 @@ if (Meteor.isClient) {
     var localtest = false;
     Template.home.plot_data = [
         {
-            tagsURL: localtest ? 'http://localhost:7856' : 'http://miranda.cs.berkeley.edu:4523/',
-            dataURLStart: localtest ? 'http://localhost:7856/data/uuid/' : 'http://quasar.cal-sdb.org:9000/data/uuid/',
-            bracketURL: 'http://quasar.cal-sdb.org:9000/q/bracket'
+            tagsURL: localtest ? 'http://localhost:7856' : 'http://archiver.cal-sdb.org:4523',//'http://miranda.cs.berkeley.edu:4523/',
+            dataURLStart: localtest ? 'http://localhost:7856/data/uuid/' : 'http://archiver.cal-sdb.org:9000/data/uuid/',//'http://quasar.cal-sdb.org:9000/data/uuid/',
+            bracketURL: 'http://archiver.cal-sdb.org:9000/q/bracket'
         }, 
         function (inst) 
         { 

@@ -649,10 +649,10 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             // correct for nanoseconds
             xPixel += (currpt[1] / pixelw);
             mint = Math.min(Math.max(yScale(currpt[2]), -2000000), 2000000);
-            currLineChunk[0].push(xPixel + "," + mint);
-            currLineChunk[1].push(xPixel + "," + Math.min(Math.max(yScale(currpt[3]), -2000000), 2000000));
+            currLineChunk[0].push([xPixel, mint]);
+            currLineChunk[1].push([xPixel, Math.min(Math.max(yScale(currpt[3]), -2000000), 2000000)]);
             maxt = Math.min(Math.max(yScale(currpt[4]), -2000000), 2000000);
-            currLineChunk[2].push(xPixel + "," + maxt);
+            currLineChunk[2].push([xPixel, maxt]);
         }
         processLineChunk(currLineChunk, lineChunks, points);
         if (lineChunks.length == 1 && lineChunks[0][0].length == 0) {
@@ -745,18 +745,11 @@ function processLineChunk(lc, lineChunks, points) {
         var maxval = lc[2];
         var meanval = lc[1];
         if (minval[0] == maxval[0]) {
-            meanval = meanval[0].split(",");
-            points.push([parseFloat(meanval[0]), parseFloat(meanval[1])]);
+            points.push(meanval);
         } else {
-            var minv = minval[0].split(",");
-            var mint = parseFloat(minv[0]);
-            lc[0] = [(mint - 0.5) + "," + minv[1], (mint + 0.5) + "," + minv[1]];
-            var meanv = meanval[0].split(",");
-            var meant = parseFloat(meanv[0]);
-            lc[1] = [(meant - 0.5) + "," + meanv[1], (meant + 0.5) + "," + meanv[1]];
-            var maxv = maxval[0].split(",");
-            var maxt = parseFloat(maxv[0]);
-            lc[2] = [(maxt - 0.5) + "," + maxv[1], (maxt + 0.5) + "," + maxv[1]];
+            lc[0] = [[minval[0] - 0.5, minval[1]], [minval[0] + 0.5, minval[1]]];
+            lc[1] = [[meanval[0] - 0.5, meanval[1]], [meanval[0] + 0.5, meanval[1]]];
+            lc[2] = [[maxval[0] - 0.5, maxval[1]], [maxval[0] + 0.5, maxval[1]]];
             lineChunks.push(lc);
         }
     } else {
