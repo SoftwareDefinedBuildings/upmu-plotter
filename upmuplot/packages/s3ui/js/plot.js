@@ -744,8 +744,8 @@ function processLineChunk(lc, lineChunks, points) {
         var minval = lc[0];
         var maxval = lc[2];
         var meanval = lc[1];
-        if (minval[0] == maxval[0]) {
-            points.push(meanval);
+        if (minval[0][1] == maxval[0][1]) {
+            points.push(meanval[0]);
         } else {
             lc[0] = [[minval[0] - 0.5, minval[1]], [minval[0] + 0.5, minval[1]]];
             lc[1] = [[meanval[0] - 0.5, meanval[1]], [meanval[0] + 0.5, meanval[1]]];
