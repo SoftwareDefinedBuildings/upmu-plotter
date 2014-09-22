@@ -166,6 +166,7 @@ function init_graph(self, c1, c2) {
             setTimeout(function () { s3ui.createPlotDownload(self); }, 50);
         };
     self.find(".makecsv").onclick = function () {
+            s3ui.buildCSVMenu(self);
             $(self.find(".csv-modal")).modal("toggle");
         };
     self.find(".addAxis").onclick = function () {

@@ -274,6 +274,49 @@ function createPermalink(self) {
         });
 }
 
+function buildCSVMenu(self) {
+    var settingsObj = {};
+    var streamsettings = self.find("div.csv-streams");
+    $(streamsettings).empty();
+    var streams = self.idata.selectedStreams.slice(); // In case the list changes in the meantime
+    var update = d3.select(streamsettings)
+      .selectAll("div")
+      .data(streams);
+    var groups = update.enter()
+      .append("div")
+        .attr("class", "input-group");
+    groups.append("span")
+        .attr("class", "input-group-btn")
+      .append("div")
+        .attr("class", "btn btn-default active")
+        .attr("data-toggle", "button")
+        .html("Included")
+        .each(function () {
+                this.onclick = function () {
+                        var streamName = this.parentNode.nextSibling;
+                        if (this.innerHTML == "Included") {
+                            this.innerHTML = "Include Stream";
+                            delete settingsObj[this.__data__.uuid];
+                            streamName.value = s3ui.getFilepath(this.__data__);
+                        } else {
+                            this.innerHTML = "Included";
+                            settingsObj[this.__data__.uuid] = streamName.value;
+                        }
+                        streamName.disabled = !streamName.disabled;
+                    };
+            });
+    groups.append("input")
+        .attr("type", "text")
+        .attr("class", "form-control")
+        .property("value", function (d) { return s3ui.getFilepath(d); })
+        .each(function () {
+                this.onchange = function () {
+                        settingsObj[this.__data__.uuid] = this.value;
+                    };
+            });
+    update.exit().remove();
+}
+
 s3ui.init_frontend = init_frontend;
 s3ui.toggleLegend = toggleLegend;
 s3ui.setStreamMessage = setStreamMessage;
@@ -281,3 +324,4 @@ s3ui.updatePlotMessage = updatePlotMessage;
 s3ui.getSelectedTimezone = getSelectedTimezone;
 s3ui.createPlotDownload = createPlotDownload;
 s3ui.createPermalink = createPermalink;
+s3ui.buildCSVMenu = buildCSVMenu;
