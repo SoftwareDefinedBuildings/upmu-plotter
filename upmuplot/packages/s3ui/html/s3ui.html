@@ -42,7 +42,7 @@
                         <div class="row">
                             <div class="col-md-4 metadataDisplay"></div>
                             <div class="col-md-3">
-                                {{> s3plot_graphExport}}
+                                {{> s3plot_export}}
                             </div>
                             <div class="col-md-5">
                                 {{> s3plot_permalink}}
@@ -107,10 +107,29 @@
     </div>
 </template>
 
-<template name="s3plot_graphExport">
+<template name="s3plot_export">
     <div class="graphExport">
-        <div class="makeGraph btn btn-default">Export Graph to SVG Image</div>
+        <div class="btn-group-vertical">
+            <div class="makecsv btn btn-default">Export Graph to CSV File</div>
+            <div class="makeGraph btn btn-default">Export Graph to SVG Image</div>
+        </div>
         <div class="download-graph"></div>
+        <div class="modal fade csv-modal" role="dialog" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></div>
+                        <div class="csv-settings">
+                            Settings go here
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="btn btn-default" data-dismiss="modal">Close</div>
+                        <div class="btn btn-primary">Create CSV File</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 

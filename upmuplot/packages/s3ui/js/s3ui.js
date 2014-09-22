@@ -165,6 +165,9 @@ function init_graph(self, c1, c2) {
             self.find(".download-graph").innerHTML = 'Creating image...';
             setTimeout(function () { s3ui.createPlotDownload(self); }, 50);
         };
+    self.find(".makecsv").onclick = function () {
+            $(self.find(".csv-modal")).modal("toggle");
+        };
     self.find(".addAxis").onclick = function () {
             s3ui.addYAxis(self);
         };

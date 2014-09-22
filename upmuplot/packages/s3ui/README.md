@@ -86,7 +86,7 @@ They are:
 
 * s3plot_plotStyles
 * s3plot_permalink
-* s3plot_graphExport
+* s3plot_export
 * s3plot_chart
 * s3plot_streamLegend
 * s3plot_axisLegend
