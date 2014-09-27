@@ -75,6 +75,9 @@ s3ui.__init__ = function (self) {
             if (self.data[0].bracketURL != undefined) {
                 self.idata.bracketURL = self.data[0].bracketURL;
             }
+            if (self.data[0].csvURL != undefined) {
+                self.idata.csvURL = self.data[0].csvURL;
+            }
             if (self.data[0].permalinkStart != undefined) {
                 self.idata.initPermalink = self.data[0].permalinkStart;
             }
