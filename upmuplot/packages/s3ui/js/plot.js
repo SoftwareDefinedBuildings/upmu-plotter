@@ -117,7 +117,7 @@ function repaintZoomNewData(self, callback, stopCache) {
             self.idata.oldData[stream.uuid] = [stream, data, pwe];
             numResponses++;
             s3ui.setStreamMessage(self, stream.uuid, undefined, 5);
-            if (!stopCache) {
+            if (false && !stopCache) {
                 s3ui.setStreamMessage(self, stream.uuid, "Caching data...", 1);
                 setTimeout(function () { cacheData(self, stream.uuid, thisID, pwe, startTime, endTime); }, 0); // do it asynchronously
             }
@@ -421,6 +421,10 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
     var totalmax;
     var datapointmin, datapointmax;
     var axis;
+    var startIndex, endIndex;
+    var domain = xScale.domain();
+    var startTime = domain[0] - self.idata.offset;
+    var endTime = domain[1] - self.idata.offset;
     for (i = 0; i < yAxes.length; i++) {
         axis = yAxes[i];
         numstreams = axis.streams.length;
@@ -438,7 +442,15 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
                 continue;
             }
             streamdata = data[axis.streams[j].uuid][1];
-            for (k = 0; k < streamdata.length; k++) {
+            startIndex = s3ui.binSearch(streamdata, startTime, function (point) { return point[0]; });
+            if (startIndex < streamdata.length && streamdata[startIndex][0] < startTime) {
+                startIndex++; // make sure we only look at data in the specified range
+            }
+            endIndex = s3ui.binSearch(streamdata, endTime, function (point) { return point[0]; });
+            if (endIndex < streamdata.length && streamdata[endIndex][0] > endTime) {
+                endIndex--; // make sure we only look at data in the specified range
+            }
+            for (k = startIndex; k < endIndex; k++) {
                 datapointmin = streamdata[k][2];
                 datapointmax = streamdata[k][4];
                 if (!(totalmin <= datapointmin)) {

@@ -325,9 +325,10 @@ function insertData(self, uuid, cache, data, dataStart, dataEnd, callback) {
             if (data[n][0] >= cache[j].start_time) {
                 n--;
             }
+            n++;
         }
     }
-    var cacheEntry = new CacheEntry(cacheStart, cacheEnd, dataBefore.concat(data.slice(m, n + 1), dataAfter));
+    var cacheEntry = new CacheEntry(cacheStart, cacheEnd, dataBefore.concat(data.slice(m, n), dataAfter));
     var loadedStreams = self.idata.loadedStreams;
     for (var k = i; k <= j; k++) {
         self.idata.loadedData -= cache[k].cached_data.length;
