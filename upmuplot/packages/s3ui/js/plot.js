@@ -117,7 +117,7 @@ function repaintZoomNewData(self, callback, stopCache) {
             self.idata.oldData[stream.uuid] = [stream, data, pwe];
             numResponses++;
             s3ui.setStreamMessage(self, stream.uuid, undefined, 5);
-            if (false && !stopCache) {
+            if (!stopCache) {
                 s3ui.setStreamMessage(self, stream.uuid, "Caching data...", 1);
                 setTimeout(function () { cacheData(self, stream.uuid, thisID, pwe, startTime, endTime); }, 0); // do it asynchronously
             }
