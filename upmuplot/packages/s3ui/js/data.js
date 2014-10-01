@@ -202,11 +202,8 @@ function makeDataRequest(self, uuid, queryStart, queryEnd, pointwidthexp, halfpw
     the range by half a pointwidth on each side to compensate for that. */
     var halfpwmillisStart = Math.floor(halfpwnanos / 1000000);
     var halfpwnanosStart = halfpwnanos - (1000000 * halfpwmillisStart);
-    var halfpwmillisEnd = Math.ceil(halfpwnanos / 1000000);
-    var halfpwnanosEnd = (1000000 * halfpwmillisEnd) - halfpwnanos;
     halfpwnanosStart = (1000000 + halfpwnanosStart).toString().slice(1);
-    halfpwnanosEnd = (1000000 + halfpwnanosEnd).toString().slice(1);
-    var url = self.idata.dataURLStart + uuid + '?starttime=' + (queryStart + halfpwmillisStart) + halfpwnanosStart + '&endtime=' + (queryEnd - halfpwmillisEnd) + halfpwnanosEnd + '&unitoftime=ns&pw=' + pointwidthexp;
+    var url = self.idata.dataURLStart + uuid + '?starttime=' + (queryStart + halfpwmillisStart) + halfpwnanosStart + '&endtime=' + (queryEnd + halfpwmillisStart) + halfpwnanosStart + '&unitoftime=ns&pw=' + pointwidthexp;
     if (caching) {
         s3ui.getURL(url, function (data) {
                 callback(data, queryStart, queryEnd);
