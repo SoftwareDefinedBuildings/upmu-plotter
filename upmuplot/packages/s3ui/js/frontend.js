@@ -22,6 +22,7 @@ function init_frontend(self) {
             var rightpadding = $parent.css("padding-right");
             return s3ui.parsePixelsToInt(width) - s3ui.parsePixelsToInt(leftpadding) - s3ui.parsePixelsToInt(rightpadding);
         }
+    self.idata.csvURL = "http://bunker.cs.berkeley.edu:9000/multicsv";
 }
 
 /* Adds or removes (depending on the value of SHOW) the stream
@@ -274,6 +275,109 @@ function createPermalink(self) {
         });
 }
 
+function buildCSVMenu(self) {
+    var settingsObj = {};
+    var graphExport = self.find("div.graphExport");
+    var streamsettings = graphExport.querySelector("div.csv-streams");
+    $(streamsettings).empty();
+    var streams = self.idata.selectedStreams.slice(); // In case the list changes in the meantime
+    var update, groups;
+    if (streams.length > 0) {
+        update = d3.select(streamsettings)
+          .selectAll("div")
+          .data(streams);
+        groups = update.enter()
+          .append("div")
+            .attr("class", "input-group");
+        groups.append("span")
+            .attr("class", "input-group-btn")
+          .append("div")
+            .attr("class", "btn btn-default active")
+            .attr("data-toggle", "button")
+            .html("Included")
+            .each(function () {
+                    this.onclick = function () {
+                            var streamName = this.parentNode.nextSibling;
+                            if (this.innerHTML == "Included") {
+                                this.innerHTML = "Include Stream";
+                                delete settingsObj[this.__data__.uuid];
+                                streamName.value = s3ui.getFilepath(this.__data__);
+                            } else {
+                                this.innerHTML = "Included";
+                                settingsObj[this.__data__.uuid] = streamName.value;
+                            }
+                            streamName.disabled = !streamName.disabled;
+                        };
+                });
+        groups.append("input")
+            .attr("type", "text")
+            .attr("class", "form-control")
+            .property("value", function (d) { return s3ui.getFilepath(d); })
+            .each(function () {
+                    this.onchange = function () {
+                            settingsObj[this.__data__.uuid] = this.value;
+                        };
+                    this.onchange();
+                });
+        update.exit().remove();
+    } else {
+        streamsettings.innerHTML = "You must plot streams in your desired time range before you can generate a CSV file.";
+    }
+    
+    var pwselector = graphExport.querySelector(".pointwidth-selector");
+    var domain = self.idata.oldXScale;
+    var submitButton = graphExport.querySelector("div.csv-button");
+    var textSpace;
+    if (streams.length > 0 && domain != undefined) {
+        domain = domain.domain();
+        $(pwselector).css("display", "");
+        pwselector.onchange = function () {
+                var pw = Math.pow(2, this.value);
+                var m1 = this.nextSibling.nextSibling;
+                m1.innerHTML = "Point width: " + s3ui.nanosToUnit(pw) + " [exponent = " + this.value + "]";
+                var pps = Math.ceil(1000000 * (domain[1] - domain[0]) / pw);
+                m1.nextSibling.nextSibling.innerHTML = "About " + pps + (pps == 1 ? " point per stream" : " points per stream");
+            };
+        pwselector.value = self.idata.oldData[streams[0].uuid][2];
+        pwselector.onchange();
+        
+        submitButton.onclick = function () {
+                createCSVDownload(self, streams, settingsObj, domain, parseInt(pwselector.value));
+            };
+    } else {
+        $(pwselector).css("display", "none");
+        textSpace = pwselector.nextSibling.nextSibling;
+        textSpace.innerHTML = "You must plot streams in your desired time range before you can select a resolution.";
+        textSpace.nextSibling.nextSibling.innerHTML = "";
+        submitButton.onclick = function () { return false; };
+    }
+}
+
+function createCSVDownload(self, streams, settingsObj, domain, pwe) {
+    streams = streams.filter(function (x) { return settingsObj.hasOwnProperty(x.uuid); }).map(function (x) { return x.uuid; });
+    var dataJSON = {
+            "UUIDS": streams,
+            "Labels": streams.map(function (x) { return settingsObj[x]; }),
+            "StartTime": domain[0] - self.idata.offset,
+            "EndTime": domain[1] - self.idata.offset,
+            "UnitOfTime": "ms",
+            "PointWidth": pwe
+        };
+    var linkLocation = self.find(".download-csv");
+    linkLocation.innerHTML = "Waiting for server...";
+    Meteor.call("processQuery", "SENDPOST " + self.idata.csvURL + " " + JSON.stringify(dataJSON), function (error, result) {
+            if (error == undefined) {
+                var downloadAnchor = document.createElement("a");
+                downloadAnchor.innerHTML = "Download CSV (created " + (new Date()).toLocaleString() + ", local time)";
+                downloadAnchor.setAttribute("href", 'data:text/csv;charset="utf-8",' + encodeURIComponent(result));
+                downloadAnchor.setAttribute("download", "graph.csv");
+                var linkLocation = self.find(".download-csv");
+                linkLocation.innerHTML = ""; // Clear what was there before...
+                linkLocation.insertBefore(downloadAnchor, null); // ... and replace it with this download link
+            }
+        });
+}
+
 s3ui.init_frontend = init_frontend;
 s3ui.toggleLegend = toggleLegend;
 s3ui.setStreamMessage = setStreamMessage;
@@ -281,3 +385,4 @@ s3ui.updatePlotMessage = updatePlotMessage;
 s3ui.getSelectedTimezone = getSelectedTimezone;
 s3ui.createPlotDownload = createPlotDownload;
 s3ui.createPermalink = createPermalink;
+s3ui.buildCSVMenu = buildCSVMenu;

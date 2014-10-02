@@ -75,6 +75,9 @@ s3ui.__init__ = function (self) {
             if (self.data[0].bracketURL != undefined) {
                 self.idata.bracketURL = self.data[0].bracketURL;
             }
+            if (self.data[0].csvURL != undefined) {
+                self.idata.csvURL = self.data[0].csvURL;
+            }
             if (self.data[0].permalinkStart != undefined) {
                 self.idata.initPermalink = self.data[0].permalinkStart;
             }
@@ -164,6 +167,10 @@ function init_graph(self, c1, c2) {
     self.find(".makeGraph").onclick = function () {
             self.find(".download-graph").innerHTML = 'Creating image...';
             setTimeout(function () { s3ui.createPlotDownload(self); }, 50);
+        };
+    self.find(".makecsv").onclick = function () {
+            s3ui.buildCSVMenu(self);
+            $(self.find(".csv-modal")).modal("toggle");
         };
     self.find(".addAxis").onclick = function () {
             s3ui.addYAxis(self);

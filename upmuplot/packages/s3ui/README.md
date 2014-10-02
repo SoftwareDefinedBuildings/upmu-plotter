@@ -42,6 +42,7 @@ The object of parameters may have the following properties (all optional):
 * dataURLStart - Specifies the start of the url where to get data. Defaults to "http://bunker.cs.berkeley.edu/backend/api/data/uuid/".
 * tagsURL - Specifies the url to query to get stream info. Defaults to "http://new.openbms.org/backend/api/query?".
 * bracketURL - Specifies the url to query to find the time range in which streams have data. Defaults to "http://quasar.cal-sdb.org:9000/q/brackets".
+* csvURL - Specifies the url to query to generate CSV files containing data. Defaults to "http://bunker.cs.berkeley.edu:9000/multicsv".
 * width - A function that returns the targed width of the graph (_not_ just the chart area) to use. Defaults to a function that sizes the graph to the well it is in ("div.chartContainer"). If you plan to override this with a custom setting, the s3ui.pixelsToInt helper function may be of interest to you.
 * widthmin - The minimum width, in pixels, of the width of the chart area (_not_ the whole graph). Defaults to 300.
 * height - Specifies the height of the chart area (_not_ the whole graph). Defaults to 300.
@@ -86,7 +87,7 @@ They are:
 
 * s3plot_plotStyles
 * s3plot_permalink
-* s3plot_graphExport
+* s3plot_export
 * s3plot_chart
 * s3plot_streamLegend
 * s3plot_axisLegend

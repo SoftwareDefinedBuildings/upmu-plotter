@@ -42,7 +42,7 @@
                         <div class="row">
                             <div class="col-md-4 metadataDisplay"></div>
                             <div class="col-md-3">
-                                {{> s3plot_graphExport}}
+                                {{> s3plot_export}}
                             </div>
                             <div class="col-md-5">
                                 {{> s3plot_permalink}}
@@ -107,10 +107,38 @@
     </div>
 </template>
 
-<template name="s3plot_graphExport">
+<template name="s3plot_export">
     <div class="graphExport">
-        <div class="makeGraph btn btn-default">Export Graph to SVG Image</div>
+        <div class="btn-group-vertical">
+            <div class="makecsv btn btn-default">Export Graph to CSV File</div>
+            <div class="makeGraph btn btn-default">Export Graph to SVG Image</div>
+        </div>
         <div class="download-graph"></div>
+        <div class="modal fade csv-modal" role="dialog" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></div>
+                        <div class="csv-settings">
+                            <h4>1. Select the streams to include in the CSV file.</h4>
+                            <div class="csv-streams"></div>
+                            <h4>2. Select the resolution at which to get the data.</h4>
+                            <div class="csv-pointwidth">
+                                <input type="range" class="pointwidth-selector" min="0" max="63" />
+                                <div class="selected-pointwidth"></div>
+                                <div class="selected-pw-desc"></div>
+                            </div>
+                            <h4>3. Click the "Create CSV File" button to generate the CSV file.</h4>
+                            <div class="download-csv"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="btn btn-default" data-dismiss="modal">Close</div>
+                        <div class="csv-button btn btn-primary">Create CSV File</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
