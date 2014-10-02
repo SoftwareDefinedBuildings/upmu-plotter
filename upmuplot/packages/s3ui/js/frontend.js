@@ -336,7 +336,7 @@ function buildCSVMenu(self) {
                 var m1 = this.nextSibling.nextSibling;
                 m1.innerHTML = "Point width: " + s3ui.nanosToUnit(pw) + " [exponent = " + this.value + "]";
                 var pps = Math.ceil(1000000 * (domain[1] - domain[0]) / pw);
-                m1.nextSibling.nextSibling.innerHTML = "Less than or equal to " + pps + (pps == 1 ? " point per stream" : " points per stream");
+                m1.nextSibling.nextSibling.innerHTML = "About " + pps + (pps == 1 ? " point per stream" : " points per stream");
             };
         pwselector.value = self.idata.oldData[streams[0].uuid][2];
         pwselector.onchange();

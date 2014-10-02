@@ -4,7 +4,8 @@ if (Meteor.isClient) {
         {
             tagsURL: localtest ? 'http://localhost:7856' : 'http://upmuplot.cal-sdb.org:4523/',
             dataURLStart: localtest ? 'http://localhost:7856/data/uuid/' : 'http://upmuplot.cal-sdb.org:9000/data/uuid/',
-            bracketURL: 'http://upmuplot.cal-sdb.org:9000/q/bracket'
+            bracketURL: 'http://upmuplot.cal-sdb.org:9000/q/bracket',
+            csvURL: 'http://upmuplot.cal-sdb.org:9000/multicsv'
         }, 
         function (inst) 
         { 
