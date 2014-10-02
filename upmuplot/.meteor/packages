@@ -7,7 +7,7 @@ standard-app-packages
 autopublish
 insecure
 s3ui
-iron-router
+iron:router
 jquery
-bootstrap-3
+mizzao:bootstrap-3
 http
