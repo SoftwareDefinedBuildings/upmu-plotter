@@ -168,6 +168,7 @@ function init_graph(self, c1, c2) {
             self.find(".download-graph").innerHTML = 'Creating image...';
             setTimeout(function () { s3ui.createPlotDownload(self); }, 50);
         };
+    self.find(".csv-form").setAttribute("action", self.idata.csvURL);
     self.find(".makecsv").onclick = function () {
             s3ui.buildCSVMenu(self);
             $(self.find(".csv-modal")).modal("toggle");
