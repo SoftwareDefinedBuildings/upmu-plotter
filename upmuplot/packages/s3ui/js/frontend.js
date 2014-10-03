@@ -342,7 +342,7 @@ function buildCSVMenu(self) {
         pwselector.onchange();
         
         submitButton.onclick = function () {
-                createCSVDownload(self, streams, settingsObj, domain, parseInt(pwselector.value));
+                createCSVDownload(self, streams, settingsObj, domain, parseInt(pwselector.value), graphExport);
             };
     } else {
         $(pwselector).css("display", "none");
@@ -353,7 +353,7 @@ function buildCSVMenu(self) {
     }
 }
 
-function createCSVDownload(self, streams, settingsObj, domain, pwe) {
+function createCSVDownload(self, streams, settingsObj, domain, pwe, graphExport) {
     streams = streams.filter(function (x) { return settingsObj.hasOwnProperty(x.uuid); }).map(function (x) { return x.uuid; });
     var dataJSON = {
             "UUIDS": streams,
@@ -363,8 +363,10 @@ function createCSVDownload(self, streams, settingsObj, domain, pwe) {
             "UnitOfTime": "ms",
             "PointWidth": pwe
         };
-    var linkLocation = self.find(".download-csv");
-    linkLocation.innerHTML = "Waiting for server...";
+    var csvform = graphExport.querySelector(".csv-form");
+    csvform.querySelector(".csv-form-data").value = JSON.stringify(dataJSON);
+    csvform.submit();
+    /*
     Meteor.call("processQuery", "SENDPOST " + self.idata.csvURL + " " + JSON.stringify(dataJSON), function (error, result) {
             if (error == undefined) {
                 var downloadAnchor = document.createElement("a");
@@ -376,6 +378,7 @@ function createCSVDownload(self, streams, settingsObj, domain, pwe) {
                 linkLocation.insertBefore(downloadAnchor, null); // ... and replace it with this download link
             }
         });
+    */
 }
 
 s3ui.init_frontend = init_frontend;
