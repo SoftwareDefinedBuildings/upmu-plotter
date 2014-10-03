@@ -332,17 +332,17 @@ function buildCSVMenu(self) {
         domain = domain.domain();
         $(pwselector).css("display", "");
         pwselector.onchange = function () {
-                var pw = Math.pow(2, this.value);
+                var pw = Math.pow(2, 62 - this.value);
                 var m1 = this.nextSibling.nextSibling;
-                m1.innerHTML = "Point width: " + s3ui.nanosToUnit(pw) + " [exponent = " + this.value + "]";
+                m1.innerHTML = "Point width: " + s3ui.nanosToUnit(pw) + " [exponent = " + (62 - this.value) + "]";
                 var pps = Math.ceil(1000000 * (domain[1] - domain[0]) / pw);
                 m1.nextSibling.nextSibling.innerHTML = "About " + pps + (pps == 1 ? " point per stream" : " points per stream");
             };
-        pwselector.value = self.idata.oldData[streams[0].uuid][2];
+        pwselector.value = 63 - self.idata.oldData[streams[0].uuid][2];
         pwselector.onchange();
         
         submitButton.onclick = function () {
-                createCSVDownload(self, streams, settingsObj, domain, parseInt(pwselector.value), graphExport);
+                createCSVDownload(self, streams, settingsObj, domain, 62 - parseInt(pwselector.value), graphExport);
             };
     } else {
         $(pwselector).css("display", "none");
