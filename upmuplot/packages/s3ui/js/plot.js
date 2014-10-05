@@ -729,14 +729,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             startIndex++; // make sure we only plot data in the specified range
         }
         if (lineChunks.length > 0) {
-            if (startIndex < streamdata.length && (xScale(
-            streamdata[startIndex]
-            [0]
-             + offset) + 
-             (streamdata[startIndex][1] / pixelw) 
-            - diff - lineChunks[lineChunks.length - 1][1]
-            [lineChunks[lineChunks.length - 1][1].length - 1]
-            [0]) * pixelw < 1.5 * pw) {
+            if (startIndex < streamdata.length && (xScale(streamdata[startIndex][0] + offset) + (streamdata[startIndex][1] / pixelw) - diff - lineChunks[lineChunks.length - 1][1][lineChunks[lineChunks.length - 1][1].length - 1][0]) * pixelw < 1.5 * pw) {
                 currLineChunk = lineChunks.pop();
             }
         }
@@ -875,10 +868,10 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
 
 function processLineChunk(lc, lineChunks, points) {
     if (lc[0].length == 1) {
-        var minval = lc[0];
-        var maxval = lc[2];
-        var meanval = lc[1];
-        if (minval[0][1] == maxval[0][1]) {
+        var minval = lc[0][0];
+        var maxval = lc[2][0];
+        var meanval = lc[1][0];
+        if (minval[1] == maxval[1]) {
             points.push(meanval[0]);
         } else {
             lc[0] = [[minval[0] - 0.5, minval[1]], [minval[0] + 0.5, minval[1]]];
