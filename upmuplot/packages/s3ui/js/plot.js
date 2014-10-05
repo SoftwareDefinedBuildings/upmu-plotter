@@ -698,7 +698,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
       .append("g")
       .attr("class", "streamGroup");
         
-    if (!drawFast || true) {
+    if (!drawFast) {
         update
             .attr("class", function (dataObj) { return "streamGroup series-" + dataObj.uuid; })
             .attr("stroke", function (d) { return d.color; })
@@ -754,7 +754,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     
     if (self.idata.showingDensity != undefined) {
         s3ui.setStreamMessage(self, self.idata.showingDensity, "Interval width: " + s3ui.nanosToUnit(Math.pow(2, self.idata.oldData[self.idata.showingDensity][2])), 4);
-        self.$("svg.chart g.data-density-plot polyline").remove();
+        self.$("svg.chart g.data-density-plot").empty();
         showDataDensity(self, self.idata.showingDensity);
     }
 }
@@ -813,59 +813,59 @@ function showDataDensity(self, uuid) {
     var totalmax;
     var xPixel;
     var prevIntervalEnd;
-    var toDraw = [[0, 0]];
+    var toDraw = [];
     var lastiteration;
     var startIndex;
     var oldXScale = self.idata.oldXScale;
     if (streamdata.length == 0) {
-        toDraw.push([WIDTH, 0]);
         totalmax = 0;
     } else {    
         startIndex = s3ui.binSearch(streamdata, startTime, function (point) { return point[0]; });
-        if (startIndex > 0 && streamdata[startIndex][0] > startTime) {
-            startIndex--;
+        if (startIndex < streamdata.length && streamdata[startIndex][0] < startTime) {
+            startIndex++;
         }
-        totalmax = streamdata[startIndex][5];
-        lastiteration = false;
-        for (var i = startIndex; i < streamdata.length; i++) {
-            xPixel = oldXScale(streamdata[i][0] + offset);
-            xPixel += ((streamdata[i][1] - pw/2) / pixelw);
-            if (xPixel < 0) {
-                xPixel = 0;
-            }
-            if (xPixel > WIDTH) {
-                xPixel = WIDTH;
-                lastiteration = true;
-            }
-            if (i == 0 || ((streamdata[i][0] - streamdata[i - 1][0]) * 1000000) + streamdata[i][1] - streamdata[i - 1][1] <= pw) {
-                toDraw.push([xPixel, toDraw[toDraw.length - 1][1]]);
-            } else {
-                prevIntervalEnd = Math.max(0, oldXScale(streamdata[i - 1][0] + offset) + ((streamdata[i - 1][1] + (pw/2)) / pixelw));
-                if (prevIntervalEnd != 0) {
-                    if (i == startIndex) {
-                        toDraw.pop();
-                    }
-                    toDraw.push([prevIntervalEnd, streamdata[i - 1][5]]);
+        if (startIndex < streamdata.length) {
+            totalmax = streamdata[startIndex][5];
+            lastiteration = false;
+            for (var i = startIndex; i < streamdata.length; i++) {
+                xPixel = oldXScale(streamdata[i][0] + offset);
+                xPixel += ((streamdata[i][1] - pw/2) / pixelw);
+                if (xPixel < 0) {
+                    xPixel = 0;
                 }
-                toDraw.push([prevIntervalEnd, 0]);
-                toDraw.push([xPixel, 0]);
+                if (xPixel > WIDTH) {
+                    xPixel = WIDTH;
+                    lastiteration = true;
+                }
+                if (i != 0) { // Draw a point to account for the transition between the previous point and this one, if necessary
+                    if (((streamdata[i][0] - streamdata[i - 1][0]) * 1000000) + streamdata[i][1] - streamdata[i - 1][1] <= pw) {
+                        if (i == startIndex) {
+                            toDraw.push([0, streamdata[i - 1][5]]);
+                        }
+                        toDraw.push([xPixel, toDraw[toDraw.length - 1][1]]);
+                    } else {
+                        prevIntervalEnd = Math.max(0, oldXScale(streamdata[i - 1][0] + offset) + ((streamdata[i - 1][1] + (pw/2)) / pixelw)); // x pixel of end of previous interval
+                        if (prevIntervalEnd != 0) {
+                            toDraw.push([prevIntervalEnd, streamdata[i - 1][5]]);
+                        }
+                        toDraw.push([prevIntervalEnd, 0]);
+                        toDraw.push([xPixel, 0]);
+                    }
+                }
+                if (!lastiteration) {
+                    toDraw.push([xPixel, streamdata[i][5]]);
+                }
+                if (!(streamdata[i][5] <= totalmax)) {
+                    totalmax = streamdata[i][5];
+                }
+                if (lastiteration) {
+                    break;
+                }
             }
-            if (!lastiteration) {
-                toDraw.push([xPixel, streamdata[i][5]]);
-            }
-            if (!(streamdata[i][5] <= totalmax)) {
-                totalmax = streamdata[i][5];
-            }
-            if (lastiteration) {
-                break;
-            }
-        }
-        if (!lastiteration && ((oldXScale.domain()[1] - offset - streamdata[i - 1][0]) * 1000000) + streamdata[i - 1][1] > pw) {
-            toDraw.push([toDraw[toDraw.length - 1][0], 0]);
-            toDraw.push([WIDTH, 0]);
+        } else {
+            totalmax = 0;
         }
     }
-    
     var yScale;
     if (totalmax == 0) {
         totalmax = 1;
@@ -885,11 +885,20 @@ function showDataDensity(self, uuid) {
         }
     }
     var ddplot = d3.select(self.find("svg.chart g.data-density-plot"));
-    ddplot.append("polyline")
-        .attr("class", "density-" + uuid)
-        .attr("points", toDraw.join(" "))
-        .attr("fill", "none")
-        .attr("stroke", self.idata.streamSettings[uuid].color);
+    if (toDraw.length == 1) {
+        ddplot.append("circle")
+            .attr("class", "density-" + uuid)
+            .attr("cx", toDraw[0][0])
+            .attr("cy", toDraw[0][1])
+            .attr("r", 1)
+            .attr("fill", self.idata.streamSettings[uuid].color);
+    } else {
+        ddplot.append("polyline")
+            .attr("class", "density-" + uuid)
+            .attr("points", toDraw.join(" "))
+            .attr("fill", "none")
+            .attr("stroke", self.idata.streamSettings[uuid].color);
+    }
         
     var formatter = d3.format("d");
     
@@ -904,7 +913,7 @@ function showDataDensity(self, uuid) {
 }
 
 function hideDataDensity(self) {
-    self.$("svg.chart g.data-density-plot polyline").remove();
+    self.$("svg.chart g.data-density-plot").empty();
     self.$("svg.chart g.data-density-plot g.data-density-axis").empty();
     $("svg.chart g.series-" + self.idata.showingDensity).attr({"stroke-width": 1, "fill-opacity": 0.3});
     self.idata.showingDensity = undefined;
