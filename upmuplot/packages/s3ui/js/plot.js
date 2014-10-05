@@ -116,6 +116,10 @@ function repaintZoomNewData(self, callback, stopCache) {
             if (thisID != self.idata.drawRequestID) { // another request has been made
                 return;
             }
+            // Invalidate the entry in the line cache if necessary
+            if (self.idata.lineCache.hasOwnProperty(stream.uuid) && self.idata.lineCache[stream.uuid] != pwe) {
+                delete self.idata.lineCache[stream.uuid];
+            }
             s3ui.limitMemory(self, selectedStreams, self.idata.oldOffsets, domain[0], domain[1], 300000 * selectedStreams.length, 150000 * selectedStreams.length);
             self.idata.oldData[stream.uuid] = [stream, data, pwe];
             numResponses++;
@@ -650,6 +654,8 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     var trueEnd;
     var wwidth;
     
+    var dataentry;
+    
     for (var i = 0; i < streams.length; i++) {
         xPixel = -Infinity;
         if (!data.hasOwnProperty(streams[i].uuid)) {
@@ -658,8 +664,9 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         lineChunks = [];
         points = [];
         currLineChunk = [[], [], [], []]; // first array is min points, second is mean points, third is max points, fourth is time as an int
-        streamdata = data[streams[i].uuid][1];
-        pw = Math.pow(2, data[streams[i].uuid][2]);
+        dataentry = data[streams[i].uuid];
+        streamdata = dataentry[1];
+        pw = Math.pow(2, dataentry[2]);
         yScale = axisData[streamSettings[streams[i].uuid].axisid][2];
         startTime = domain[0].getTime() - offset;
         endTime = domain[1].getTime() - offset;
@@ -667,13 +674,8 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         trueEnd = endTime;
 
         cached = self.idata.lineCache[streams[i].uuid];
-        //console.log("iter");
-        //if (cached != undefined) {
-        //    console.log(cached.window_width);
-        //    console.log(cached.end - cached.start);
-        //}
         wwidth = endTime - startTime;
-        if (cached != undefined && Math.abs(cached.window_width - wwidth) <= 1 && cached.start <= endTime && cached.end >= startTime) {
+        if (cached != undefined && cached.pwe == dataentry[2] && Math.abs(cached.window_width - wwidth) <= 1 && cached.start <= endTime && cached.end >= startTime) {
             // Cache hit!
             diff = cached.diff + (cached.start - startTime) * WIDTH / (domain[1] - domain[0]);
             if (cached.start > startTime) {
@@ -718,7 +720,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             }
         } else {
             // Cache miss
-            cached = { window_width: wwidth };
+            cached = { window_width: wwidth, pwe: dataentry[2] };
             self.idata.lineCache[streams[i].uuid] = cached;
         }
         //console.log(startTime);
