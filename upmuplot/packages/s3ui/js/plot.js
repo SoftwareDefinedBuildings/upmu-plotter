@@ -657,7 +657,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         }
         lineChunks = [];
         points = [];
-        currLineChunk = [[], [], []]; // first array is min points, second is mean points, third is max points
+        currLineChunk = [[], [], [], []]; // first array is min points, second is mean points, third is max points, fourth is time as an int
         streamdata = data[streams[i].uuid][1];
         pw = Math.pow(2, data[streams[i].uuid][2]);
         yScale = axisData[streamSettings[streams[i].uuid].axisid][2];
@@ -690,20 +690,21 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
                 startTime = cached.end;
                 if (cached.lines.length > 0) {
                     j = cached.lines.length - 1;
-                    while (j > 0 && cached.lines[j][1][0][0] >= -diff) {
+                    while (j > 0 && cached.lines[j][3][0] >= -diff) {
                         j--;
                     }
                     if (j > 0) {
                         cached.lines.splice(0, j);
                     }
                     m = cached.lines[0]; // the cache entry we have to trim
-                    j = s3ui.binSearch(m[1], -diff, function (entry) { return entry[0]; });
-                    if (m[1][j] < -diff) {
+                    j = s3ui.binSearch(m[3], -diff, function (entry) { return entry; });
+                    if (m[3][j] < -diff) {
                         j++;
                     }
                     m[0].splice(0, j);
                     m[1].splice(0, j);
                     m[2].splice(0, j);
+                    m[3].splice(0, j);
                     lineChunks = cached.lines;
                 }
                 if (cached.points.length > 0) {
@@ -729,7 +730,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             startIndex++; // make sure we only plot data in the specified range
         }
         if (lineChunks.length > 0) {
-            if (startIndex < streamdata.length && (xScale(streamdata[startIndex][0] + offset) + (streamdata[startIndex][1] / pixelw) - diff - lineChunks[lineChunks.length - 1][1][lineChunks[lineChunks.length - 1][1].length - 1][0]) * pixelw < 1.5 * pw) {
+            if (startIndex < streamdata.length && (xScale(streamdata[startIndex][0] + offset) + (streamdata[startIndex][1] / pixelw) - diff - lineChunks[lineChunks.length - 1][3][lineChunks[lineChunks.length - 1][3].length - 1]) * pixelw < 1.5 * pw) {
                 currLineChunk = lineChunks.pop();
             }
         }
@@ -737,40 +738,43 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             prevpt = streamdata[j - 1];
             if (currLineChunk[0].length > 0 && j != 0 && ((currpt[0] - prevpt[0]) * 1000000 + (currpt[1] - prevpt[1]) > pw)) {
                 processLineChunk(currLineChunk, lineChunks, points);
-                currLineChunk = [[], [], []];
+                currLineChunk = [[], [], [], []];
             }
             // correct for nanoseconds and translation
             xPixel += (currpt[1] / pixelw) - diff;
             mint = Math.min(Math.max(yScale(currpt[2]), -2000000), 2000000);
-            currLineChunk[0].push([xPixel, mint]);
-            currLineChunk[1].push([xPixel, Math.min(Math.max(yScale(currpt[3]), -2000000), 2000000)]);
+            currLineChunk[0].push(xPixel + "," + mint);
+            currLineChunk[1].push(xPixel + "," + Math.min(Math.max(yScale(currpt[3]), -2000000), 2000000));
             maxt = Math.min(Math.max(yScale(currpt[4]), -2000000), 2000000);
-            currLineChunk[2].push([xPixel, maxt]);
+            currLineChunk[2].push(xPixel + "," + maxt);
+            currLineChunk[3].push(xPixel);
         }
         if (fillAfter) {
             if (cached.lines.length > 0) {
-                if (currLineChunk[1].length > 0 && (cached.lines[0][1][0] - currLineChunk[1][0]) * pixelw > pw * 1.5) {
+                if (currLineChunk[1].length > 0 && (cached.lines[0][3][0] - currLineChunk[3][currLineChunk[3].length - 1]) * pixelw > pw * 1.5) {
                     processLineChunk(currLineChunk, lineChunks, points);
                 } else {
                     cached.lines[0][0] = $.merge(currLineChunk[0], cached.lines[0][0]);
                     cached.lines[0][1] = $.merge(currLineChunk[1], cached.lines[0][1]);
                     cached.lines[0][2] = $.merge(currLineChunk[2], cached.lines[0][2]);
+                    cached.lines[0][3] = $.merge(currLineChunk[3], cached.lines[0][3]);
                 }
                 j = 0;
-                while (j < cached.lines.length - 1 && cached.lines[j][1][cached.lines[j][1].length - 1][0] < WIDTH - diff) {
+                while (j < cached.lines.length - 1 && cached.lines[j][3][cached.lines[j][3].length - 1] < WIDTH - diff) {
                     j++;
                 }
                 if (j < cached.lines.length - 1) {
                     cached.lines.splice(j + 1, cached.lines.length);
                 }
                 m = cached.lines[j]; // the cache entry we have to trim
-                j = s3ui.binSearch(m[1], WIDTH - diff, function (entry) { return entry[0]; });
-                if (m[1][j] >= WIDTH - diff) {
+                j = s3ui.binSearch(m[3], WIDTH - diff, function (entry) { return entry; });
+                if (m[3][j] >= WIDTH - diff) {
                     j--;
                 }
                 m[0].splice(j + 1, m[0].length);
                 m[1].splice(j + 1, m[1].length);
                 m[2].splice(j + 1, m[2].length);
+                m[3].splice(j + 1, m[3].length);
                 $.merge(lineChunks, cached.lines);
             }
             $.merge(points, cached.points);
@@ -803,15 +807,16 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     update.enter()
       .append("g")
       .attr("class", "streamGroup");
+      
+    update.attr("transform", function (d) { return "translate(" + d.trans + ", 0)"; });
         
-    if (!drawFast || true) {
+    if (!drawFast) {
         update
             .attr("class", function (dataObj) { return "streamGroup series-" + dataObj.uuid; })
             .attr("stroke", function (d) { return d.color; })
             .attr("stroke-width", 1)
             .attr("fill", function (d) { return d.color; })
-            .attr("fill-opacity", 0.3)
-            .attr("transform", function (d) { return "translate(" + d.trans +", 0)"; });
+            .attr("fill-opacity", 0.3);
     }
         
     update.exit()
@@ -871,12 +876,17 @@ function processLineChunk(lc, lineChunks, points) {
         var minval = lc[0][0];
         var maxval = lc[2][0];
         var meanval = lc[1][0];
-        if (minval[1] == maxval[1]) {
-            points.push(meanval[0]);
+        var pixelval = lc[3][0];
+        var meanv = meanval.split(",");
+        if (minval == maxval) {
+            points.push([pixelval, parseFloat(meanv[1])]);
         } else {
-            lc[0] = [[minval[0] - 0.5, minval[1]], [minval[0] + 0.5, minval[1]]];
-            lc[1] = [[meanval[0] - 0.5, meanval[1]], [meanval[0] + 0.5, meanval[1]]];
-            lc[2] = [[maxval[0] - 0.5, maxval[1]], [maxval[0] + 0.5, maxval[1]]];
+            var minv = minval.split(",");
+            lc[0] = [(pixelval - 0.5) + "," + minv[1], (pixelval + 0.5) + "," + minv[1]];
+            lc[1] = [(pixelval - 0.5) + "," + meanv[1], (pixelval + 0.5) + "," + meanv[1]];
+            var maxv = maxval.split(",");
+            lc[2] = [(pixelval - 0.5) + "," + maxv[1], (pixelval + 0.5) + "," + maxv[1]];
+            lc[3] = [pixelval - 0.5, pixelval + 0.5];
             lineChunks.push(lc);
         }
     } else {
