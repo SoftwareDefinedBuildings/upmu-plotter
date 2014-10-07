@@ -30,6 +30,7 @@ Meteor.methods({
                         });
                     return result.content;
                 } catch (err) {
+                    console.log(query);
                     console.log(err);
                     return '[]';
                 }

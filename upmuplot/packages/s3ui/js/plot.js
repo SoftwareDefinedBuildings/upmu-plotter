@@ -114,7 +114,9 @@ function repaintZoomNewData(self, callback, stopCache) {
                 return;
             }
             s3ui.limitMemory(self, selectedStreams, self.idata.oldOffsets, domain[0], domain[1], 300000 * selectedStreams.length, 150000 * selectedStreams.length);
-            self.idata.oldData[stream.uuid] = [stream, data, pwe];
+            if (data != undefined) {
+                self.idata.oldData[stream.uuid] = [stream, data, pwe];
+            }
             numResponses++;
             s3ui.setStreamMessage(self, stream.uuid, undefined, 5);
             if (!stopCache) {
@@ -717,9 +719,9 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         update
             .attr("class", function (dataObj) { return "streamGroup series-" + dataObj.uuid; })
             .attr("stroke", function (d) { return d.color; })
-            .attr("stroke-width", 1)
+            .attr("stroke-width", function (d) { return self.idata.showingDensity == d.uuid ? 3 : 1; })
             .attr("fill", function (d) { return d.color; })
-            .attr("fill-opacity", 0.3);
+            .attr("fill-opacity", function (d) { return self.idata.showingDensity == d.uuid ? 0.5 : 0.3; });
     }
         
     update.exit()

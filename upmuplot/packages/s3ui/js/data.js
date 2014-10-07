@@ -123,8 +123,8 @@ function ensureData(self, uuid, pointwidthexp, startTime, endTime, callback, cac
     pointwidthexp = Math.min(self.idata.pweHigh, pointwidthexp);
     var halfPWnanos = Math.pow(2, pointwidthexp - 1) - 1;
     var halfPWmillis = halfPWnanos / 1000000;
-    startTime = Math.min(Math.max(startTime, self.idata.queryLow - Math.floor(halfPWmillis)), self.idata.queryHigh - Math.ceil(halfPWmillis) - 1);
-    endTime = Math.min(Math.max(endTime, self.idata.queryLow + Math.ceil(halfPWmillis) + 1), self.idata.queryHigh + Math.floor(halfPWmillis));
+    startTime = Math.min(Math.max(startTime, self.idata.queryLow + Math.ceil(halfPWmillis)), self.idata.queryHigh - Math.ceil(halfPWmillis) - 1);
+    endTime = Math.min(Math.max(endTime, self.idata.queryLow + Math.ceil(halfPWmillis) + 1), self.idata.queryHigh - Math.ceil(halfPWmillis));
     var dataCache = self.idata.dataCache;
     // Create the mapping for this stream if it isn't already present
     if (!dataCache.hasOwnProperty(uuid)) {
@@ -153,6 +153,7 @@ function ensureData(self, uuid, pointwidthexp, startTime, endTime, callback, cac
         callback(cache[i].cached_data);
     } else {
         // Fetch the data between the cache entries, and consolidate into one entry
+        var si = i;
         var numReceived = 0;
         var urlCallback = function (streamdata, start, end) {
                 var callbackToUse;
@@ -167,7 +168,8 @@ function ensureData(self, uuid, pointwidthexp, startTime, endTime, callback, cac
                         data = JSON.parse(streamdata)[0].XReadings;
                     } catch (err) {
                         console.log('Invalid data response from server: ' + err);
-                        callback([]);
+                        // Just use the previous data that was cached for drawing
+                        callback(undefined);
                         return;
                     }
                     insertData(self, uuid, cache, data, start, end, callbackToUse);
