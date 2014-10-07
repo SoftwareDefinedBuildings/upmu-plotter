@@ -431,6 +431,10 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
         if (numstreams > 0) {
             toDraw.push(axis);
         }
+        if (axis.newaxis && (axis.leftBox.value != "" || axis.rightBox.value != "")) { // Check if the user gave this axis an initial scale
+            axis.newaxis = false;
+            axis.autoscale = false;
+        }
         if (!axis.autoscale && (axis.manualscale[1] > axis.manualscale[0])) {
             axisData[axis.axisid] = [NaN, NaN]; // so we know that we're using a manual scale for this axis
             continue;
@@ -468,7 +472,7 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
             }
             axisData[axis.axisid] = [totalmin, totalmax];
         } else {
-            axisData[axis.axisid] = [-1, 1];
+            axisData[axis.axisid] = [-1, 1, true];
         }
     }
     
@@ -482,12 +486,23 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
                 scale = d3.scale.linear()
                     .domain([elem.manualscale[0], elem.manualscale[1]])
                     .range([self.idata.HEIGHT, 0]);
+                elem.newaxis = false;
             } else { // auto scale
                 scale = d3.scale.linear()
                     .domain([axisData[elem.axisid][0], axisData[elem.axisid][1]])
                     .range([self.idata.HEIGHT, 0])
                     .nice();
                 var domain = scale.domain();
+                if (elem.autoscale) { // if this is the result of an AUTOSCALE rather than bad input...
+                    if (!axisData[elem.axisid][2]) { // only set the text in the axes if autoscale came up with something reasonable
+                        elem.leftBox.value = domain[0];
+                        elem.rightBox.value = domain[1];
+                        elem.newaxis = false;
+                    }
+                    if (!elem.newaxis) {
+                        elem.autoscale = false;
+                    }
+                }
                 elem.manualscale[0] = domain[0];
                 elem.manualscale[1] = domain[1];
             }

@@ -6,6 +6,7 @@ function Axis (id) {
     this.streams = [];
     this.units = {};
     this.autoscale = true;
+    this.newaxis = true;
     this.manualscale = [-1, 1];
     this.right = false; // true if this axis is to be displayed on the right side of the graph
 }
@@ -76,25 +77,28 @@ function addYAxis(self) {
         .attr("class", "axisrangeselect form-inline");
     selectElem.append("span")
         .text("Scale: ");
-    selectElem.append("input")
+    var leftBox = selectElem.append("input")
         .attr("type", "text")
         .attr("class", "axisrange form-control thin-margin-text")
         .attr("style", "width: 50px;")
-        .node().onchange = function () {
+        .node();
+    leftBox.onchange = function () {
                 axisObj.manualscale[0] = parseFloat(this.value.trim());
                 s3ui.applySettings(self, false);
             };
+    axisObj.leftBox = leftBox;
     selectElem.append("span")
         .text(" to ");
-    selectElem.append("input")
+    var rightBox = selectElem.append("input")
         .attr("type", "text")
         .attr("class", "axisrange form-control thin-margin-text")
         .attr("style", "width: 50px;")
-        .node().onchange = function () {
+        .node();
+    rightBox.onchange = function () {
                 axisObj.manualscale[1] = parseFloat(this.value.trim());
                 s3ui.applySettings(self, false);
             };
-            
+    axisObj.rightBox = rightBox;
     var settingsElem = row.append("td").append("table").attr("class", "axissettingtable").attr("style", "width: 175px");
     settingsElem.append("tr")
       .append("div")
@@ -153,29 +157,17 @@ function addYAxis(self) {
             
     var rangeElem = settingsElem.append("tr")
       .append("div")
-        .attr("class", "btn-group")
-        .attr("data-toggle", "buttons")
-      .append("label")
-        .attr("class", "btn btn-info active autoscalebutton")
-        .attr("style", "width: 100%;");
-    rangeElem.append("input")
-        .attr("type", "checkbox")
-        .property("checked", true)
-        .node().onchange = function () {
-                var thisRow = this.parentNode.parentNode.parentNode;
-                axisObj.autoscale = this.checked;
-                if (this.checked) {
-                   thisRow.parentNode.removeChild(thisRow.nextSibling);
-                   s3ui.applySettings(self, false);
-                } else {
-                    thisRow.parentNode.insertBefore(rangeRow, thisRow.nextSibling);
-                    var fields = selectElem.node().getElementsByClassName("axisrange");
-                    fields[0].value = axisObj.manualscale[0];
-                    fields[1].value = axisObj.manualscale[1];
-                }
+        .attr("class", "btn btn-info autoscalebutton")
+        .attr("style", "width: 100%;")
+        .html("Autoscale")
+        .node();
+    rangeElem.onclick = function () {
+                axisObj.autoscale = true;
+                s3ui.applySettings(self, false);
             };
-    rangeElem.append("span")
-      .text("Autoscale");
+    var thisRow = rangeElem.parentNode.parentNode;
+    thisRow.parentNode.appendChild(rangeRow, thisRow.nextSibling);
+    axisObj.rangeRow = rangeRow;
         
     d3.selectAll(self.$("select.axis-select"))
       .append("option")
