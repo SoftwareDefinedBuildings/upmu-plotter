@@ -929,8 +929,9 @@ function showDataDensity(self, uuid) {
 }
 
 function hideDataDensity(self) {
-    self.$("svg.chart g.data-density-plot").empty();
-    self.$("svg.chart g.data-density-plot g.data-density-axis").empty();
+    var ddplot = $(self.find("svg.chart g.data-density-plot"));
+    ddplot.children("polyline, circle").remove();
+    ddplot.children("g.data-density-axis").empty();
     $("svg.chart g.series-" + self.idata.showingDensity).attr({"stroke-width": 1, "fill-opacity": 0.3});
     self.idata.showingDensity = undefined;
 }
