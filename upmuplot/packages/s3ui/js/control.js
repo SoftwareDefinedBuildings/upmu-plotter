@@ -116,44 +116,26 @@ function setAxisSide(id, left) {
 
 /* Sets the scale of the axis with the specified ID to the range [LOW, HIGH].
    If one of LOW and HIGH is undefined (or not specified), only the specified
-   endpoint is changed; if both are undefined, the "Autoscale" settings is set
+   endpoint is changed; if both are undefined, the "Autoscale" setting is set
    to true. */
 function setAxisScale(id, low, high) {
-    if (!this.idata.axisMap.hasOwnProperty(id)) {
+    var axis = this.idata.axisMap[id];
+    if (axis == undefined) {
         return;
     }
-    var autoscale = low == undefined && high == undefined;
-    var currautoscale = this.idata.axisMap[id].autoscale;
-    var row = this.find(".axis-" + id + " .axissettingtable");
     var checkbox;
     var endpoints;
-    if (autoscale) {
-        if (currautoscale) {
-            return;
-        } else {
-            // Check "Autoscale"
-            checkbox = row.querySelector(".autoscalebutton");
-            $(checkbox).addClass("active");
-            checkbox = checkbox.firstChild;
-            checkbox.checked = true;
-            checkbox.onchange();
-        }
+    if (low == undefined && high == undefined) {
+        this.idata.axisMap[id].autoscale = true;
+        s3ui.applySettings(this, false);
     } else {
-        if (currautoscale) {
-            // Uncheck "Autoscale"
-            checkbox = row.querySelector(".autoscalebutton");
-            $(checkbox).removeClass("active");
-            checkbox = checkbox.firstChild;
-            checkbox.checked = false;
-            checkbox.onchange();
-        }
         // Set the endpoints to those specified
-        endpoints = row.querySelectorAll("input.axisrange");
-        if (low != undefined && endpoints[0].value != low) {
+        endpoints = axis.rangeRow.querySelectorAll("input.axisrange");
+        if (low != undefined && endpoints[0].value !== low) {
             endpoints[0].value = low;
             endpoints[0].onchange();
         }
-        if (high != undefined && endpoints[1].value != high) {
+        if (high != undefined && endpoints[1].value !== high) {
             endpoints[1].value = high;
             endpoints[1].onchange();
         }

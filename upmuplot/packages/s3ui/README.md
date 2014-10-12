@@ -125,7 +125,7 @@ The bound methods provided are:
 * removeAxis(id) - Removes the axis with the specified ID, reassigning streams as necessary. The axis with the id "y1" cannot be removed.
 * renameAxis(id, newName) - Assigns the name NEWNAME to the axis with the specified ID.
 * setAxisSide(id, leftOrRight) - Sets the side of the chart area where the axis with the specified ID will be displayed. If LEFTORRIGHT is true, it is set to the left side; otherwise it is set to the right side.
-* setAxisScale(id, low, high) - Sets the scale of the axis with the specifed ID to have the specified LOW and HIGH values. If one of LOW and HIGH is undefined, only the other endpoint of the interval is set; if both are undefined, the "Autoscale" feature is turned on for that axis.
+* setAxisScale(id, low, high) - Sets the scale of the axis with the specifed ID to have the specified LOW and HIGH values. If one of LOW and HIGH is undefined, only the other endpoint of the interval is set; if both are undefined, the "Autoscale" feature is used for that axis (exactly as if the "Autoscale" button were pressed).
 * setStreamAxis(uuid, id) - Assigns the stream with the specifed UUID to the axis with the specified ID.
 * setStreamColor(uuid, color) - Sets the color for the stream with the specified UUID to COLOR.
 * applyAllSettings() - Programmatically clicks the "Apply All Settings and Update Plot" button.
