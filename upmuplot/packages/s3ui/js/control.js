@@ -336,7 +336,7 @@ function finishExecutingPermalink(self, streams, colors, args) {
     }
     if (args.hasOwnProperty('autoupdate')) {
         if (!args.autoupdate) {
-            self.toggleAutomaticUpdate();
+            self.imethods.toggleAutomaticUpdate();
         }
     }
     if (args.hasOwnProperty('axes')) {

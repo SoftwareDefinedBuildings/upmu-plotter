@@ -239,7 +239,7 @@ function initPlot(self) {
     self.idata.initialized = true;
 }
 
-/* Updates the size of the chart based on changes to the margins The width will
+/* Updates the size of the chart based on changes to the margins. The width will
    be changed to best match self.idata.TARGETWIDTH. */
 function updateSize(self, redraw) {
     var oldwidth = self.idata.WIDTH;
@@ -308,10 +308,10 @@ function updatePlot(self) {
     drawPlot(self);
 }
 
-function applySettings(self, loadData) {
+function applySettings(self, loadData, overrideAutomaticAxisUpdate) {
     if (self.idata.onscreen) {
-        if (!self.idata.automaticAxisUpdate) {
-            otherChange = true;
+        if (!(self.idata.automaticAxisUpdate || overrideAutomaticAxisUpdate)) {
+            self.idata.otherChange = true;
             s3ui.updatePlotMessage(self);
         } else {
             if (loadData) {
@@ -326,7 +326,6 @@ function applySettings(self, loadData) {
 
 function drawPlot(self) {
     // Get the time range we are going to plot
-    // dateConverter is defined in plotter.html
     var loadingElem = self.idata.loadingElem;
     loadingElem.html("Verifying date range...");
     var startText = self.find(".startdate").value;

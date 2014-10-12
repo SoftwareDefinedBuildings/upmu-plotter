@@ -196,14 +196,10 @@ function setStreamMessage(self, uuid, message, importance) {
 
 function updatePlotMessage(self) {
     var message = "";
-    if (self.idata.automaticAxisUpdate) {
-        if (self.idata.addedStreams || self.idata.changedTimes) {
-            message = 'Click "Apply and Plot" to update the graph.';
-        }
-    } else {
-        if (self.idata.addedStreams || self.idata.changedTimes || self.idata.otherChange) {
-            message = 'Click "Apply and Plot" to update the graph.';
-        }
+    if (self.idata.changedTimes) {
+        message = 'Click "Apply and Plot" to update the graph, using the selected the start and end times.';
+    } else if (self.idata.addedStreams || self.idata.otherChange) {
+        message = 'Click "Apply Settings" below to update the graph.';
     }
     self.find(".plotLoading").innerHTML = message;
 }
@@ -268,6 +264,7 @@ function createPermalink(self) {
                 var anchor = document.createElement("a");
                 anchor.innerHTML = URL;
                 anchor.setAttribute("href", URL);
+                anchor.setAttribute("target", "_blank");
                 var permalocation = self.find(".permalink");
                 permalocation.innerHTML = "";
                 permalocation.insertBefore(anchor, null);
@@ -366,19 +363,6 @@ function createCSVDownload(self, streams, settingsObj, domain, pwe, graphExport)
     var csvform = graphExport.querySelector(".csv-form");
     csvform.querySelector(".csv-form-data").value = JSON.stringify(dataJSON);
     csvform.submit();
-    /*
-    Meteor.call("processQuery", "SENDPOST " + self.idata.csvURL + " " + JSON.stringify(dataJSON), function (error, result) {
-            if (error == undefined) {
-                var downloadAnchor = document.createElement("a");
-                downloadAnchor.innerHTML = "Download CSV (created " + (new Date()).toLocaleString() + ", local time)";
-                downloadAnchor.setAttribute("href", 'data:text/csv;charset="utf-8",' + encodeURIComponent(result));
-                downloadAnchor.setAttribute("download", "graph.csv");
-                var linkLocation = self.find(".download-csv");
-                linkLocation.innerHTML = ""; // Clear what was there before...
-                linkLocation.insertBefore(downloadAnchor, null); // ... and replace it with this download link
-            }
-        });
-    */
 }
 
 s3ui.init_frontend = init_frontend;

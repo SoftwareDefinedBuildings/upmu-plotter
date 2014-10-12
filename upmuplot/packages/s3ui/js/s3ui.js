@@ -179,6 +179,7 @@ function init_graph(self, c1, c2) {
     self.find(".plotButton").onclick = function () {
             self.idata.addedStreams = false;
             self.idata.changedTimes = false;
+            self.idata.otherChange = false;
             s3ui.updatePlot(self);
         };
     self.find(".resetZoom").onclick = function () {
@@ -211,14 +212,23 @@ function init_graph(self, c1, c2) {
     self.find(".automaticAxisSetting").onchange = function () {
             self.idata.automaticAxisUpdate = !self.idata.automaticAxisUpdate;
             if (self.idata.automaticAxisUpdate) {
+                this.parentNode.nextSibling.nextSibling.style.display = "none";
                 self.idata.selectedStreams = self.idata.selectedStreamsBuffer;
                 if (self.idata.otherChange || self.idata.addedStreams) {
                     s3ui.applySettings(self, true);
                 }
             } else {
+                this.parentNode.nextSibling.nextSibling.style.display = "initial";
                 s3ui.updatePlotMessage(self);
                 self.idata.selectedStreamsBuffer = self.idata.selectedStreams.slice();
             }
+        };
+    self.find(".applySettingsButton").onclick = function () {
+            self.idata.addedStreams = false;
+            self.idata.changedTimes = false;
+            self.idata.otherChange = false;
+            self.idata.selectedStreams = self.idata.selectedStreamsBuffer.slice();
+            s3ui.applySettings(self, true, true);
         };
     var changedDate = function () {
             self.idata.changedTimes = true;
