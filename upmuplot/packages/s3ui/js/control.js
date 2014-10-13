@@ -22,6 +22,7 @@ function init_control(self) {
     self.imethods.toggleEmbedMetadata = bind_method(toggleEmbedMetadata, self);
     self.imethods.selectStreams = bind_method(selectStreams, self);
     self.imethods.deselectStreams = bind_method(deselectStreams, self);
+    self.imethods.applySettings = bind_method(applySettings, self);
     self.imethods.updateGraphSize = bind_method(updateGraphSize, self);
 }
 
@@ -264,6 +265,13 @@ function deselectStreams(data_lst) {
         }
     }
     s3ui.applySettings(this, false);
+}
+
+function applySettings() {
+    this.idata.addedStreams = false;
+    this.idata.otherChange = false;
+    this.idata.selectedStreams = this.idata.selectedStreamsBuffer.slice();
+    s3ui.applySettings(this, true, true);
 }
 
 function updateGraphSize() {

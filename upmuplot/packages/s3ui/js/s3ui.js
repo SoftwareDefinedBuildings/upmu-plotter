@@ -215,6 +215,8 @@ function init_graph(self, c1, c2) {
                 this.parentNode.nextSibling.nextSibling.style.display = "none";
                 self.idata.selectedStreams = self.idata.selectedStreamsBuffer;
                 if (self.idata.otherChange || self.idata.addedStreams) {
+                    self.idata.addedStreams = false;
+                    self.idata.otherChange = false;
                     s3ui.applySettings(self, true);
                 }
             } else {
@@ -223,13 +225,7 @@ function init_graph(self, c1, c2) {
                 self.idata.selectedStreamsBuffer = self.idata.selectedStreams.slice();
             }
         };
-    self.find(".applySettingsButton").onclick = function () {
-            self.idata.addedStreams = false;
-            self.idata.changedTimes = false;
-            self.idata.otherChange = false;
-            self.idata.selectedStreams = self.idata.selectedStreamsBuffer.slice();
-            s3ui.applySettings(self, true, true);
-        };
+    self.find(".applySettingsButton").onclick = self.imethods.applySettings;
     var changedDate = function () {
             self.idata.changedTimes = true;
             s3ui.updatePlotMessage(self);
