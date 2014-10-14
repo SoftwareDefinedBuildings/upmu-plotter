@@ -113,6 +113,9 @@ function repaintZoomNewData(self, callback, stopCache) {
             if (thisID != self.idata.drawRequestID) { // another request has been made
                 return;
             }
+            if (!self.idata.pollingBrackets && s3ui.shouldPollBrackets(self, stream.uuid, domain)) {
+                s3ui.startPollingBrackets(self);
+            }
             s3ui.limitMemory(self, selectedStreams, self.idata.oldOffsets, domain[0], domain[1], 300000 * selectedStreams.length, 150000 * selectedStreams.length);
             if (data != undefined) {
                 self.idata.oldData[stream.uuid] = [stream, data, pwe];
@@ -946,6 +949,7 @@ function resetZoom(self) {
 }
 
 s3ui.init_plot = init_plot;
+s3ui.repaintZoomNewData = repaintZoomNewData;
 s3ui.updateSize = updateSize;
 s3ui.updatePlot = updatePlot;
 s3ui.applySettings = applySettings;

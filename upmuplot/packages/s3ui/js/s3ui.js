@@ -181,6 +181,9 @@ function init_graph(self, c1, c2) {
             self.idata.changedTimes = false;
             self.idata.otherChange = false;
             s3ui.updatePlot(self);
+            if (!self.idata.onscreen && !self.idata.pollingBrackets) {
+                s3ui.startPollingBrackets(self);
+            }
         };
     self.find(".resetZoom").onclick = function () {
             s3ui.resetZoom(self);
@@ -188,10 +191,11 @@ function init_graph(self, c1, c2) {
     self.find(".showAll").onclick = function () {
             if (self.idata.selectedStreamsBuffer.length > 0) {
                 self.imethods.resetZoom();
-                s3ui.getURL("SENDPOST " + self.idata.bracketURL + " " + JSON.stringify({"UUIDS": self.idata.selectedStreamsBuffer.map(function (s) { return s.uuid; })}), function (data) {
+                var uuids = self.idata.selectedStreamsBuffer.map(function (s) { return s.uuid; });
+                s3ui.getURL("SENDPOST " + self.idata.bracketURL + " " + JSON.stringify({"UUIDS": uuids}), function (data) {
                         var range;
                         try {
-                            range = JSON.parse(data).Merged;
+                            range = JSON.parse(data);
                         } catch (err) {
                             console.log("Autozoom error: " + err.message);
                             return;
@@ -200,9 +204,12 @@ function init_graph(self, c1, c2) {
                             self.find(".plotLoading").innerHTML = "Error: Selected streams have no data.";
                             return;
                         }
+                        s3ui.processBracketResponse(self, uuids, range);
+                        range = range.Merged;
                         var offset = 60000 * ((new Date()).getTimezoneOffset() - (new timezoneJS.Date(s3ui.getSelectedTimezone(self))).getTimezoneOffset());
                         self.imethods.setStartTime(new Date(Math.floor(range[0] / 1000000) + offset));
-                        self.imethods.setEndTime(new Date(Math.floor(range[1] / 1000000) + offset));
+                        var endTime = range[1] / 1000000;
+                        self.imethods.setEndTime(new Date(Math.ceil(range[1] / 1000000) + offset));
                         self.imethods.applyAllSettings();
                     });
             } else {

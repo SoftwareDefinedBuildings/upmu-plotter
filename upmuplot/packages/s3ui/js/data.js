@@ -8,6 +8,9 @@ function init_data(self) {
     // The total number of data points that have been cached.
     self.idata.loadedData = 0;
     self.idata.loadedStreams = {}; // maps a stream's uuid to the total number of points that have been cached for that stream
+    self.idata.lastTimes = {}; // maps a stream's uuid to the time of the last pint where there is valid data, obtained from the server
+    self.idata.pollingBrackets = false; // whether or not we are periodically checking if the brackets have changed
+    self.idata.bracketInterval = 10000;
     
     self.idata.dataURLStart = 'http://bunker.cs.berkeley.edu/backend/api/data/uuid/';
     
@@ -28,6 +31,88 @@ function CacheEntry(startTime, endTime, data) {
     this.start_time = startTime;
     this.end_time = endTime;
     this.cached_data = data;
+}
+
+/* Starts a cycle of polling the brackets. If already in a cycle, starts
+   another cycle (which should be avoided). */
+function startPollingBrackets(self) {
+    self.idata.pollingBrackets = true;
+    if (self.idata.selectedStreams.length > 0) {
+            var uuids = self.idata.selectedStreams.map(function (s) { return s.uuid; });
+            s3ui.getURL("SENDPOST " + self.idata.bracketURL + " " + JSON.stringify({"UUIDS": uuids}), function (data) {
+                    pollBracket(self, uuids, data);
+                });
+        }
+}
+
+/* The polling system works as follows: the program polls the server for the
+   bracket at specified intervals. After reading the server's response, the
+   program decides if the screen is close enough to the new limit to continue
+   polling. If not it stops; repaintZoomNewData (in plot.js) resumes polling
+   if it detects that the stream is close enough again. This means that if the
+   user scrolls to the left, one request may be made to the server even though
+   the program could have avoided that. I thought that the extra computation
+   due to this was small enough to ignore. */
+
+function pollBracket(self, uuids, data) {
+    var range;
+    var continuePolling = true;
+    try {
+        range = JSON.parse(data);
+    } catch (err) {
+        return;
+    }
+    if (range != undefined) {
+        continuePolling = processBracketResponse(self, uuids, range);
+    }
+    if (continuePolling) {
+        setTimeout(function () { startPollingBrackets(self); }, self.idata.bracketInterval);
+    } else {
+        self.idata.pollingBrackets = false;
+    }
+}
+
+/* Trims the cache as appropriate given the server's RESPONSE as an object
+   to a bracket call for a list of STREAMS. Returns true if the program
+   should continue polling the server for changes in the bracket. Returns
+   false if the program can stop for now. */
+function processBracketResponse(self, uuids, response) {
+    var prevLast, newLast;
+    var domain;
+    var continuePolling = false;
+    var loadNewData = false;
+    if (self.idata.onscreen) {
+        domain = self.idata.oldXScale.domain();
+    } else {
+        continuePolling = true;
+    }
+    for (var i = 0; i < uuids.length; i++) {
+        prevLast = self.idata.lastTimes[uuids[i]];
+        newLast = Math.floor(response.Brackets[i][1] / 1000000);
+        if (prevLast == undefined) {
+            self.idata.lastTimes[uuids[i]] = newLast;
+        } else if (prevLast < newLast) {
+            trimCache(self, uuids[i], prevLast);
+            self.idata.lastTimes[uuids[i]] = newLast;
+            if (self.idata.onscreen && (prevLast + self.idata.offset) <= domain[1] && (newLast + self.idata.offset) >= domain[0]) {
+                loadNewData = true;
+            }
+        }
+        if (self.idata.onscreen && shouldPollBrackets(self, uuids[i], domain)) {
+            continuePolling = true;
+        }
+    }
+    if (loadNewData) {
+        s3ui.repaintZoomNewData(self);
+    }
+    return continuePolling;
+}
+
+/* Given a stream's UUID and the current domain of the graph, determines
+   whether the plotter should keep polling the server for a change in
+   brackets. */
+function shouldPollBrackets(self, uuid, domain) {
+    return !self.idata.lastTimes.hasOwnProperty(uuid) || ((domain[1] - self.idata.offset) >= (self.idata.lastTimes[uuid] + (domain[0] - domain[1])));
 }
 
 /* POINTWIDTH is the number of milliseconds in one interval. Converts this to
@@ -403,6 +488,40 @@ function getIndices(cache, startTime, endTime) {
     return [i, j, startsBefore, endsAfter];
 }
 
+/* Excise the portion of the cache for the stream with UUID where the time is
+   strictly greater than LASTTIME. The excising is done at all resolutions.
+   LASTTIME is specified in Universal Coordinated Time (UTC). */
+function trimCache(self, uuid, lastTime) {
+    var dataCache = self.idata.dataCache;
+    if (dataCache.hasOwnProperty(uuid)) {
+        var cache = dataCache[uuid];
+        for (var resolution in cache) {
+            if (cache.hasOwnProperty(resolution)) {
+                var entries = cache[resolution];
+                var index = s3ui.binSearch(entries, lastTime, function (entry) { return entry.start_time; });
+                if (index > 0 && entries[index].start_time > lastTime && entries[index - 1].end_time > lastTime) {
+                    index--;
+                }
+                if (entries[index].start_time <= lastTime) {
+                    var data = entries[index].cached_data;
+                    var entryIndex = s3ui.binSearch(data, lastTime, function (point) { return point[0]; });
+                    if (data[entryIndex][0] <= lastTime) {
+                        entryIndex++;
+                    }
+                    var numpoints = data.length - entryIndex;
+                    data.splice(entryIndex, numpoints);
+                    self.idata.loadedData -= numpoints;
+                    index++;
+                }
+                var excised = entries.splice(0, index);
+                for (var i = 0; i < excised.length; i++) {
+                    self.idata.loadedData -= excised[i].cached_data.length;
+                }
+            }
+        }
+    }
+}
+
 /* Reduce memory consumption by removing some cached data. STARTTIME and
    ENDTIME are in UTC (Universal Coord. Time) and represent the extent of the
    current view (so the presently viewed data is not erased). If current memory
@@ -434,6 +553,9 @@ function limitMemory(self, streams, startTime, endTime, threshold, target) {
                 self.idata.loadedData -= loadedStreams[uuid];
                 delete dataCache[uuid];
                 delete loadedStreams[uuid];
+                if (self.idata.latestPoint.hasOwnProperty(uuid)) {
+                    delete self.idata.lastTimes[uuid];
+                }
             }
         }
     }
@@ -529,6 +651,9 @@ function limitMemory(self, streams, startTime, endTime, threshold, target) {
 }
 
 s3ui.init_data = init_data;
+s3ui.startPollingBrackets = startPollingBrackets;
+s3ui.processBracketResponse = processBracketResponse;
+s3ui.shouldPollBrackets = shouldPollBrackets;
 s3ui.getPWExponent = getPWExponent;
 s3ui.ensureData = ensureData;
 s3ui.limitMemory = limitMemory;
