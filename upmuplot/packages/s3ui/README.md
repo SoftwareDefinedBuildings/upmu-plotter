@@ -48,7 +48,8 @@ The object of parameters may have the following properties (all optional):
 * height - Specifies the height of the chart area (_not_ the whole graph). Defaults to 300.
 * queryLow - The earliest time, in milliseconds since the epoch, when data can be queried. Defaults to 0. queryHigh - queryLow should be at least 2 ms, and queryLow must be at least 0 for correct functionality.
 * queryHigh - The latest time, in milliseconds since the epoch, when data can be queried. Defaults to 3458764513820. queryHigh - queryLow should be at least 2 ms.
-* pweHigh- The highest point width exponent with which data can be queried.
+* pweHigh - The highest point width exponent with which data can be queried.
+* bracketInterval - The approximate number of milliseconds at which to poll the server for a change in the time of the last data point. Note that the server is only polled for new data when the previously received point of the last data, and that the real time between samples will be slightly larger than the number specified here (i.e., this is a lower bound on the time between samples). Defaults to 5000.
 
 When the graph has been displayed, but before any interactivity is added, the
 first callback function is invoked with a single argument, namely the template

@@ -24,9 +24,6 @@ def get_smapx_data(starttime, endtime, unitoftime, pw, hole):
     if unitoftime != "ns":
         raise SMAPXexception("invalid unit of time")
     try:
-        starttime = int(starttime)
-        endtime = int(endtime)
-        pw = int(pw)
         assert starttime >= 0, "Start time is negative"
         assert endtime >= 0, "End time is negative"
         assert pw >= 0, "Point width is negative"

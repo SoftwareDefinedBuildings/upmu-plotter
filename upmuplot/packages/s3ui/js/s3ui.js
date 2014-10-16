@@ -90,6 +90,9 @@ s3ui.__init__ = function (self) {
             if (self.data[0].pweHigh != undefined) {
                 self.idata.pweHigh = self.data[0].pweHigh;
             }
+            if (self.data[0].bracketInterval != undefined) {
+                self.idata.bracketInterval = self.data[0].bracketInterval;
+            }
             self.imethods.changeVisuals = function (options) {
                     init_visuals(self, options);
                 };

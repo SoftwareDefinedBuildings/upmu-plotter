@@ -10,7 +10,7 @@ function init_data(self) {
     self.idata.loadedStreams = {}; // maps a stream's uuid to the total number of points that have been cached for that stream
     self.idata.lastTimes = {}; // maps a stream's uuid to the time of the last pint where there is valid data, obtained from the server
     self.idata.pollingBrackets = false; // whether or not we are periodically checking if the brackets have changed
-    self.idata.bracketInterval = 10000;
+    self.idata.bracketInterval = 5000;
     
     self.idata.dataURLStart = 'http://bunker.cs.berkeley.edu/backend/api/data/uuid/';
     
@@ -490,24 +490,28 @@ function getIndices(cache, startTime, endTime) {
 
 /* Excise the portion of the cache for the stream with UUID where the time is
    strictly greater than LASTTIME. The excising is done at all resolutions.
-   LASTTIME is specified in Universal Coordinated Time (UTC). */
+   LASTTIME is specified in milliseconds in Universal Coordinated Time (UTC). */
 function trimCache(self, uuid, lastTime) {
     var dataCache = self.idata.dataCache;
+    var data;
     if (dataCache.hasOwnProperty(uuid)) {
         var cache = dataCache[uuid];
         for (var resolution in cache) {
             if (cache.hasOwnProperty(resolution)) {
                 var entries = cache[resolution];
+                if (entries.length == 0) {
+                    continue;
+                }
                 var index = s3ui.binSearch(entries, lastTime, function (entry) { return entry.start_time; });
                 if (index > 0 && entries[index].start_time > lastTime && entries[index - 1].end_time > lastTime) {
                     index--;
                 }
-                if (entries[index].start_time <= lastTime) {
-                    var data = entries[index].cached_data;
+                if (entries[index].start_time <= lastTime && (data = entries[index].cached_data).length > 0) {
                     var entryIndex = s3ui.binSearch(data, lastTime, function (point) { return point[0]; });
                     if (data[entryIndex][0] <= lastTime) {
                         entryIndex++;
                     }
+                    entries[index].end_time = lastTime;
                     var numpoints = data.length - entryIndex;
                     data.splice(entryIndex, numpoints);
                     self.idata.loadedData -= numpoints;
@@ -553,7 +557,7 @@ function limitMemory(self, streams, startTime, endTime, threshold, target) {
                 self.idata.loadedData -= loadedStreams[uuid];
                 delete dataCache[uuid];
                 delete loadedStreams[uuid];
-                if (self.idata.latestPoint.hasOwnProperty(uuid)) {
+                if (self.idata.lastTimes.hasOwnProperty(uuid)) {
                     delete self.idata.lastTimes[uuid];
                 }
             }
