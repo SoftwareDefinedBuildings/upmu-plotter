@@ -230,14 +230,36 @@ function initPlot(self) {
         .attr("class", "data-density-plot")
       .append("g")
         .attr("class", "data-density-axis");
-    chart.append("rect") // To sense mouse click/drag
+    var plotclickscreen = chart.append("rect") // To sense mouse click/drag
         .attr("width", self.idata.WIDTH)
         .attr("height", self.idata.HEIGHT)
         .attr("transform", "translate(" + self.idata.margin.left + ", " + self.idata.margin.top + ")")
-        .attr("onmousedown", "$(this).attr('class', 'clickscreen clickedchart');")
-        .attr("onmouseup", "$(this).attr('class', 'clickscreen unclickedchart');")
-        .attr("fill", "none")
-        .attr("class", "clickscreen unclickedchart");
+        .attr("class", "plotclickscreen clickscreen unclickedchart")
+      .node();
+    plotclickscreen.onmousedown = function () {
+            $(this).attr('class', 'plotclickscreen clickscreen clickedchart');
+        };
+    plotclickscreen.onmouseup = function () {
+            $(this).attr('class', 'plotclickscreen clickscreen unclickedchart');
+        };
+    chart.append("rect")
+        .attr("width", self.idata.WIDTH)
+        .attr("height", self.idata.margin.bottom)
+        .attr("transform", "translate(" + self.idata.margin.left + ", " + (self.idata.margin.top + self.idata.HEIGHT) + ")")
+        .attr("class", "clickscreen bottomcursorselect")
+      .node().onmousedown = function () { console.log("clicked bottom"); };
+    chart.append("rect")
+        .attr("width", self.idata.margin.left)
+        .attr("height", self.idata.HEIGHT)
+        .attr("class", "clickscreen leftcursorselect")
+        .attr("transform", "translate(0, " + self.idata.margin.top + ")")
+      .node().onmousedown = function () { console.log("clicked left"); };
+    chart.append("rect")
+        .attr("width", self.idata.margin.right)
+        .attr("height", self.idata.HEIGHT)
+        .attr("class", "clickscreen rightcursorselect")
+        .attr("transform", "translate(" + (self.idata.margin.left + self.idata.WIDTH) + ", " + self.idata.margin.top + ")")
+      .node().onmousedown = function () { console.log("clicked right"); };
     self.idata.loadingElem = $(self.find('.plotLoading'));
     self.idata.initialized = true;
 }
@@ -255,11 +277,11 @@ function updateSize(self, redraw) {
             width: margin.left + WIDTH + margin.right,
             height: margin.top + HEIGHT + margin.bottom
         });
-    self.$("svg.chart g.chartarea, svg.chart rect.clickscreen").attr({
+    self.$("svg.chart g.chartarea, svg.chart rect.plotclickscreen").attr({
             transform: "translate(" + margin.left + ", " + margin.top + ")",
             width: WIDTH
         });
-    self.$("svg.chart g.x-axis-cover").attr("transform", "translate(" + margin.left + ", " + (margin.top + HEIGHT) + ")");
+    self.$("svg.chart g.x-axis-cover, svg.chart rect.bottomcursorselect").attr("transform", "translate(" + margin.left + ", " + (margin.top + HEIGHT) + ")");
     self.$("svg.chart g.data-density-cover").attr("transform", "translate(" + margin.left + ", 0)");
     self.$("rect.x-axis-background").attr({
             height: margin.bottom,
@@ -273,6 +295,20 @@ function updateSize(self, redraw) {
             width: margin.right,
             height: margin.top + HEIGHT + margin.bottom,
             transform: "translate(" + (margin.left + WIDTH) + ", 0)"
+        });
+    $(self.find("rect.leftcursorselect")).attr({
+            width: margin.left,
+            height: HEIGHT,
+            transform: "translate(0, " + margin.top + ")"
+        });
+    $(self.find("rect.rightcursorselect")).attr({
+            width: margin.right,
+            height: HEIGHT,
+            transform: "translate(" + (margin.left + WIDTH) + ", " + margin.top + ")"
+        });
+    $(self.find("rect.bottomcursorselect")).attr({
+            width: WIDTH,
+            height: margin.bottom
         });
     self.$("rect.data-density-background").attr({
             width: WIDTH + 2,
@@ -406,7 +442,7 @@ function drawPlot(self) {
             }
             loadingElem.html("Drawing graph...");
             // Set a timeout so the new message (Drawing graph...) actually shows
-            setTimeout(function () { d3.select(".clickscreen").call(self.idata.zoom); drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, loadingElem); }, 50);
+            setTimeout(function () { d3.select(".plotclickscreen").call(self.idata.zoom); drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, loadingElem); }, 50);
         });
 }
 
