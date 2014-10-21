@@ -109,7 +109,7 @@ function repaintZoomNewData(self, callback, stopCache) {
     self.idata.xEnd.innerHTML = self.idata.labelFormatter.format(domain[1]);
     var numResponses = 0;
     function makeDataCallback(stream, startTime, endTime) {
-        return function (data) {
+        return function (data, low, high) {
             if (thisID != self.idata.drawRequestID) { // another request has been made
                 return;
             }
@@ -118,7 +118,7 @@ function repaintZoomNewData(self, callback, stopCache) {
             }
             s3ui.limitMemory(self, selectedStreams, self.idata.oldOffsets, domain[0], domain[1], 300000 * selectedStreams.length, 150000 * selectedStreams.length);
             if (data != undefined) {
-                self.idata.oldData[stream.uuid] = [stream, data, pwe];
+                self.idata.oldData[stream.uuid] = [stream, data, pwe, low, high];
             }
             numResponses++;
             s3ui.setStreamMessage(self, stream.uuid, undefined, 5);
@@ -872,18 +872,21 @@ function showDataDensity(self, uuid) {
     var toDraw = [];
     var lastiteration;
     var startIndex;
+    var prevpt;
     var oldXScale = self.idata.oldXScale;
-    if (streamdata.length == 0) {
-        totalmax = 0;
-    } else {    
+    if (streamdata.length > 0) {    
+        var i;
         startIndex = s3ui.binSearch(streamdata, startTime, function (point) { return point[0]; });
         if (startIndex < streamdata.length && streamdata[startIndex][0] < startTime) {
             startIndex++;
         }
+        if (startIndex >= streamdata.length) {
+            startIndex = streamdata.length - 1;
+        }
+        totalmax = streamdata[startIndex][5];
         if (startIndex < streamdata.length) {
-            totalmax = streamdata[startIndex][5];
             lastiteration = false;
-            for (var i = startIndex; i < streamdata.length; i++) {
+            for (i = startIndex; i < streamdata.length; i++) {
                 xPixel = oldXScale(streamdata[i][0] + offset);
                 xPixel += ((streamdata[i][1] - pw/2) / pixelw);
                 if (xPixel < 0) {
@@ -893,20 +896,25 @@ function showDataDensity(self, uuid) {
                     xPixel = WIDTH;
                     lastiteration = true;
                 }
-                if (i != 0) { // Draw a point to account for the transition between the previous point and this one, if necessary
-                    if (((streamdata[i][0] - streamdata[i - 1][0]) * 1000000) + streamdata[i][1] - streamdata[i - 1][1] <= pw) {
+                if (i == 0) {
+                    prevpt = [self.idata.oldData[uuid][3], 0, 0, 0, 0, 0];
+                } else {
+                    prevpt = streamdata[i - 1];
+                }
+                if (((streamdata[i][0] - prevpt[0]) * 1000000) + streamdata[i][1] - prevpt[1] <= pw) {
+                    if (i != 0) { // if this is the first point in the cache entry, then the cache start is less than a pointwidth away and don't drop it to zero
                         if (i == startIndex) {
-                            toDraw.push([0, streamdata[i - 1][5]]);
+                            toDraw.push([Math.max(0, oldXScale(prevpt[1] + offset)), prevpt[5]]);
                         }
                         toDraw.push([xPixel, toDraw[toDraw.length - 1][1]]);
-                    } else {
-                        prevIntervalEnd = Math.max(0, oldXScale(streamdata[i - 1][0] + offset) + ((streamdata[i - 1][1] + (pw/2)) / pixelw)); // x pixel of end of previous interval
-                        if (prevIntervalEnd != 0) {
-                            toDraw.push([prevIntervalEnd, streamdata[i - 1][5]]);
-                        }
-                        toDraw.push([prevIntervalEnd, 0]);
-                        toDraw.push([xPixel, 0]);
                     }
+                } else {
+                    prevIntervalEnd = Math.max(0, oldXScale(prevpt[0] + offset) + ((prevpt[1] + (pw/2)) / pixelw)); // x pixel of end of previous interval
+                    if (prevIntervalEnd != 0) {
+                        toDraw.push([prevIntervalEnd, prevpt[5]]);
+                    }
+                    toDraw.push([prevIntervalEnd, 0]);
+                    toDraw.push([xPixel, 0]);
                 }
                 if (!lastiteration) {
                     toDraw.push([xPixel, streamdata[i][5]]);
@@ -918,10 +926,18 @@ function showDataDensity(self, uuid) {
                     break;
                 }
             }
-        } else {
-            totalmax = 0;
+            if (i == streamdata.length && (self.idata.oldData[uuid][4] - streamdata[i - 1][0]) * 1000000 - streamdata[i - 1][1] >= pw) {
+                // Force the plot to 0
+                toDraw.push([toDraw[toDraw.length - 1][0], 0]);
+                // Keep it at zero for the correct amount of time
+                toDraw.push([Math.min(oldXScale(self.idata.oldData[uuid][4] + offset), WIDTH), 0]);
+            }
         }
     }
+    if (toDraw.length == 0) { // streamdata is empty, OR nothing relevant is there to draw
+        toDraw = [[Math.max(0, oldXScale(self.idata.oldData[uuid][3] + offset)), 0], [Math.min(WIDTH, oldXScale(self.idata.oldData[uuid][4] + offset)), 0]];
+        totalmax = 0;
+    } 
     var yScale;
     if (totalmax == 0) {
         totalmax = 1;

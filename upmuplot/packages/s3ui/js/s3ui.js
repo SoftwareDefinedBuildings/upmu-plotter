@@ -203,7 +203,7 @@ function init_graph(self, c1, c2) {
                             console.log("Autozoom error: " + err.message);
                             return;
                         }
-                        if (range == undefined) {
+                        if (range == undefined || range.Merged == undefined || range.Brackets == undefined) {
                             self.find(".plotLoading").innerHTML = "Error: Selected streams have no data.";
                             return;
                         }
