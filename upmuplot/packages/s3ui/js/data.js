@@ -60,6 +60,7 @@ function pollBracket(self, uuids, data) {
     try {
         range = JSON.parse(data);
     } catch (err) {
+        console.log("Invalid bracket response from server");
         return;
     }
     if (range != undefined) {
@@ -85,6 +86,10 @@ function processBracketResponse(self, uuids, response) {
         domain = self.idata.oldXScale.domain();
     } else {
         continuePolling = true;
+    }
+    if (response.Brackets == undefined || response.Brackets.length == uuids.length) {
+        console.log("Invalid bracket response from server: requested data for " + uuids.length + " streams, got " + JSON.stringify(response));
+        return true;
     }
     for (var i = 0; i < uuids.length; i++) {
         prevLast = self.idata.lastTimes[uuids[i]];
@@ -199,11 +204,12 @@ function validateContiguous(cacheEntry, pwe) {
    added to the cache so the extent of its data is at least from STARTTIME to
    ENDTIME. STARTTIME and ENDTIME are specified in UTC (Universal Coord. Time).
    Once the data is found or procured, CALLBACK is called with an array of data
-   as its single argument, where the requested data is a subset of the
-   requested data. If another call to this function is pending (it has
-   requested data from the server) for a certain stream, any more calls for
-   that stream will not result in a GET request (so this function doesn't fall
-   behind user input). */
+   as its first argument, where the requested data is a subset of the requested
+   data (second and third arguments are the start and end time of the cache
+   entry, used for the data density plot). If another call to this function is
+   pending (it has requested data from the server) for a certain stream, any
+   more calls for that stream will not result in a GET request (so this
+   function doesn't fall behind user input). */
 function ensureData(self, uuid, pointwidthexp, startTime, endTime, callback, caching) {
     pointwidthexp = Math.min(self.idata.pweHigh, pointwidthexp);
     var halfPWnanos = Math.pow(2, pointwidthexp - 1) - 1;
@@ -235,7 +241,7 @@ function ensureData(self, uuid, pointwidthexp, startTime, endTime, callback, cac
     
     var numRequests = j - i + startsBefore + endsAfter;    
     if (numRequests == 0) {
-        callback(cache[i].cached_data);
+        callback(cache[i].cached_data, cache[i].start_time, cache[i].end_time);
     } else {
         // Fetch the data between the cache entries, and consolidate into one entry
         var si = i;
@@ -374,7 +380,7 @@ function insertData(self, uuid, cache, data, dataStart, dataEnd, callback) {
     var startsBefore = indices[2];
     var endsAfter = indices[3];
     if (i == j && !startsBefore && !endsAfter) {
-        callback(cache[i].cached_data);
+        callback(cache[i].cached_data, cache[i].start_time, cache[i].end_time);
         return;
     }
     var dataBefore;
@@ -421,7 +427,7 @@ function insertData(self, uuid, cache, data, dataStart, dataEnd, callback) {
     self.idata.loadedData += cacheEntry.cached_data.length;
     loadedStreams[uuid] += cacheEntry.cached_data.length;
     cache.splice(i, j - i + 1, cacheEntry);
-    callback(cacheEntry.cached_data);
+    callback(cacheEntry.cached_data, cacheEntry.start_time, cacheEntry.end_time);
 }
 
 /* Given CACHE, and array of cache entries, and a STARTTIME and an ENDTIME,
