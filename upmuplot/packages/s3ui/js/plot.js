@@ -57,6 +57,119 @@ function init_plot(self) {
         .size([self.idata.WIDTH, self.idata.HEIGHT]);
         
     self.idata.testElem = undefined;
+    
+    self.idata.horizCursor1 = undefined;
+    self.idata.horizCursor2 = undefined;
+    self.idata.vertCursor1 = undefined;
+    self.idata.vertCursor2 = undefined;
+}
+
+/* d3chartgroup is a d3 selection. */
+function Cursor(self, coord, d3chartgroup, length, vertical, $background) {
+    this.s3ui_instance = self;
+    this.coord = coord;
+    coord--;
+    if (vertical) {
+        this.rectMarker = d3chartgroup.append("rect")
+            .attr("x", coord)
+            .attr("y", 0)
+            .attr("width", 3)
+            .attr("height", length)
+            .attr("fill-opacity", 1)
+            .style("cursor", "col-resize")
+          .node();
+    } else {
+        this.rectMarker = d3chartgroup.append("rect")
+            .attr("x", 0)
+            .attr("y", coord)
+            .attr("width", length)
+            .attr("height", 3)
+            .attr("fill-opacity", 1)
+            .style("cursor", "row-resize")
+          .node();
+    }
+    this.parent = d3chartgroup.node();
+    this.vertical = vertical;
+    this.selected = false;
+    var cursorObj = this;
+    this.$background = $background;
+    $(this.rectMarker).on("mousedown.cursor", function (event) {
+            cursorObj.select(vertical ? event.pageX : event.pageY);
+        });
+}
+
+Cursor.prototype.updateLength = function (newLength) {
+    if (this.vertical) {
+        this.rectMarker.setAttribute("height", newLength);
+    } else {
+        this.rectMarker.setAttribute("width", newLength);
+    }
+}
+
+Cursor.prototype.updateCoordinate = function (newCoord) {
+    this.coord = newCoord;
+    if (this.vertical) {
+        this.rectMarker.setAttribute("x", newCoord);
+    } else {
+        this.rectMarker.setAttribute("y", newCoord);
+    }
+}
+
+Cursor.prototype.select = function (initCoord) {
+    this.selected = true;
+    this.rectMarker.setAttribute("fill-opacity", 0.5);
+    var intermediateCoord = this.coord;
+    var cursorObj = this;
+    cursorObj.$background.css("cursor", this.vertical ? "col-resize" : "row-resize");
+    $(document).on("mousemove.cursor", function (event) {
+            var attr, eventVal;
+            if (cursorObj.vertical) {
+                attr = "x";
+                eventVal = event.pageX;
+            } else {
+                attr = "y";
+                eventVal = event.pageY;
+            }
+            intermediateCoord = cursorObj.coord + (eventVal - initCoord);
+            cursorObj.rectMarker.setAttribute(attr, intermediateCoord - 1);
+        });
+    $(document).on("mouseup.cursor", function (event) {
+            if (intermediateCoord < 0 || intermediateCoord >= (cursorObj.vertical ? cursorObj.s3ui_instance.idata.WIDTH : cursorObj.s3ui_instance.idata.HEIGHT)) {
+                cursorObj.deleteSelf();
+            } else {
+                cursorObj.coord = intermediateCoord;
+                cursorObj.deselect();
+            }
+        });
+}
+
+Cursor.prototype.deselect = function () {
+    this.selected = false;
+    this.$background.css("cursor", "");
+    this.rectMarker.setAttribute("fill-opacity", 1);
+    $(document).off(".cursor");
+}
+
+Cursor.prototype.deleteSelf = function () {
+    if (this.selected) {
+        $(document).off(".cursor");
+        this.$background.css("cursor", "");
+    }
+    $(this.rectMarker).off(".cursor");
+    if (this.vertical) {
+        if (this.s3ui_instance.idata.vertCursor1 == this) {
+            this.s3ui_instance.idata.vertCursor1 = undefined;
+        } else {
+            this.s3ui_instance.idata.vertCursor2 = undefined;
+        }
+    } else {
+        if (this.s3ui_instance.idata.horizCursor1 == this) {
+            this.s3ui_instance.idata.horizCursor1 = undefined;
+        } else {
+            this.s3ui_instance.idata.horizCursor2 = undefined;
+        }
+    }
+    this.parent.removeChild(this.rectMarker);
 }
 
 // Behavior for zooming and scrolling
@@ -182,7 +295,7 @@ function initPlot(self) {
         .attr("class", "x-axis-cover")
         .attr("transform", "translate(" + self.idata.margin.left + ", " + (self.idata.margin.top + self.idata.HEIGHT) + ")");
     xaxiscover.append("rect")
-        .attr("width", self.idata.WIDTH + 2) // Move 1 to the left and increase self.idata.WIDTH by 2 to cover boundaries when zooming
+        .attr("width", self.idata.WIDTH + 2) // Move 1 to the left and increase width by 2 to cover boundaries when zooming
         .attr("height", self.idata.margin.bottom)
         .attr("transform", "translate(-1, 0)")
         .attr("class", "x-axis-background")
@@ -209,7 +322,7 @@ function initPlot(self) {
     var datadensitycover = chart.append("g")
         .attr("class", "data-density-cover")
         .attr("transform", "translate(" + self.idata.margin.left + ", 0)");
-    datadensitycover.append("rect") // Move 1 to the left and increase self.idata.WIDTH by 2 to cover boundaries when zooming
+    datadensitycover.append("rect") // Move 1 to the left and increase width by 2 to cover boundaries when zooming
         .attr("width", self.idata.WIDTH + 2)
         .attr("height", self.idata.margin.top)
         .attr("transform", "translate(-1, 0)")
@@ -242,24 +355,54 @@ function initPlot(self) {
     plotclickscreen.onmouseup = function () {
             $(this).attr('class', 'plotclickscreen clickscreen unclickedchart');
         };
-    chart.append("rect")
+    var bottomcursorselect = chart.append("rect")
         .attr("width", self.idata.WIDTH)
         .attr("height", self.idata.margin.bottom)
         .attr("transform", "translate(" + self.idata.margin.left + ", " + (self.idata.margin.top + self.idata.HEIGHT) + ")")
         .attr("class", "clickscreen bottomcursorselect")
-      .node().onmousedown = function () { console.log("clicked bottom"); };
-    chart.append("rect")
+      .node();
+    $(bottomcursorselect).mousedown(function (event) {
+            if (self.idata.vertCursor1 != undefined && self.idata.vertCursor2 != undefined) {
+                return;
+            }
+            var newCursor = new Cursor(self, event.pageX - (self.idata.margin.left + $(chart.node()).offset().left), cursorgroup, self.idata.HEIGHT, true, $background);
+            if (self.idata.vertCursor1 == undefined) {
+                self.idata.vertCursor1 = newCursor;
+            } else{
+                self.idata.vertCursor2 = newCursor;
+            }
+            newCursor.select(event.pageX);
+        });
+    var leftcursorselect = chart.append("rect")
         .attr("width", self.idata.margin.left)
         .attr("height", self.idata.HEIGHT)
         .attr("class", "clickscreen leftcursorselect")
         .attr("transform", "translate(0, " + self.idata.margin.top + ")")
-      .node().onmousedown = function () { console.log("clicked left"); };
-    chart.append("rect")
+      .node();
+    var createHorizCursor = function (event) {
+        if (self.idata.horizCursor1 != undefined && self.idata.horizCursor2 != undefined) {
+            return;
+        }
+        var newCursor = new Cursor(self, event.pageY - (self.idata.margin.top + $(chart.node()).offset().top), cursorgroup, self.idata.WIDTH, false, $background);
+        if (self.idata.horizCursor1 == undefined) {
+            self.idata.horizCursor1 = newCursor;
+        } else{
+            self.idata.horizCursor2 = newCursor;
+        }
+        newCursor.select(event.pageY);
+    };
+    $(leftcursorselect).mousedown(createHorizCursor);
+    var rightcursorselect = chart.append("rect")
         .attr("width", self.idata.margin.right)
         .attr("height", self.idata.HEIGHT)
         .attr("class", "clickscreen rightcursorselect")
         .attr("transform", "translate(" + (self.idata.margin.left + self.idata.WIDTH) + ", " + self.idata.margin.top + ")")
-      .node().onmousedown = function () { console.log("clicked right"); };
+      .node();
+    $(rightcursorselect).mousedown(createHorizCursor);
+    var cursorgroup = chart.append("g")
+        .attr("transform", "translate(" + self.idata.margin.left + ", " + self.idata.margin.top + ")")
+        .attr("class", "cursorgroup");
+    var $background = $("svg.chart > .clickscreen, svg.chart .data-density-background, svg.chart .y-axis-background-left, svg.chart .y-axis-background-right");
     self.idata.loadingElem = $(self.find('.plotLoading'));
     self.idata.initialized = true;
 }
@@ -269,6 +412,7 @@ function initPlot(self) {
 function updateSize(self, redraw) {
     var oldwidth = self.idata.WIDTH;
     var margin = self.idata.margin;
+    
     self.idata.WIDTH = Math.max(self.idata.widthmin, self.idata.TARGETWIDTH - margin.left - margin.right);
     var WIDTH = self.idata.WIDTH;
     var HEIGHT = self.idata.HEIGHT;
@@ -277,7 +421,7 @@ function updateSize(self, redraw) {
             width: margin.left + WIDTH + margin.right,
             height: margin.top + HEIGHT + margin.bottom
         });
-    self.$("svg.chart g.chartarea, svg.chart rect.plotclickscreen").attr({
+    self.$("svg.chart g.chartarea, svg.chart rect.plotclickscreen, svg.chart g.cursorgroup").attr({
             transform: "translate(" + margin.left + ", " + margin.top + ")",
             width: WIDTH
         });
@@ -331,6 +475,23 @@ function updateSize(self, redraw) {
         oldXScale.range([0, WIDTH]);
         zoom.x(oldXScale).scale(scale).translate([translate / oldwidth * WIDTH, 0]);
         self.idata.oldXAxis(d3.select(self.find("g.x-axis")));
+        // I could do it more efficiently if I just mutated the object's attributes directly rather than creating
+        // methods, but that would be much less readable (enough to make up for the slowness of checking this.vertical
+        // twice unnecessarily)
+        if (self.idata.vertCursor1 != undefined) {
+            self.idata.vertCursor1.updateCoordinate(self.idata.vertCursor1.coord * WIDTH / oldwidth);
+        }
+        if (self.idata.vertCursor2 != undefined) {
+            self.idata.vertCursor2.updateCoordinate(self.idata.vertCursor2.coord * WIDTH / oldwidth);
+        }
+        if (self.idata.horizCursor1 != undefined) {
+            self.idata.horizCursor1.updateLength(WIDTH);
+        }
+        if (self.idata.horizCursor2 != undefined) {
+            self.idata.horizCursor2.updateLength(WIDTH);
+        }
+        // The height can't change, so we're done. If the height could also change, I'd also have to update
+        // the heights of the vertical cursors and the positions of the horizontal cursors.
     }
     if (redraw) {
         setTimeout(function () { repaintZoomNewData(self); }, 50);
