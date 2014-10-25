@@ -8,7 +8,7 @@ function init_plot(self) {
     self.idata.inittrans = 0;
 
     // Margin size (not constant)
-    self.idata.margin = {left: 100, right: 100, top: 70, bottom: 60};
+    self.idata.margin = {left: 100, right: 100, top: 70, bottom: 150};
     
     // Height of the chart area (constant)
     self.idata.HEIGHT = 300;
@@ -62,10 +62,22 @@ function init_plot(self) {
     self.idata.horizCursor2 = undefined;
     self.idata.vertCursor1 = undefined;
     self.idata.vertCursor2 = undefined;
+    
+    self.idata.cursorDataElems = {};
+    self.idata.cursorDataElems.x1 = undefined;
+    self.idata.cursorDataElems.x2 = undefined;
+    self.idata.cursorDataElems.deltax = undefined;
+    self.idata.cursorDataElems.freqx = undefined;
+    self.idata.cursorDataElems.fx1 = undefined;
+    self.idata.cursorDataElems.fx2 = undefined;
+    self.idata.cursorDataElems.deltafx = undefined;
+    self.idata.cursorDataElems.y1 = undefined;
+    self.idata.cursorDataElems.y2 = undefined;
+    self.idata.cursorDataElems.deltay = undefined;
 }
 
-/* d3chartgroup is a d3 selection. */
-function Cursor(self, coord, d3chartgroup, length, vertical, $background) {
+/* d3chartgroup is a d3 selection. updateCallback is a function to call when the position of this cursor is updated. */
+function Cursor(self, coord, d3chartgroup, length, vertical, $background, updateCallback) {
     this.s3ui_instance = self;
     this.coord = coord;
     coord--;
@@ -93,6 +105,7 @@ function Cursor(self, coord, d3chartgroup, length, vertical, $background) {
     this.selected = false;
     var cursorObj = this;
     this.$background = $background;
+    this.callback = updateCallback;
     $(this.rectMarker).on("mousedown.cursor", function (event) {
             cursorObj.select(vertical ? event.pageX : event.pageY);
         });
@@ -148,6 +161,7 @@ Cursor.prototype.deselect = function () {
     this.$background.css("cursor", "");
     this.rectMarker.setAttribute("fill-opacity", 1);
     $(document).off(".cursor");
+    this.callback();
 }
 
 Cursor.prototype.deleteSelf = function () {
@@ -170,6 +184,7 @@ Cursor.prototype.deleteSelf = function () {
         }
     }
     this.parent.removeChild(this.rectMarker);
+    this.callback();
 }
 
 // Behavior for zooming and scrolling
@@ -220,6 +235,7 @@ function repaintZoomNewData(self, callback, stopCache) {
     var domain = self.idata.oldXScale.domain();
     self.idata.xStart.innerHTML = self.idata.labelFormatter.format(domain[0]);
     self.idata.xEnd.innerHTML = self.idata.labelFormatter.format(domain[1]);
+    updateVertCursorStats(self);
     var numResponses = 0;
     function makeDataCallback(stream, startTime, endTime) {
         return function (data, low, high) {
@@ -255,6 +271,70 @@ function repaintZoomNewData(self, callback, stopCache) {
     }
     if (selectedStreams.length == 0) {
         callback();
+    }
+}
+
+function updateVertCursorStats(self) {
+    if (self.idata.initialized && self.idata.onscreen) {
+        var cursors = self.idata.cursorDataElems;
+        var scale = self.idata.oldXScale;
+        var firstCursor = self.idata.vertCursor1;
+        var secondCursor = self.idata.vertCursor2;
+        if (firstCursor == undefined && secondCursor == undefined) {
+            return;
+        } else if (firstCursor == undefined) {
+            firstCursor = secondCursor;
+            secondCursor = undefined;
+        } else if (secondCursor != undefined && firstCursor.coord > secondCursor.coord) {
+            secondCursor = firstCursor;
+            firstCursor = self.idata.vertCursor2;
+        }
+        var domain = scale.domain();
+        pixelwidthnanos = (domain[1] - domain[0]) / self.idata.WIDTH * 1000000;
+        var x1millis = scale.invert(firstCursor.coord);
+        var x1num, x2num; // dates converted to numbers
+        var x1nanos = (firstCursor.coord - scale(x1millis)) * pixelwidthnanos;
+        if (x1nanos < 0) {
+            x1nanos = Math.round(x1nanos + 1000000);
+            x1num = x1millis - 1;
+            x1millis = new Date(x1num);
+        } else {
+            x1num = x1millis.getTime();
+            x1nanos = Math.round(x1nanos);
+        }
+        var x1millisextra = x1num >= 0 ? x1num % 1000 : ((x1num % 1000) + 1000);
+        cursors.x1.innerHTML = "x1 = " + self.idata.labelFormatter.format(x1millis) + "." + x1millisextra + (1000000 + x1nanos).toString().slice(1);
+        if (secondCursor == undefined) {
+            cursors.x2.innerHTML = "";
+            cursors.deltax.innerHTML = "";
+            cursors.freqx.innerHTML = "";
+        } else {
+            var x2millis = scale.invert(secondCursor.coord);
+            var x2nanos = Math.round((secondCursor.coord - scale(x2millis)) * pixelwidthnanos);
+            if (x2nanos < 0) {
+                x2nanos = Math.round(x2nanos + 1000000);
+                x2num = x2millis - 1;
+                x2millis = new Date(x2num);
+            } else {
+                x2nanos = Math.round(x2nanos);
+                x2num = x2millis.getTime();
+            }
+            var x2millisextra = x2num >= 0 ? x2num % 1000 : ((x2num % 1000) + 1000);
+            cursors.x2.innerHTML = "x2 = " + self.idata.labelFormatter.format(x2millis) + "." + x2millisextra + (1000000 + x2nanos).toString().slice(1);
+            var millidiff = x2num - x1num;
+            var nanodiff = x2nanos - x1nanos;
+            if (nanodiff < 0) {
+                nanodiff += 1000000;
+                millidiff--;
+            }
+            if (millidiff == 0) {
+                nanodiff = nanodiff.toString();
+            } else {
+                nanodiff = millidiff + (1000000 + nanodiff).toString().slice(1);
+            }
+            cursors.deltax.innerHTML = "delta x = " + nanodiff + " ns";
+            cursors.freqx.innerHTML = "frequency = " + (1000 / (x2millis - x1millis + ((x2nanos - x1nanos) / 1000000))) + " Hz";
+        }
     }
 }
 
@@ -306,19 +386,45 @@ function initPlot(self) {
         .attr("x", self.idata.WIDTH / 2)
         .attr("y", 53)
         .html("Time")
-        .node();
+      .node();
     self.idata.xStart = xaxiscover.append("text")
         .attr("text-anchor", "middle")
         .attr("class", "label")
         .attr("x", 0)
         .attr("y", 35)
-        .node();
+      .node();
     self.idata.xEnd = xaxiscover.append("text")
         .attr("text-anchor", "middle")
         .attr("class", "label")
         .attr("x", self.idata.WIDTH)
         .attr("y", 35)
-        .node();
+      .node();
+    var cursors = self.idata.cursorDataElems;
+    var alignoffset = 70;
+    cursors.x1 = xaxiscover.append("text")
+        .attr("text-anchor", "start")
+        .attr("class", "cursorlabel")
+        .attr("x", -alignoffset)
+        .attr("y", 75)
+      .node();
+    cursors.x2 = xaxiscover.append("text")
+        .attr("text-anchor", "end")
+        .attr("class", "cursorlabel cursor-right-align")
+        .attr("x", self.idata.WIDTH + alignoffset)
+        .attr("y", 75)
+      .node();
+    cursors.deltax = xaxiscover.append("text")
+        .attr("text-anchor", "start")
+        .attr("class", "cursorlabel")
+        .attr("x", -alignoffset)
+        .attr("y", 100)
+      .node();
+    cursors.freqx = xaxiscover.append("text")
+        .attr("text-anchor", "end")
+        .attr("class", "cursorlabel cursor-right-align")
+        .attr("x", self.idata.WIDTH + alignoffset)
+        .attr("y", 100)
+      .node();
     var datadensitycover = chart.append("g")
         .attr("class", "data-density-cover")
         .attr("transform", "translate(" + self.idata.margin.left + ", 0)");
@@ -365,7 +471,7 @@ function initPlot(self) {
             if (self.idata.vertCursor1 != undefined && self.idata.vertCursor2 != undefined) {
                 return;
             }
-            var newCursor = new Cursor(self, event.pageX - (self.idata.margin.left + $(chart.node()).offset().left), cursorgroup, self.idata.HEIGHT, true, $background);
+            var newCursor = new Cursor(self, event.pageX - (self.idata.margin.left + $(chart.node()).offset().left), cursorgroup, self.idata.HEIGHT, true, $background, function () { updateVertCursorStats(self); });
             if (self.idata.vertCursor1 == undefined) {
                 self.idata.vertCursor1 = newCursor;
             } else{
@@ -383,7 +489,7 @@ function initPlot(self) {
         if (self.idata.horizCursor1 != undefined && self.idata.horizCursor2 != undefined) {
             return;
         }
-        var newCursor = new Cursor(self, event.pageY - (self.idata.margin.top + $(chart.node()).offset().top), cursorgroup, self.idata.WIDTH, false, $background);
+        var newCursor = new Cursor(self, event.pageY - (self.idata.margin.top + $(chart.node()).offset().top), cursorgroup, self.idata.WIDTH, false, $background, function () {});
         if (self.idata.horizCursor1 == undefined) {
             self.idata.horizCursor1 = newCursor;
         } else{
@@ -467,6 +573,8 @@ function updateSize(self, redraw) {
     zoom.size([WIDTH, HEIGHT]);
     self.idata.xTitle.setAttribute("x", WIDTH / 2);
     self.idata.xEnd.setAttribute("x", WIDTH);
+    self.$("svg.chart text.cursor-right-align").attr("x", WIDTH + 80);
+    // Deal with cursor display
     var oldXScale = self.idata.oldXScale;
     if (self.idata.oldXScale != undefined) {
         var scale = zoom.scale();
