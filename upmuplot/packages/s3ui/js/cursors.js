@@ -236,9 +236,9 @@ function getNearestDataPoint(xmillis, xnanos, data) {
             currentDiff[0]--;
             currentDiff[1] += 1000000;
         }
-    }
-    if (s3ui.cmpTimes(currentDiff, rivalDiff) > 0) {
-        return rivalPoint;
+        if (s3ui.cmpTimes(currentDiff, rivalDiff) > 0) {
+            return rivalPoint;
+        }
     }
     return currentPoint;
 }
