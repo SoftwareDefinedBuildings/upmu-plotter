@@ -77,6 +77,32 @@ function binSearch(sortedLst, item, key) {
     return low;
 }
 
+/* Performs binary search of SORTEDLST to find the index of the item that,
+   according to the comparator, is equal to ITEM. COMPARATOR is a function
+   that, given two elements in the array, returns a negative number of the
+   first is less than the second, a positive number if it is greater, and
+   zero if the two are equal. If ITEM is not equal to any of the items in
+   SORTEDLST, one of the indices closes to the index where it would be is
+   returned. */
+function binSearchCmp(sortedLst, item, comparator) {
+    var comparison;
+    var low = 0;
+    var high = sortedLst.length - 1;
+    var i;
+    while (low < high) {
+        i = Math.floor((low + high) / 2);
+        comparison = comparator(sortedLst[i], item);
+        if (comparison < 0) {
+            low = i + 1;
+        } else if (comparison > 0) {
+            high = i - 1;
+        } else {
+            return i;
+        }
+    }
+    return low;
+}
+
 function nanosToUnit(numValue) {
     var unit;
     if (numValue >= 86400000000000) {
@@ -103,9 +129,34 @@ function nanosToUnit(numValue) {
     return numValue.toFixed(3) + unit;
 }
 
+function cmpTimes(t1, t2) {
+    if (t1[0] < t2[0]) {
+        return -1;
+    } else if (t1[0] > t2[0]) {
+        return 1;
+    } else if (t1[1] < t2[1]) {
+        return -1;
+    } else if (t1[1] > t2[1]) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+function timeToStr(time) {
+    if (time[0] == 0) {
+        return time[1].toString();
+    } else {
+        return time[0] + (1000000 + time[1]).toString().slice(1);
+    }
+}
+
 s3ui.getFilepath = getFilepath;
 s3ui.getInfo = getInfo;
 s3ui.getURL = getURL;
 s3ui.makeMenuMaker = makeMenuMaker;
 s3ui.binSearch = binSearch;
+s3ui.binSearchCmp = binSearchCmp;
 s3ui.nanosToUnit = nanosToUnit;
+s3ui.cmpTimes = cmpTimes;
+s3ui.timeToStr = timeToStr;

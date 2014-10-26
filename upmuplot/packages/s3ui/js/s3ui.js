@@ -51,6 +51,7 @@ s3ui.__init__ = function (self) {
         s3ui.init_frontend(self);
         s3ui.init_streamtree(self);
         s3ui.init_control(self);
+        s3ui.init_cursors(self);
         
         var c1, c2;
         

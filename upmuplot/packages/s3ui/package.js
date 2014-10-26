@@ -29,6 +29,7 @@ Package.on_use(function (api) {
   api.add_files(path.join(asset_path, 'js', 'frontend.js'), 'client');
   api.add_files(path.join(asset_path, 'js', 'streamtree.js'), 'client');
   api.add_files(path.join(asset_path, 'js', 'control.js'), 'client');
+  api.add_files(path.join(asset_path, 'js', 'cursors.js'), 'client');
   
   api.export('s3ui');
   api.export('s3ui_server');

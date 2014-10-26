@@ -93,6 +93,7 @@ function toggleLegend (self, show, streamdata, update) {
                     nameCell.style("background-color", "rgba(" + color + ", 0.3)");
                     self.find(".metadataDisplay").innerHTML = "<h3>Stream Metadata</h3>" + s3ui.getInfo(streamdata, "<br>");
                 }
+                s3ui.updateVertCursorStats(self);
             };
         var hovered = false;
         nameElem.onmouseover = function () {

@@ -58,11 +58,6 @@ function init_plot(self) {
         
     self.idata.testElem = undefined;
     
-    self.idata.horizCursor1 = undefined;
-    self.idata.horizCursor2 = undefined;
-    self.idata.vertCursor1 = undefined;
-    self.idata.vertCursor2 = undefined;
-    
     self.idata.cursorDataElems = {};
     self.idata.cursorDataElems.x1 = undefined;
     self.idata.cursorDataElems.x2 = undefined;
@@ -74,117 +69,6 @@ function init_plot(self) {
     self.idata.cursorDataElems.y1 = undefined;
     self.idata.cursorDataElems.y2 = undefined;
     self.idata.cursorDataElems.deltay = undefined;
-}
-
-/* d3chartgroup is a d3 selection. updateCallback is a function to call when the position of this cursor is updated. */
-function Cursor(self, coord, d3chartgroup, length, vertical, $background, updateCallback) {
-    this.s3ui_instance = self;
-    this.coord = coord;
-    coord--;
-    if (vertical) {
-        this.rectMarker = d3chartgroup.append("rect")
-            .attr("x", coord)
-            .attr("y", 0)
-            .attr("width", 3)
-            .attr("height", length)
-            .attr("fill-opacity", 1)
-            .style("cursor", "col-resize")
-          .node();
-    } else {
-        this.rectMarker = d3chartgroup.append("rect")
-            .attr("x", 0)
-            .attr("y", coord)
-            .attr("width", length)
-            .attr("height", 3)
-            .attr("fill-opacity", 1)
-            .style("cursor", "row-resize")
-          .node();
-    }
-    this.parent = d3chartgroup.node();
-    this.vertical = vertical;
-    this.selected = false;
-    var cursorObj = this;
-    this.$background = $background;
-    this.callback = updateCallback;
-    $(this.rectMarker).on("mousedown.cursor", function (event) {
-            cursorObj.select(vertical ? event.pageX : event.pageY);
-        });
-}
-
-Cursor.prototype.updateLength = function (newLength) {
-    if (this.vertical) {
-        this.rectMarker.setAttribute("height", newLength);
-    } else {
-        this.rectMarker.setAttribute("width", newLength);
-    }
-}
-
-Cursor.prototype.updateCoordinate = function (newCoord) {
-    this.coord = newCoord;
-    if (this.vertical) {
-        this.rectMarker.setAttribute("x", newCoord);
-    } else {
-        this.rectMarker.setAttribute("y", newCoord);
-    }
-}
-
-Cursor.prototype.select = function (initCoord) {
-    this.selected = true;
-    this.rectMarker.setAttribute("fill-opacity", 0.5);
-    var intermediateCoord = this.coord;
-    var cursorObj = this;
-    cursorObj.$background.css("cursor", this.vertical ? "col-resize" : "row-resize");
-    $(document).on("mousemove.cursor", function (event) {
-            var attr, eventVal;
-            if (cursorObj.vertical) {
-                attr = "x";
-                eventVal = event.pageX;
-            } else {
-                attr = "y";
-                eventVal = event.pageY;
-            }
-            intermediateCoord = cursorObj.coord + (eventVal - initCoord);
-            cursorObj.rectMarker.setAttribute(attr, intermediateCoord - 1);
-        });
-    $(document).on("mouseup.cursor", function (event) {
-            if (intermediateCoord < 0 || intermediateCoord >= (cursorObj.vertical ? cursorObj.s3ui_instance.idata.WIDTH : cursorObj.s3ui_instance.idata.HEIGHT)) {
-                cursorObj.deleteSelf();
-            } else {
-                cursorObj.coord = intermediateCoord;
-                cursorObj.deselect();
-            }
-        });
-}
-
-Cursor.prototype.deselect = function () {
-    this.selected = false;
-    this.$background.css("cursor", "");
-    this.rectMarker.setAttribute("fill-opacity", 1);
-    $(document).off(".cursor");
-    this.callback();
-}
-
-Cursor.prototype.deleteSelf = function () {
-    if (this.selected) {
-        $(document).off(".cursor");
-        this.$background.css("cursor", "");
-    }
-    $(this.rectMarker).off(".cursor");
-    if (this.vertical) {
-        if (this.s3ui_instance.idata.vertCursor1 == this) {
-            this.s3ui_instance.idata.vertCursor1 = undefined;
-        } else {
-            this.s3ui_instance.idata.vertCursor2 = undefined;
-        }
-    } else {
-        if (this.s3ui_instance.idata.horizCursor1 == this) {
-            this.s3ui_instance.idata.horizCursor1 = undefined;
-        } else {
-            this.s3ui_instance.idata.horizCursor2 = undefined;
-        }
-    }
-    this.parent.removeChild(this.rectMarker);
-    this.callback();
 }
 
 // Behavior for zooming and scrolling
@@ -235,7 +119,7 @@ function repaintZoomNewData(self, callback, stopCache) {
     var domain = self.idata.oldXScale.domain();
     self.idata.xStart.innerHTML = self.idata.labelFormatter.format(domain[0]);
     self.idata.xEnd.innerHTML = self.idata.labelFormatter.format(domain[1]);
-    updateVertCursorStats(self);
+    s3ui.updateVertCursorStats(self);
     var numResponses = 0;
     function makeDataCallback(stream, startTime, endTime) {
         return function (data, low, high) {
@@ -271,70 +155,6 @@ function repaintZoomNewData(self, callback, stopCache) {
     }
     if (selectedStreams.length == 0) {
         callback();
-    }
-}
-
-function updateVertCursorStats(self) {
-    if (self.idata.initialized && self.idata.onscreen) {
-        var cursors = self.idata.cursorDataElems;
-        var scale = self.idata.oldXScale;
-        var firstCursor = self.idata.vertCursor1;
-        var secondCursor = self.idata.vertCursor2;
-        if (firstCursor == undefined && secondCursor == undefined) {
-            return;
-        } else if (firstCursor == undefined) {
-            firstCursor = secondCursor;
-            secondCursor = undefined;
-        } else if (secondCursor != undefined && firstCursor.coord > secondCursor.coord) {
-            secondCursor = firstCursor;
-            firstCursor = self.idata.vertCursor2;
-        }
-        var domain = scale.domain();
-        pixelwidthnanos = (domain[1] - domain[0]) / self.idata.WIDTH * 1000000;
-        var x1millis = scale.invert(firstCursor.coord);
-        var x1num, x2num; // dates converted to numbers
-        var x1nanos = (firstCursor.coord - scale(x1millis)) * pixelwidthnanos;
-        if (x1nanos < 0) {
-            x1nanos = Math.round(x1nanos + 1000000);
-            x1num = x1millis - 1;
-            x1millis = new Date(x1num);
-        } else {
-            x1num = x1millis.getTime();
-            x1nanos = Math.round(x1nanos);
-        }
-        var x1millisextra = x1num >= 0 ? x1num % 1000 : ((x1num % 1000) + 1000);
-        cursors.x1.innerHTML = "x1 = " + self.idata.labelFormatter.format(x1millis) + "." + x1millisextra + (1000000 + x1nanos).toString().slice(1);
-        if (secondCursor == undefined) {
-            cursors.x2.innerHTML = "";
-            cursors.deltax.innerHTML = "";
-            cursors.freqx.innerHTML = "";
-        } else {
-            var x2millis = scale.invert(secondCursor.coord);
-            var x2nanos = Math.round((secondCursor.coord - scale(x2millis)) * pixelwidthnanos);
-            if (x2nanos < 0) {
-                x2nanos = Math.round(x2nanos + 1000000);
-                x2num = x2millis - 1;
-                x2millis = new Date(x2num);
-            } else {
-                x2nanos = Math.round(x2nanos);
-                x2num = x2millis.getTime();
-            }
-            var x2millisextra = x2num >= 0 ? x2num % 1000 : ((x2num % 1000) + 1000);
-            cursors.x2.innerHTML = "x2 = " + self.idata.labelFormatter.format(x2millis) + "." + x2millisextra + (1000000 + x2nanos).toString().slice(1);
-            var millidiff = x2num - x1num;
-            var nanodiff = x2nanos - x1nanos;
-            if (nanodiff < 0) {
-                nanodiff += 1000000;
-                millidiff--;
-            }
-            if (millidiff == 0) {
-                nanodiff = nanodiff.toString();
-            } else {
-                nanodiff = millidiff + (1000000 + nanodiff).toString().slice(1);
-            }
-            cursors.deltax.innerHTML = "delta x = " + nanodiff + " ns";
-            cursors.freqx.innerHTML = "frequency = " + (1000 / (x2millis - x1millis + ((x2nanos - x1nanos) / 1000000))) + " Hz";
-        }
     }
 }
 
@@ -425,6 +245,18 @@ function initPlot(self) {
         .attr("x", self.idata.WIDTH + alignoffset)
         .attr("y", 100)
       .node();
+    cursors.fx1 = xaxiscover.append("text")
+        .attr("text-anchor", "start")
+        .attr("class", "cursorlabel")
+        .attr("x", -alignoffset)
+        .attr("y", 125)
+      .node();
+    cursors.fx2 = xaxiscover.append("text")
+        .attr("text-anchor", "end")
+        .attr("class", "cursorlabel cursor-right-align")
+        .attr("x", self.idata.WIDTH + alignoffset)
+        .attr("y", 125)
+      .node();
     var datadensitycover = chart.append("g")
         .attr("class", "data-density-cover")
         .attr("transform", "translate(" + self.idata.margin.left + ", 0)");
@@ -471,7 +303,7 @@ function initPlot(self) {
             if (self.idata.vertCursor1 != undefined && self.idata.vertCursor2 != undefined) {
                 return;
             }
-            var newCursor = new Cursor(self, event.pageX - (self.idata.margin.left + $(chart.node()).offset().left), cursorgroup, self.idata.HEIGHT, true, $background, function () { updateVertCursorStats(self); });
+            var newCursor = new s3ui.Cursor(self, event.pageX - (self.idata.margin.left + $(chart.node()).offset().left), cursorgroup, self.idata.HEIGHT, true, $background, function () { s3ui.updateVertCursorStats(self); });
             if (self.idata.vertCursor1 == undefined) {
                 self.idata.vertCursor1 = newCursor;
             } else{
@@ -489,7 +321,7 @@ function initPlot(self) {
         if (self.idata.horizCursor1 != undefined && self.idata.horizCursor2 != undefined) {
             return;
         }
-        var newCursor = new Cursor(self, event.pageY - (self.idata.margin.top + $(chart.node()).offset().top), cursorgroup, self.idata.WIDTH, false, $background, function () {});
+        var newCursor = new s3ui.Cursor(self, event.pageY - (self.idata.margin.top + $(chart.node()).offset().top), cursorgroup, self.idata.WIDTH, false, $background, function () {});
         if (self.idata.horizCursor1 == undefined) {
             self.idata.horizCursor1 = newCursor;
         } else{
