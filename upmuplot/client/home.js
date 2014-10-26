@@ -2,7 +2,7 @@ if (Meteor.isClient) {
     var localtest = false;
     Template.home.plot_data = [
         {
-            tagsURL: localtest ? 'http://localhost:7856' : 'http://upmuplot.cal-sdb.org:4523/',
+            tagsURL: localtest ? 'http://localhost:7856' : 'http://miranda.cs.berkeley.edu:4523/',
             dataURLStart: localtest ? 'http://localhost:7856/data/uuid/' : 'http://upmuplot.cal-sdb.org:9000/data/uuid/',
             bracketURL: localtest ? 'http://localhost:7856' : 'http://upmuplot.cal-sdb.org:9000/q/bracket',
             csvURL: 'http://upmuplot.cal-sdb.org:9000/wrappedcsv'
