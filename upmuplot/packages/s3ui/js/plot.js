@@ -868,7 +868,7 @@ function showDataDensity(self, uuid) {
                 if (((streamdata[i][0] - prevpt[0]) * 1000000) + streamdata[i][1] - prevpt[1] <= pw) {
                     if (i != 0) { // if this is the first point in the cache entry, then the cache start is less than a pointwidth away and don't drop it to zero
                         if (i == startIndex) {
-                            toDraw.push([Math.max(0, oldXScale(prevpt[1] + offset)), prevpt[5]]);
+                            toDraw.push([Math.max(0, oldXScale(prevpt[0] + offset)), prevpt[5]]);
                         }
                         toDraw.push([xPixel, toDraw[toDraw.length - 1][1]]);
                     }
