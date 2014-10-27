@@ -94,6 +94,7 @@ function toggleLegend (self, show, streamdata, update) {
                     self.find(".metadataDisplay").innerHTML = "<h3>Stream Metadata</h3>" + s3ui.getInfo(streamdata, "<br>");
                 }
                 s3ui.updateVertCursorStats(self);
+                s3ui.updateHorizCursorStats(self);
             };
         var hovered = false;
         nameElem.onmouseover = function () {

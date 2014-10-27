@@ -8,7 +8,7 @@ function init_plot(self) {
     self.idata.inittrans = 0;
 
     // Margin size (not constant)
-    self.idata.margin = {left: 100, right: 100, top: 70, bottom: 150};
+    self.idata.margin = {left: 100, right: 100, top: 70, bottom: 170};
     
     // Height of the chart area (constant)
     self.idata.HEIGHT = 300;
@@ -237,25 +237,43 @@ function initPlot(self) {
         .attr("text-anchor", "start")
         .attr("class", "cursorlabel")
         .attr("x", -alignoffset)
-        .attr("y", 100)
+        .attr("y", 95)
       .node();
     cursors.freqx = xaxiscover.append("text")
         .attr("text-anchor", "end")
         .attr("class", "cursorlabel cursor-right-align")
         .attr("x", self.idata.WIDTH + alignoffset)
-        .attr("y", 100)
+        .attr("y", 95)
       .node();
     cursors.fx1 = xaxiscover.append("text")
         .attr("text-anchor", "start")
         .attr("class", "cursorlabel")
         .attr("x", -alignoffset)
-        .attr("y", 125)
+        .attr("y", 115)
       .node();
     cursors.fx2 = xaxiscover.append("text")
         .attr("text-anchor", "end")
         .attr("class", "cursorlabel cursor-right-align")
         .attr("x", self.idata.WIDTH + alignoffset)
-        .attr("y", 125)
+        .attr("y", 115)
+      .node();
+    cursors.y1 = xaxiscover.append("text")
+        .attr("text-anchor", "start")
+        .attr("class", "cursorlabel")
+        .attr("x", -alignoffset)
+        .attr("y", 135)
+      .node();
+    cursors.y2 = xaxiscover.append("text")
+        .attr("text-anchor", "end")
+        .attr("class", "cursorlabel cursor-right-align")
+        .attr("x", self.idata.WIDTH + alignoffset)
+        .attr("y", 135)
+      .node();
+    cursors.deltay = xaxiscover.append("text")
+        .attr("text-anchor", "middle")
+        .attr("class", "cursorlabel")
+        .attr("x", self.idata.WIDTH / 2)
+        .attr("y", 155)
       .node();
     var datadensitycover = chart.append("g")
         .attr("class", "data-density-cover")
@@ -321,7 +339,7 @@ function initPlot(self) {
         if (self.idata.horizCursor1 != undefined && self.idata.horizCursor2 != undefined) {
             return;
         }
-        var newCursor = new s3ui.Cursor(self, event.pageY - (self.idata.margin.top + $(chart.node()).offset().top), cursorgroup, self.idata.WIDTH, false, $background, function () {});
+        var newCursor = new s3ui.Cursor(self, event.pageY - (self.idata.margin.top + $(chart.node()).offset().top), cursorgroup, self.idata.WIDTH, false, $background, function () { s3ui.updateHorizCursorStats(self); });
         if (self.idata.horizCursor1 == undefined) {
             self.idata.horizCursor1 = newCursor;
         } else{
@@ -406,6 +424,7 @@ function updateSize(self, redraw) {
     self.idata.xTitle.setAttribute("x", WIDTH / 2);
     self.idata.xEnd.setAttribute("x", WIDTH);
     self.$("svg.chart text.cursor-right-align").attr("x", WIDTH + 80);
+    self.idata.cursorDataElems.deltay.setAttribute("x", WIDTH / 2);
     // Deal with cursor display
     var oldXScale = self.idata.oldXScale;
     if (self.idata.oldXScale != undefined) {
@@ -577,7 +596,7 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
             axis.autoscale = false;
         }
         if (!axis.autoscale && (axis.manualscale[1] > axis.manualscale[0])) {
-            axisData[axis.axisid] = [NaN, NaN]; // so we know that we're using a manual scale for this axis
+            axisData[axis.axisid] = [NaN, NaN, undefined, true]; // so we know that we're using a manual scale for this axis
             continue;
         }
         totalmin = undefined;
@@ -611,9 +630,9 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
                 totalmin--;
                 totalmax++;
             }
-            axisData[axis.axisid] = [totalmin, totalmax];
+            axisData[axis.axisid] = [totalmin, totalmax, undefined, true];
         } else {
-            axisData[axis.axisid] = [-1, 1, true];
+            axisData[axis.axisid] = [-1, 1, undefined, false];
         }
     }
     
@@ -635,7 +654,7 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
                     .nice();
                 var domain = scale.domain();
                 if (elem.autoscale) { // if this is the result of an AUTOSCALE rather than bad input...
-                    if (!axisData[elem.axisid][2]) { // only set the text in the axes if autoscale came up with something reasonable
+                    if (axisData[elem.axisid][3]) { // only set the text in the axes if autoscale came up with something reasonable
                         elem.leftBox.value = domain[0];
                         elem.rightBox.value = domain[1];
                         elem.newaxis = false;
@@ -647,7 +666,7 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
                 elem.manualscale[0] = domain[0];
                 elem.manualscale[1] = domain[1];
             }
-            axisData[elem.axisid].push(scale);
+            axisData[elem.axisid][2] = scale;
             return scale;
         });
         
@@ -743,6 +762,8 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
              })())
         .html(function (d) { return d.axisname; });
     update.exit().remove();
+    
+    s3ui.updateHorizCursorStats(self);
     
     drawStreams(self, data, streams, streamSettings, xScale, yScales, yAxisArray, axisData, loadingElem, false);
 }

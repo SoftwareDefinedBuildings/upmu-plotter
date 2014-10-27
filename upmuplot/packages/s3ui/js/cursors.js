@@ -192,6 +192,37 @@ function updateVertCursorStats(self) {
     }
 }
 
+function updateHorizCursorStats(self) {
+    if (self.idata.initialized && self.idata.onscreen) {
+        var cursors = self.idata.cursorDataElems;
+        var firstCursor = self.idata.horizCursor1;
+        var secondCursor = self.idata.horizCursor2;
+        if (self.idata.showingDensity == undefined || (firstCursor == undefined && secondCursor == undefined)) {
+            cursors.y1.innerHTML = "";
+            cursors.y2.innerHTML = "";
+            cursors.deltay.innerHTML = "";
+            return;
+        } else if (firstCursor == undefined) {
+            firstCursor = secondCursor;
+            secondCursor = undefined;
+        } else if (secondCursor != undefined && firstCursor.coord < secondCursor.coord) {
+            secondCursor = firstCursor;
+            firstCursor = self.idata.horizCursor2;
+        }
+        var scale = self.idata.oldAxisData[self.idata.streamSettings[self.idata.showingDensity].axisid][2];
+        var units = self.idata.oldData[self.idata.showingDensity][0].Properties.UnitofMeasure;
+        var firstVal = scale.invert(firstCursor.coord);
+        cursors.y1.innerHTML = "y1 = " + firstVal + " " + units;
+        if (secondCursor != undefined) {
+            var secondVal = scale.invert(secondCursor.coord);
+            cursors.y2.innerHTML = "y2 = " + secondVal + " " + units;
+            cursors.deltay.innerHTML = "delta y = " + (secondVal - firstVal) + " " + units;
+        } else {
+            cursors.deltay.innterHTML = "";
+        }
+    }
+}
+
 /* PIXELWIDTHNANOS is (scale.domain()[1] - scale.domain()[0]) / self.idata.WIDTH * 1000000.
    It is a parameter for the sake of efficiency. Returns an array of the form
    [date obj, milliseconds, nanoseconds] which represents the time on the given scale. */
@@ -246,3 +277,4 @@ function getNearestDataPoint(xmillis, xnanos, data) {
 s3ui.init_cursors = init_cursors;
 s3ui.Cursor = Cursor;
 s3ui.updateVertCursorStats = updateVertCursorStats;
+s3ui.updateHorizCursorStats = updateHorizCursorStats;
