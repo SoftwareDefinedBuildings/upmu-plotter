@@ -148,7 +148,7 @@ function updateVertCursorStats(self) {
         x1millis = arr[1];
         x1nanos = arr[2];
         var x1millisextra = x1millis >= 0 ? x1millis % 1000 : ((x1millis % 1000) + 1000);
-        cursors.x1.innerHTML = "x1 = " + self.idata.labelFormatter.format(x1date) + "." + x1millisextra + (1000000 + x1nanos).toString().slice(1);
+        cursors.x1.innerHTML = "x\u2081 = " + self.idata.labelFormatter.format(x1date) + "." + x1millisextra + (1000000 + x1nanos).toString().slice(1);
         if (secondCursor == undefined) {
             cursors.x2.innerHTML = "";
             cursors.deltax.innerHTML = "";
@@ -159,7 +159,7 @@ function updateVertCursorStats(self) {
             x2millis = arr[1];
             x2nanos = arr[2];
             var x2millisextra = x2millis >= 0 ? x2millis % 1000 : ((x2millis % 1000) + 1000);
-            cursors.x2.innerHTML = "x2 = " + self.idata.labelFormatter.format(x2date) + "." + x2millisextra + (1000000 + x2nanos).toString().slice(1);
+            cursors.x2.innerHTML = "x\u2082 = " + self.idata.labelFormatter.format(x2date) + "." + x2millisextra + (1000000 + x2nanos).toString().slice(1);
             var millidiff = x2millis - x1millis;
             var nanodiff = x2nanos - x1nanos;
             if (nanodiff < 0) {
@@ -167,8 +167,8 @@ function updateVertCursorStats(self) {
                 millidiff--;
             }
             nanodiff = s3ui.timeToStr([millidiff, nanodiff]);
-            cursors.deltax.innerHTML = "delta x = " + nanodiff + " ns";
-            cursors.freqx.innerHTML = "frequency = " + (1000 / (x2millis - x1millis + ((x2nanos - x1nanos) / 1000000))) + " Hz";
+            cursors.deltax.innerHTML = "x\u2082 \u2212 x\u2081 = " + nanodiff + " ns";
+            cursors.freqx.innerHTML = "(x\u2082 \u2212 x\u2081)\u207B\xB9 = " + (1000 / (x2millis - x1millis + ((x2nanos - x1nanos) / 1000000))) + " Hz";
         }
         if (self.idata.showingDensity != undefined) {
             x1millis -= self.idata.offset; // switch to UTC time
@@ -212,11 +212,11 @@ function updateHorizCursorStats(self) {
         var scale = self.idata.oldAxisData[self.idata.streamSettings[self.idata.showingDensity].axisid][2];
         var units = self.idata.oldData[self.idata.showingDensity][0].Properties.UnitofMeasure;
         var firstVal = scale.invert(firstCursor.coord);
-        cursors.y1.innerHTML = "y1 = " + firstVal + " " + units;
+        cursors.y1.innerHTML = "y\u2081 = " + firstVal + " " + units;
         if (secondCursor != undefined) {
             var secondVal = scale.invert(secondCursor.coord);
-            cursors.y2.innerHTML = "y2 = " + secondVal + " " + units;
-            cursors.deltay.innerHTML = "delta y = " + (secondVal - firstVal) + " " + units;
+            cursors.y2.innerHTML = "y\u2082 = " + secondVal + " " + units;
+            cursors.deltay.innerHTML = "y\u2082 \u2212 y\u2081 = " + (secondVal - firstVal) + " " + units;
         } else {
             cursors.deltay.innterHTML = "";
         }

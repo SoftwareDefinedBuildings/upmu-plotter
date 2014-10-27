@@ -24,10 +24,6 @@ svg.chart {
 .clickedchart {
     cursor: url(../img/closedhand.cur), move;
 }
-rect.clickscreen {
-    pointer-events: visibleFill;
-    fill: none;
-}
 .jstree-contextmenu {
     z-index: 99999; /* So the context menu isn't hidden. */
 }
