@@ -125,12 +125,12 @@ function updateVertCursorStats(self) {
         var firstCursor = self.idata.vertCursor1;
         var secondCursor = self.idata.vertCursor2;
         if (firstCursor == undefined && secondCursor == undefined) {
-            cursors.x1.innerHTML = "";
-            cursors.x2.innerHTML = "";
-            cursors.deltax.innerHTML = "";
-            cursors.freqx.innerHTML = "";
-            cursors.fx1.innerHTML = "";
-            cursors.fx2.innerHTML = "";
+            hideEntry(cursors.x1);
+            hideEntry(cursors.x2);
+            hideEntry(cursors.deltax);
+            hideEntry(cursors.freqx);
+            hideEntry(cursors.fx1);
+            hideEntry(cursors.fx2);
             return;
         } else if (firstCursor == undefined) {
             firstCursor = secondCursor;
@@ -139,6 +139,7 @@ function updateVertCursorStats(self) {
             secondCursor = firstCursor;
             firstCursor = self.idata.vertCursor2;
         }
+        showEntry(cursors.x1);
         var domain = scale.domain();
         var x1date, x1millis, x1nanos;
         var x2date, x2millis, x2nanos;
@@ -148,18 +149,19 @@ function updateVertCursorStats(self) {
         x1millis = arr[1];
         x1nanos = arr[2];
         var x1millisextra = x1millis >= 0 ? x1millis % 1000 : ((x1millis % 1000) + 1000);
-        cursors.x1.innerHTML = "x\u2081 = " + self.idata.labelFormatter.format(x1date) + "." + x1millisextra + (1000000 + x1nanos).toString().slice(1);
+        cursors.x1[1].innerHTML = self.idata.labelFormatter.format(x1date) + "." + (1000 + x1millisextra).toString().slice(1) + (1000000 + x1nanos).toString().slice(1);
         if (secondCursor == undefined) {
-            cursors.x2.innerHTML = "";
-            cursors.deltax.innerHTML = "";
-            cursors.freqx.innerHTML = "";
+            hideEntry(cursors.x2);
+            hideEntry(cursors.deltax);
+            hideEntry(cursors.freqx);
         } else {
             arr = getScaleTime(secondCursor, scale, pixelwidthnanos);
             x2date = arr[0];
             x2millis = arr[1];
             x2nanos = arr[2];
             var x2millisextra = x2millis >= 0 ? x2millis % 1000 : ((x2millis % 1000) + 1000);
-            cursors.x2.innerHTML = "x\u2082 = " + self.idata.labelFormatter.format(x2date) + "." + x2millisextra + (1000000 + x2nanos).toString().slice(1);
+            showEntry(cursors.x2);
+            cursors.x2[1].innerHTML = self.idata.labelFormatter.format(x2date) + "." + (1000 + x2millisextra).toString().slice(1) + (1000000 + x2nanos).toString().slice(1);
             var millidiff = x2millis - x1millis;
             var nanodiff = x2nanos - x1nanos;
             if (nanodiff < 0) {
@@ -167,27 +169,53 @@ function updateVertCursorStats(self) {
                 millidiff--;
             }
             nanodiff = s3ui.timeToStr([millidiff, nanodiff]);
-            cursors.deltax.innerHTML = "x\u2082 \u2212 x\u2081 = " + nanodiff + " ns";
-            cursors.freqx.innerHTML = "(x\u2082 \u2212 x\u2081)\u207B\xB9 = " + (1000 / (x2millis - x1millis + ((x2nanos - x1nanos) / 1000000))) + " Hz";
+            showEntry(cursors.deltax);
+            cursors.deltax[1].innerHTML = nanodiff;
+            showEntry(cursors.freqx);
+            cursors.freqx[1].innerHTML = (1000 / (x2millis - x1millis + ((x2nanos - x1nanos) / 1000000)));
         }
         if (self.idata.showingDensity != undefined) {
             x1millis -= self.idata.offset; // switch to UTC time
             x2millis -= self.idata.offset; // switch to UTC time
             var selectedData = self.idata.oldData[self.idata.showingDensity][1];
+            var pwedelta = self.idata.oldData[self.idata.showingDensity][2] - 1; // the exponent for the width of the range
+            var delta = Math.pow(2, pwedelta);
+            var deltamillis = Math.floor(delta / 1000000);
+            var deltananos = delta % 1000000;
             if (selectedData.length > 0) {
                 var units = self.idata.oldData[self.idata.showingDensity][0].Properties.UnitofMeasure;
                 var leftPoint = getNearestDataPoint(x1millis, x1nanos, selectedData);
-                cursors.fx1.innerHTML = "Left: (" + s3ui.timeToStr(leftPoint) + " ns, " + leftPoint[3] + " " + units + ")";
+                var timearr = [leftPoint[0], leftPoint[1]];
+                timearr[1] += deltananos;
+                timearr[0] += deltamillis;
+                if (timearr[1] >= 1000000) {
+                    timearr[1] -= 1000000;
+                    timearr[0] += 1;
+                }
+                showEntry(cursors.fx1);
+                cursors.fx1[1].innerHTML = s3ui.timeToStr(timearr) + " \xB1 2";
+                cursors.fx1[2].innerHTML = pwedelta;
+                cursors.fx1[3].innerHTML = leftPoint[3] + " " + units;
                 if (secondCursor == undefined) {
-                    cursors.fx2.innerHTML = "";
+                    hideEntry(cursors.fx2);
                 } else {
                     var rightPoint = getNearestDataPoint(x2millis, x2nanos, selectedData);
-                    cursors.fx2.innerHTML = "Right: (" + s3ui.timeToStr(rightPoint) + " ns, " + rightPoint[3] + " " + units + ")";
+                    timearr = [rightPoint[0], rightPoint[1]];
+                    timearr[1] += deltananos;
+                    timearr[0] += deltamillis;
+                    if (timearr[1] >= 1000000) {
+                        timearr[1] -= 1000000;
+                        timearr[0] += 1;
+                    }
+                    showEntry(cursors.fx2);
+                    cursors.fx2[1].innerHTML = s3ui.timeToStr(rightPoint) + " \xB1 2"
+                    cursors.fx2[2].innerHTML = pwedelta;
+                    cursors.fx2[3].innerHTML = rightPoint[3] + " " + units;
                 }
             }
         } else {
-            cursors.fx1.innerHTML = "";
-            cursors.fx2.innerHTML = "";
+            hideEntry(cursors.fx1);
+            hideEntry(cursors.fx2);
         }
     }
 }
@@ -198,9 +226,9 @@ function updateHorizCursorStats(self) {
         var firstCursor = self.idata.horizCursor1;
         var secondCursor = self.idata.horizCursor2;
         if (self.idata.showingDensity == undefined || (firstCursor == undefined && secondCursor == undefined)) {
-            cursors.y1.innerHTML = "";
-            cursors.y2.innerHTML = "";
-            cursors.deltay.innerHTML = "";
+            hideEntry(cursors.y1);
+            hideEntry(cursors.y2);
+            hideEntry(cursors.deltay);
             return;
         } else if (firstCursor == undefined) {
             firstCursor = secondCursor;
@@ -212,13 +240,17 @@ function updateHorizCursorStats(self) {
         var scale = self.idata.oldAxisData[self.idata.streamSettings[self.idata.showingDensity].axisid][2];
         var units = self.idata.oldData[self.idata.showingDensity][0].Properties.UnitofMeasure;
         var firstVal = scale.invert(firstCursor.coord);
-        cursors.y1.innerHTML = "y\u2081 = " + firstVal + " " + units;
+        showEntry(cursors.y1);
+        cursors.y1[1].innerHTML = firstVal + " " + units;
         if (secondCursor != undefined) {
             var secondVal = scale.invert(secondCursor.coord);
-            cursors.y2.innerHTML = "y\u2082 = " + secondVal + " " + units;
-            cursors.deltay.innerHTML = "y\u2082 \u2212 y\u2081 = " + (secondVal - firstVal) + " " + units;
+            showEntry(cursors.y2);
+            cursors.y2[1].innerHTML = secondVal + " " + units;
+            showEntry(cursors.deltay);
+            cursors.deltay[1].innerHTML = (secondVal - firstVal) + " " + units;
         } else {
-            cursors.deltay.innterHTML = "";
+            hideEntry(cursors.y2);
+            hideEntry(cursors.deltay);
         }
     }
 }
@@ -274,7 +306,16 @@ function getNearestDataPoint(xmillis, xnanos, data) {
     return currentPoint;
 }
 
+function hideEntry(entry) {
+    entry[0].style.display = "none";
+}
+
+function showEntry(entry) {
+    entry[0].style.display = "";
+}
+
 s3ui.init_cursors = init_cursors;
 s3ui.Cursor = Cursor;
 s3ui.updateVertCursorStats = updateVertCursorStats;
 s3ui.updateHorizCursorStats = updateHorizCursorStats;
+s3ui.hideEntry = hideEntry;

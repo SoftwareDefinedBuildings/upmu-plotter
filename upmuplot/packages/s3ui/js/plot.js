@@ -8,7 +8,7 @@ function init_plot(self) {
     self.idata.inittrans = 0;
 
     // Margin size (not constant)
-    self.idata.margin = {left: 100, right: 100, top: 70, bottom: 170};
+    self.idata.margin = {left: 100, right: 100, top: 70, bottom: 180};
     
     // Height of the chart area (constant)
     self.idata.HEIGHT = 300;
@@ -221,60 +221,190 @@ function initPlot(self) {
       .node();
     var cursors = self.idata.cursorDataElems;
     var alignoffset = 70;
-    cursors.x1 = xaxiscover.append("text")
+    var x1 = xaxiscover.append("text")
         .attr("text-anchor", "start")
         .attr("class", "cursorlabel")
         .attr("x", -alignoffset)
         .attr("y", 75)
-      .node();
-    cursors.x2 = xaxiscover.append("text")
+    x1.append("tspan")
+        .html("x");
+    x1.append("tspan")
+        .attr("baseline-shift", "sub")
+        .html("1");
+    x1.append("tspan")
+        .html(" = ");
+    cursors.x1 = [x1.node(), x1.append("tspan").node()];
+    s3ui.hideEntry(cursors.x1);
+    
+    var x2 = xaxiscover.append("text")
         .attr("text-anchor", "end")
         .attr("class", "cursorlabel cursor-right-align")
         .attr("x", self.idata.WIDTH + alignoffset)
         .attr("y", 75)
-      .node();
-    cursors.deltax = xaxiscover.append("text")
+    x2.append("tspan")
+        .html("x");
+    x2.append("tspan")
+        .attr("baseline-shift", "sub")
+        .html("2");
+    x2.append("tspan")
+        .html(" = ");
+    cursors.x2 = [x2.node(), x2.append("tspan").node()];
+    s3ui.hideEntry(cursors.x2);
+    
+    var deltax = xaxiscover.append("text")
         .attr("text-anchor", "start")
         .attr("class", "cursorlabel")
         .attr("x", -alignoffset)
-        .attr("y", 95)
-      .node();
-    cursors.freqx = xaxiscover.append("text")
+        .attr("y", 95);
+    deltax.append("tspan")
+        .html("x");
+    deltax.append("tspan")
+        .attr("baseline-shift", "sub")
+        .html("2");
+    deltax.append("tspan")
+        .html(" - ");
+    deltax.append("tspan")
+        .html("x");
+    deltax.append("tspan")
+        .attr("baseline-shift", "sub")
+        .html("1");
+    deltax.append("tspan")
+        .html(" = ");
+    cursors.deltax = [deltax.node(), deltax.append("tspan").node()];
+    deltax.append("tspan")
+        .html(" ns");
+    s3ui.hideEntry(cursors.deltax);
+    
+    var freqx = xaxiscover.append("text")
         .attr("text-anchor", "end")
         .attr("class", "cursorlabel cursor-right-align")
         .attr("x", self.idata.WIDTH + alignoffset)
-        .attr("y", 95)
-      .node();
-    cursors.fx1 = xaxiscover.append("text")
+        .attr("y", 95);
+    freqx.append("tspan")
+        .html("(x");
+    freqx.append("tspan")
+        .attr("baseline-shift", "sub")
+        .html("2");
+    freqx.append("tspan")
+        .html(" - x");
+    freqx.append("tspan")
+        .attr("baseline-shift", "sub")
+        .html("1");
+    freqx.append("tspan")
+        .html(")");
+    freqx.append("tspan")
+        .attr("baseline-shift", "super")
+        .html("-1");
+    freqx.append("tspan")
+        .html(" = ");
+    cursors.freqx = [freqx.node(), freqx.append("tspan").node()];
+    freqx.append("tspan")
+        .html(" Hz");
+    s3ui.hideEntry(cursors.freqx);
+    
+    var fx1 = xaxiscover.append("g");
+    var fx11 = fx1.append("text")
         .attr("text-anchor", "start")
         .attr("class", "cursorlabel")
         .attr("x", -alignoffset)
-        .attr("y", 115)
-      .node();
-    cursors.fx2 = xaxiscover.append("text")
+        .attr("y", 115);
+    fx11.append("tspan")
+        .html("Left: (");
+    var fx1top = fx11.append("tspan").node();
+    var fx1exp = fx11.append("tspan").attr("baseline-shift", "super").node();
+    fx11.append("tspan")
+        .html(" ns,");
+    var fx12 = fx1.append("text")
+      .attr("text-anchor", "start")
+        .attr("class", "cursorlabel")
+        .attr("x", -alignoffset)
+        .attr("y", 130);
+    fx12.append("tspan")
+        .style("fill", "none")
+        .html("Left: (");
+    var fx1bottom = fx12.append("tspan")
+        .node();
+    fx12.append("tspan")
+        .html(")");
+    cursors.fx1 = [fx1.node(), fx1top, fx1exp, fx1bottom];
+    s3ui.hideEntry(cursors.fx1);
+    
+    var fx2 = xaxiscover.append("g");
+    var fx21 = fx2.append("text")
         .attr("text-anchor", "end")
         .attr("class", "cursorlabel cursor-right-align")
         .attr("x", self.idata.WIDTH + alignoffset)
-        .attr("y", 115)
-      .node();
-    cursors.y1 = xaxiscover.append("text")
+        .attr("y", 115);
+    fx21.append("tspan")
+        .html("Right: (");
+    var fx2top = fx21.append("tspan").node();
+    var fx2exp = fx21.append("tspan").attr("baseline-shift", "super").node();
+    fx21.append("tspan")
+        .html(" ns,");
+    var fx22 = fx2.append("text")
+        .attr("text-anchor", "end")
+        .attr("class", "cursorlabel cursor-right-align")
+        .attr("x", self.idata.WIDTH + alignoffset)
+        .attr("y", 130);
+    var fx2bottom = fx22.append("tspan")
+        .node();
+    fx22.append("tspan")
+        .html(")");
+    cursors.fx2 = [fx2.node(), fx2top, fx2exp, fx2bottom];
+    s3ui.hideEntry(cursors.fx2);
+    
+    var y1 = xaxiscover.append("text")
         .attr("text-anchor", "start")
         .attr("class", "cursorlabel")
         .attr("x", -alignoffset)
-        .attr("y", 135)
-      .node();
-    cursors.y2 = xaxiscover.append("text")
+        .attr("y", 150);
+    y1.append("tspan")
+        .html("y");
+    y1.append("tspan")
+        .attr("baseline-shift", "sub")
+        .html("1");
+    y1.append("tspan")
+        .html(" = ");
+    cursors.y1 = [y1.node(), y1.append("tspan").node()];
+    s3ui.hideEntry(cursors.y1);
+    
+    var y2 = xaxiscover.append("text")
         .attr("text-anchor", "end")
         .attr("class", "cursorlabel cursor-right-align")
         .attr("x", self.idata.WIDTH + alignoffset)
-        .attr("y", 135)
-      .node();
-    cursors.deltay = xaxiscover.append("text")
+        .attr("y", 150);
+    y2.append("tspan")
+        .html("y");
+    y2.append("tspan")
+        .attr("baseline-shift", "sub")
+        .html("2");
+    y2.append("tspan")
+        .html(" = ");
+    cursors.y2 = [y2.node(), y2.append("tspan").node()];
+    s3ui.hideEntry(cursors.y2);
+        
+    var deltay = xaxiscover.append("text")
         .attr("text-anchor", "middle")
         .attr("class", "cursorlabel")
         .attr("x", self.idata.WIDTH / 2)
-        .attr("y", 155)
-      .node();
+        .attr("y", 170);
+    deltay.append("tspan")
+        .html("y");
+    deltay.append("tspan")
+        .attr("baseline-shift", "sub")
+        .html("2");
+    deltay.append("tspan")
+        .html(" - ");
+    deltay.append("tspan")
+        .html("y");
+    deltay.append("tspan")
+        .attr("baseline-shift", "sub")
+        .html("1");
+    deltay.append("tspan")
+        .html(" = ");
+    cursors.deltay = [deltay.node(), deltay.append("tspan").node()];
+    s3ui.hideEntry(cursors.deltay);
+        
     var datadensitycover = chart.append("g")
         .attr("class", "data-density-cover")
         .attr("transform", "translate(" + self.idata.margin.left + ", 0)");
@@ -424,7 +554,7 @@ function updateSize(self, redraw) {
     self.idata.xTitle.setAttribute("x", WIDTH / 2);
     self.idata.xEnd.setAttribute("x", WIDTH);
     self.$("svg.chart text.cursor-right-align").attr("x", WIDTH + 80);
-    self.idata.cursorDataElems.deltay.setAttribute("x", WIDTH / 2);
+    self.idata.cursorDataElems.deltay[0].setAttribute("x", WIDTH / 2);
     // Deal with cursor display
     var oldXScale = self.idata.oldXScale;
     if (self.idata.oldXScale != undefined) {
