@@ -253,14 +253,19 @@ function updateHorizCursorStats(self) {
         var scale = self.idata.oldAxisData[self.idata.streamSettings[self.idata.showingDensity].axisid][2];
         var units = self.idata.oldData[self.idata.showingDensity][0].Properties.UnitofMeasure;
         var firstVal = scale.invert(firstCursor.coord);
+        var domain = scale.domain();
+        var sigfigs = Math.min(Math.max(getSigFigs(domain[1]), getSigFigs(domain[0])) + getSigFigs(self.idata.HEIGHT), 21);
         showEntry(cursors.y1);
+        firstVal = firstVal.toPrecision(sigfigs)
         cursors.y1[1].innerHTML = firstVal + " " + units;
         if (secondCursor != undefined) {
             var secondVal = scale.invert(secondCursor.coord);
             showEntry(cursors.y2);
+            secondVal = secondVal.toPrecision(sigfigs);
             cursors.y2[1].innerHTML = secondVal + " " + units;
             showEntry(cursors.deltay);
-            cursors.deltay[1].innerHTML = (secondVal - firstVal) + " " + units;
+            var numfixed = Math.min(firstVal.slice(firstVal.indexOf('.')).length, secondVal.slice(secondVal.indexOf('.')).length) - 1;
+            cursors.deltay[1].innerHTML = (secondVal - firstVal).toFixed(numfixed) + " " + units;
         } else {
             hideEntry(cursors.y2);
             hideEntry(cursors.deltay);
@@ -349,6 +354,13 @@ function hideEntry(entry) {
 
 function showEntry(entry) {
     entry[0].style.display = "";
+}
+
+function getSigFigs(num) {
+    var numexp = num.toString().replace(/^[0.]+/, '');
+    numexp = numexp.replace(/\./, '');
+    var eindex = numexp.indexOf('e');
+    return eindex == -1 ? numexp.length : eindex;
 }
 
 s3ui.init_cursors = init_cursors;
