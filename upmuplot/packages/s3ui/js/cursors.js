@@ -8,14 +8,14 @@ function init_cursors(self) {
 }
 
 /* d3chartgroup is a d3 selection. updateCallback is a function to call when the position of this cursor is updated. */
-function Cursor(self, coord, d3chartgroup, length, vertical, $background, updateCallback) {
+function Cursor(self, coord, d3chartgroup, length, offset, vertical, $background, updateCallback) {
     this.s3ui_instance = self;
     this.coord = coord;
     coord--;
     if (vertical) {
         this.rectMarker = d3chartgroup.append("rect")
             .attr("x", coord)
-            .attr("y", 0)
+            .attr("y", offset)
             .attr("width", 3)
             .attr("height", length)
             .attr("fill-opacity", 1)
@@ -23,7 +23,7 @@ function Cursor(self, coord, d3chartgroup, length, vertical, $background, update
           .node();
     } else {
         this.rectMarker = d3chartgroup.append("rect")
-            .attr("x", 0)
+            .attr("x", offset)
             .attr("y", coord)
             .attr("width", length)
             .attr("height", 3)

@@ -476,7 +476,7 @@ function initPlot(self) {
             if (self.idata.vertCursor1 != undefined && self.idata.vertCursor2 != undefined) {
                 return;
             }
-            var newCursor = new s3ui.Cursor(self, event.pageX - (self.idata.margin.left + $(chart.node()).offset().left), cursorgroup, self.idata.HEIGHT, true, $background, function () { s3ui.updateVertCursorStats(self); });
+            var newCursor = new s3ui.Cursor(self, event.pageX - (self.idata.margin.left + $(chart.node()).offset().left), cursorgroup, self.idata.HEIGHT + 65, -65, true, $background, function () { s3ui.updateVertCursorStats(self); });
             if (self.idata.vertCursor1 == undefined) {
                 self.idata.vertCursor1 = newCursor;
             } else{
@@ -494,7 +494,7 @@ function initPlot(self) {
         if (self.idata.horizCursor1 != undefined && self.idata.horizCursor2 != undefined) {
             return;
         }
-        var newCursor = new s3ui.Cursor(self, event.pageY - (self.idata.margin.top + $(chart.node()).offset().top), cursorgroup, self.idata.WIDTH, false, $background, function () { s3ui.updateHorizCursorStats(self); });
+        var newCursor = new s3ui.Cursor(self, event.pageY - (self.idata.margin.top + $(chart.node()).offset().top), cursorgroup, self.idata.WIDTH, 0, false, $background, function () { s3ui.updateHorizCursorStats(self); });
         if (self.idata.horizCursor1 == undefined) {
             self.idata.horizCursor1 = newCursor;
         } else{
