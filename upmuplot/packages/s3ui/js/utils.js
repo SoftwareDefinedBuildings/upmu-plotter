@@ -37,7 +37,7 @@ function getURL(url, success_callback, type, error_callback) {
 
 
 function makeMenuMaker() {
-    var colors = [["black", "#000000"], ["blue", "#0000FF"], ["red", "#FF0000"], ["green", "#008000"], ["purple", "#800080"], ["navy", "#000080"], ["maroon", "#800000"], ["fuchsia", "#FF00FF"], ["aqua", "#00FFFF"], ["gray", "#808080"], ["olive", "#808000"], ["lime", "#00FF00"], ["teal", "#008080"], ["silver", "#C0C0C0"], ["yellow", "#FFFF00"]];
+    var colors = [["blue", "#0000FF"], ["red", "#FF0000"], ["green", "#008000"], ["purple", "#800080"], ["yellow green", "#9ACD32"], ["navy", "#000080"], ["maroon", "#800000"], ["fuchsia", "#FF00FF"], ["brown", "#8B4513"], ["orange", "#FFA500"], ["aqua", "#00FFFF"], ["gray", "#808080"], ["light brown", "#D2691E"], ["olive", "#808000"], ["blue violet", "#8A2BE2"], ["pink", "#FA8072"], ["lime", "#00FF00"], ["dark orange", "#FF8C00"], ["teal", "#008080"], ["yellow", "#FFFF00"], ["dark green", "#004000"], ["tan", "#C2A47C"], ["bright pink", "#FF3399"], ["dark blue", "#4682B4"]];
     var colorIndex = 0;
     return function makeColorMenu () {
         var menu = document.createElement("select");
