@@ -200,7 +200,7 @@ function updateVertCursorStats(self) {
                 } else {
                     timearr = [leftPoint[6], leftPoint[7]];
                     cursors.fx1[1].innerHTML = s3ui.timeToStr(timearr);
-                    cursors.fx1[2].innerHTML = "";
+                    cursors.fx1[2].innerHTML = "\n";
                 }
                 cursors.fx1[3].innerHTML = leftPoint[3] + " " + units;
                 if (secondCursor == undefined) {
@@ -221,7 +221,7 @@ function updateVertCursorStats(self) {
                     } else {
                         timearr = [rightPoint[6], rightPoint[7]];
                         cursors.fx2[1].innerHTML = s3ui.timeToStr(timearr);
-                        cursors.fx2[2].innerHTML = "";
+                        cursors.fx2[2].innerHTML = "\n";
                     }
                     cursors.fx2[3].innerHTML = rightPoint[3] + " " + units;
                 }

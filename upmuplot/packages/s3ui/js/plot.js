@@ -219,6 +219,9 @@ function initPlot(self) {
         .attr("x", self.idata.WIDTH)
         .attr("y", 35)
       .node();
+    var scriptsize = "0.75em";
+    var subscriptoffset = "4px";
+    var superscriptoffset = "6px";
     var cursors = self.idata.cursorDataElems;
     var alignoffset = 70;
     var x1 = xaxiscover.append("text")
@@ -229,9 +232,11 @@ function initPlot(self) {
     x1.append("tspan")
         .html("x");
     x1.append("tspan")
-        .attr("baseline-shift", "sub")
+        .attr("dy", subscriptoffset)
+        .attr("font-size", scriptsize)
         .html("1");
     x1.append("tspan")
+        .attr("dy", "-" + subscriptoffset)
         .html(" = ");
     cursors.x1 = [x1.node(), x1.append("tspan").node()];
     s3ui.hideEntry(cursors.x1);
@@ -244,9 +249,11 @@ function initPlot(self) {
     x2.append("tspan")
         .html("x");
     x2.append("tspan")
-        .attr("baseline-shift", "sub")
+        .attr("dy", subscriptoffset)
+        .attr("font-size", scriptsize)
         .html("2");
     x2.append("tspan")
+        .attr("dy", "-" + subscriptoffset)
         .html(" = ");
     cursors.x2 = [x2.node(), x2.append("tspan").node()];
     s3ui.hideEntry(cursors.x2);
@@ -259,16 +266,18 @@ function initPlot(self) {
     deltax.append("tspan")
         .html("x");
     deltax.append("tspan")
-        .attr("baseline-shift", "sub")
+        .attr("dy", subscriptoffset)
+        .attr("font-size", scriptsize)
         .html("2");
     deltax.append("tspan")
-        .html(" - ");
+        .attr("dy", "-" + subscriptoffset)
+        .html(" - x");
     deltax.append("tspan")
-        .html("x");
-    deltax.append("tspan")
-        .attr("baseline-shift", "sub")
+        .attr("dy", subscriptoffset)
+        .attr("font-size", scriptsize)
         .html("1");
     deltax.append("tspan")
+        .attr("dy", "-" + subscriptoffset)
         .html(" = ");
     cursors.deltax = [deltax.node(), deltax.append("tspan").node()];
     deltax.append("tspan")
@@ -283,19 +292,25 @@ function initPlot(self) {
     freqx.append("tspan")
         .html("(x");
     freqx.append("tspan")
-        .attr("baseline-shift", "sub")
+        .attr("dy", subscriptoffset)
+        .attr("font-size", scriptsize)
         .html("2");
     freqx.append("tspan")
+        .attr("dy", "-" + subscriptoffset)
         .html(" - x");
     freqx.append("tspan")
-        .attr("baseline-shift", "sub")
+        .attr("dy", subscriptoffset)
+        .attr("font-size", scriptsize)
         .html("1");
     freqx.append("tspan")
+        .attr("dy", "-" + subscriptoffset)
         .html(")");
     freqx.append("tspan")
-        .attr("baseline-shift", "super")
+        .attr("dy", "-" + superscriptoffset)
+        .attr("font-size", scriptsize)
         .html("-1");
     freqx.append("tspan")
+        .attr("dy", superscriptoffset)
         .html(" = ");
     cursors.freqx = [freqx.node(), freqx.append("tspan").node()];
     freqx.append("tspan")
@@ -311,8 +326,9 @@ function initPlot(self) {
     fx11.append("tspan")
         .html("Left: (");
     var fx1top = fx11.append("tspan").node();
-    var fx1exp = fx11.append("tspan").attr("baseline-shift", "super").node();
+    var fx1exp = fx11.append("tspan").attr("dy", "-" + superscriptoffset).attr("font-size", scriptsize).node();
     fx11.append("tspan")
+        .attr("dy", superscriptoffset)
         .html(" ns,");
     var fx12 = fx1.append("text")
       .attr("text-anchor", "start")
@@ -338,8 +354,9 @@ function initPlot(self) {
     fx21.append("tspan")
         .html("Right: (");
     var fx2top = fx21.append("tspan").node();
-    var fx2exp = fx21.append("tspan").attr("baseline-shift", "super").node();
+    var fx2exp = fx21.append("tspan").attr("dy", "-" + superscriptoffset).attr("font-size", scriptsize).node();
     fx21.append("tspan")
+        .attr("dy", superscriptoffset)
         .html(" ns,");
     var fx22 = fx2.append("text")
         .attr("text-anchor", "end")
@@ -361,9 +378,11 @@ function initPlot(self) {
     y1.append("tspan")
         .html("y");
     y1.append("tspan")
-        .attr("baseline-shift", "sub")
+        .attr("dy", subscriptoffset)
+        .attr("font-size", scriptsize)
         .html("1");
     y1.append("tspan")
+        .attr("dy", "-" + subscriptoffset)
         .html(" = ");
     cursors.y1 = [y1.node(), y1.append("tspan").node()];
     s3ui.hideEntry(cursors.y1);
@@ -376,9 +395,11 @@ function initPlot(self) {
     y2.append("tspan")
         .html("y");
     y2.append("tspan")
-        .attr("baseline-shift", "sub")
+        .attr("dy", subscriptoffset)
+        .attr("font-size", scriptsize)
         .html("2");
     y2.append("tspan")
+        .attr("dy", "-" + subscriptoffset)
         .html(" = ");
     cursors.y2 = [y2.node(), y2.append("tspan").node()];
     s3ui.hideEntry(cursors.y2);
@@ -391,16 +412,20 @@ function initPlot(self) {
     deltay.append("tspan")
         .html("y");
     deltay.append("tspan")
-        .attr("baseline-shift", "sub")
+        .attr("dy", subscriptoffset)
+        .attr("font-size", scriptsize)
         .html("2");
     deltay.append("tspan")
+        .attr("dy", "-" + subscriptoffset)
         .html(" - ");
     deltay.append("tspan")
         .html("y");
     deltay.append("tspan")
-        .attr("baseline-shift", "sub")
+        .attr("dy", subscriptoffset)
+        .attr("font-size", scriptsize)
         .html("1");
     deltay.append("tspan")
+        .attr("dy", "-" + subscriptoffset)
         .html(" = ");
     cursors.deltay = [deltay.node(), deltay.append("tspan").node()];
     s3ui.hideEntry(cursors.deltay);
