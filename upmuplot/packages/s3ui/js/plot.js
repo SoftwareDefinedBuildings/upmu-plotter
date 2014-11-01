@@ -8,7 +8,9 @@ function init_plot(self) {
     self.idata.inittrans = 0;
 
     // Margin size (not constant)
-    self.idata.margin = {left: 100, right: 100, top: 70, bottom: 180};
+    self.idata.normalbmargin = 70;
+    self.idata.cursorbmargin = 180;
+    self.idata.margin = {left: 100, right: 100, top: 70, bottom: self.idata.normalbmargin};
     
     // Height of the chart area (constant)
     self.idata.HEIGHT = 300;
@@ -16,7 +18,7 @@ function init_plot(self) {
     // Width of the chart and chart area (WIDTH is set automatically by updateSize)
     self.idata.TARGETWIDTH = undefined;
     self.idata.WIDTH = undefined;
-    self.idata.widthmin = 350;
+    self.idata.widthmin = 450;
 
     // Selection of the element to display progress
     self.idata.loadingElem = self.$('.plotLoading');
@@ -33,6 +35,8 @@ function init_plot(self) {
     self.idata.oldAxisData = undefined;
     self.idata.offset = undefined;
     self.idata.oldDomain = undefined;
+    
+    self.idata.scriptsize = "0.75em";
 
     // Keeps track of whether the graph is drawn on the screen
     self.idata.onscreen = false;
@@ -219,7 +223,7 @@ function initPlot(self) {
         .attr("x", self.idata.WIDTH)
         .attr("y", 35)
       .node();
-    var scriptsize = "0.75em";
+    var scriptsize = self.idata.scriptsize;
     var subscriptoffset = "4px";
     var superscriptoffset = "6px";
     var cursors = self.idata.cursorDataElems;

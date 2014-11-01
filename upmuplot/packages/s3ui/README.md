@@ -44,7 +44,7 @@ The object of parameters may have the following properties (all optional):
 * bracketURL - Specifies the url to query to find the time range in which streams have data. Defaults to "http://quasar.cal-sdb.org:9000/q/brackets".
 * csvURL - Specifies the url to query to generate CSV files containing data. Defaults to "http://bunker.cs.berkeley.edu:9000/multicsv".
 * width - A function that returns the targed width of the graph (_not_ just the chart area) to use. Defaults to a function that sizes the graph to the well it is in ("div.chartContainer"). If you plan to override this with a custom setting, the s3ui.pixelsToInt helper function may be of interest to you.
-* widthmin - The minimum width, in pixels, of the width of the chart area (_not_ the whole graph). Defaults to 300.
+* widthmin - The minimum width, in pixels, of the width of the chart area (_not_ the whole graph). Defaults to 450.
 * height - Specifies the height of the chart area (_not_ the whole graph). Defaults to 300.
 * queryLow - The earliest time, in milliseconds since the epoch, when data can be queried. Defaults to 0. queryHigh - queryLow should be at least 2 ms, and queryLow must be at least 0 for correct functionality.
 * queryHigh - The latest time, in milliseconds since the epoch, when data can be queried. Defaults to 3458764513820. queryHigh - queryLow should be at least 2 ms.

@@ -5,6 +5,8 @@ function init_cursors(self) {
     self.idata.horizCursor2 = undefined;
     self.idata.vertCursor1 = undefined;
     self.idata.vertCursor2 = undefined;
+    self.idata.showingVertCursors = false;
+    self.idata.showingHorizCursors = true;
 }
 
 /* d3chartgroup is a d3 selection. updateCallback is a function to call when the position of this cursor is updated. */
@@ -131,6 +133,10 @@ function updateVertCursorStats(self) {
             hideEntry(cursors.freqx);
             hideEntry(cursors.fx1);
             hideEntry(cursors.fx2);
+            self.idata.showingVertCursors = false;
+            if (!self.idata.showingHorizCursors) {
+                shrinkMarginIfNecessary(self);
+            }
             return;
         } else if (firstCursor == undefined) {
             firstCursor = secondCursor;
@@ -139,6 +145,8 @@ function updateVertCursorStats(self) {
             secondCursor = firstCursor;
             firstCursor = self.idata.vertCursor2;
         }
+        self.idata.showingVertCursors = true;
+        growMarginIfNecessary(self);
         showEntry(cursors.x1);
         var domain = scale.domain();
         var x1date, x1millis, x1nanos;
@@ -196,13 +204,14 @@ function updateVertCursorStats(self) {
                         timearr[0] += 1;
                     }
                     cursors.fx1[1].innerHTML = s3ui.timeToStr(timearr) + " \xB1 2";
+                    showExp(self, cursors.fx1[2]);
                     cursors.fx1[2].innerHTML = pwedelta;
                 } else {
                     timearr = [leftPoint[6], leftPoint[7]];
                     cursors.fx1[1].innerHTML = s3ui.timeToStr(timearr);
-                    cursors.fx1[2].innerHTML = "\n";
+                    hideExp(cursors.fx1[2]);
                 }
-                cursors.fx1[3].innerHTML = leftPoint[3] + " " + units;
+                cursors.fx1[3].innerHTML = leftPoint[3].toPrecision(15) + " " + units;
                 if (secondCursor == undefined) {
                     hideEntry(cursors.fx2);
                 } else {
@@ -217,13 +226,14 @@ function updateVertCursorStats(self) {
                             timearr[0] += 1;
                         }
                         cursors.fx2[1].innerHTML = s3ui.timeToStr(rightPoint) + " \xB1 2";
+                        showExp(self, cursors.fx2[2]);
                         cursors.fx2[2].innerHTML = pwedelta;
                     } else {
                         timearr = [rightPoint[6], rightPoint[7]];
                         cursors.fx2[1].innerHTML = s3ui.timeToStr(timearr);
-                        cursors.fx2[2].innerHTML = "\n";
+                        hideExp(cursors.fx2[2]);
                     }
-                    cursors.fx2[3].innerHTML = rightPoint[3] + " " + units;
+                    cursors.fx2[3].innerHTML = rightPoint[3].toPrecision(15) + " " + units;
                 }
             }
         } else {
@@ -231,6 +241,17 @@ function updateVertCursorStats(self) {
             hideEntry(cursors.fx2);
         }
     }
+}
+
+function hideExp(elem) {
+    elem.style["font-size"] = "1px";
+    elem.style["font-color"] = "none";
+    elem.innerHTML = ",";
+}
+
+function showExp(self, elem) {
+    elem.style["font-size"] = self.idata.scriptsize;
+    elem.style["font-color"] = "black";
 }
 
 function updateHorizCursorStats(self) {
@@ -242,6 +263,10 @@ function updateHorizCursorStats(self) {
             hideEntry(cursors.y1);
             hideEntry(cursors.y2);
             hideEntry(cursors.deltay);
+            self.idata.showingHorizCursors = false;
+            if (!self.idata.showingVertCursors) {
+                shrinkMarginIfNecessary(self);
+            }
             return;
         } else if (firstCursor == undefined) {
             firstCursor = secondCursor;
@@ -250,22 +275,31 @@ function updateHorizCursorStats(self) {
             secondCursor = firstCursor;
             firstCursor = self.idata.horizCursor2;
         }
+        self.idata.showingHorizCursors = true;
+        growMarginIfNecessary(self);
         var scale = self.idata.oldAxisData[self.idata.streamSettings[self.idata.showingDensity].axisid][2];
         var units = self.idata.oldData[self.idata.showingDensity][0].Properties.UnitofMeasure;
         var firstVal = scale.invert(firstCursor.coord);
         var domain = scale.domain();
-        var sigfigs = Math.min(Math.max(getSigFigs(domain[1]), getSigFigs(domain[0])) + getSigFigs(self.idata.HEIGHT), 21);
+        var scaledelta = (domain[1] - domain[0]) / self.idata.HEIGHT;
+        var numDigits = scaledelta % 1;
+        if (numDigits == scaledelta) {
+            numDigits = numDigits.toString();
+            numDigits = numDigits.length - numDigits.replace(/^[0.]+/, '').length;
+        } else {
+            numDigits = 0;
+        }
+        numDigits += 1;
         showEntry(cursors.y1);
-        firstVal = firstVal.toPrecision(sigfigs)
+        firstVal = firstVal.toFixed(numDigits)
         cursors.y1[1].innerHTML = firstVal + " " + units;
         if (secondCursor != undefined) {
             var secondVal = scale.invert(secondCursor.coord);
             showEntry(cursors.y2);
-            secondVal = secondVal.toPrecision(sigfigs);
+            secondVal = secondVal.toFixed(numDigits);
             cursors.y2[1].innerHTML = secondVal + " " + units;
             showEntry(cursors.deltay);
-            var numfixed = Math.min(firstVal.slice(firstVal.indexOf('.')).length, secondVal.slice(secondVal.indexOf('.')).length) - 1;
-            cursors.deltay[1].innerHTML = (secondVal - firstVal).toFixed(numfixed) + " " + units;
+            cursors.deltay[1].innerHTML = (secondVal - firstVal).toFixed(numDigits) + " " + units;
         } else {
             hideEntry(cursors.y2);
             hideEntry(cursors.deltay);
@@ -361,6 +395,20 @@ function getSigFigs(num) {
     numexp = numexp.replace(/\./, '');
     var eindex = numexp.indexOf('e');
     return eindex == -1 ? numexp.length : eindex;
+}
+
+function growMarginIfNecessary(self) {
+    if (self.idata.margin.bottom == self.idata.normalbmargin) {
+        self.idata.margin.bottom = self.idata.cursorbmargin;
+        s3ui.updateSize(self, false);
+    }
+}
+
+function shrinkMarginIfNecessary(self) {
+    if (self.idata.margin.bottom == self.idata.cursorbmargin) {
+        self.idata.margin.bottom = self.idata.normalbmargin;
+        s3ui.updateSize(self, false);
+    }
 }
 
 s3ui.init_cursors = init_cursors;

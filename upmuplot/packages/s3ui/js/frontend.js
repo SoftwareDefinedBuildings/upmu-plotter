@@ -220,7 +220,8 @@ function createPlotDownload(self) {
     var chartElem = self.find(".chart");
     var chartData = chartElem.innerHTML.replace(/[\d.]+em/g, function (match) {
             return (parseFloat(match.slice(0, match.length - 2)) * 16) + "px";
-        }); // It seems that using "em" to position fonts doesn't work in Inkview, a common SVG viewing application
+        });
+    var chartData = chartData.replace(">\n</tspan>", " font-color=\"white\"></tspan>"); // So it renders correctly in Inkview
     var graphStyle = self.find(".plotStyles").innerHTML;
     var xmlData = '<svg width="' + chartElem.getAttribute("width") + '" height="' + chartElem.getAttribute("height") + '" font-family="serif" font-size="16px">'
         + '<defs><style type="text/css"><![CDATA[' + graphStyle + ']]></style></defs>' + chartData + '</svg>';
