@@ -69,7 +69,6 @@ function init_plot(self) {
     self.idata.cursorDataElems.freqx = undefined;
     self.idata.cursorDataElems.fx1 = undefined;
     self.idata.cursorDataElems.fx2 = undefined;
-    self.idata.cursorDataElems.deltafx = undefined;
     self.idata.cursorDataElems.y1 = undefined;
     self.idata.cursorDataElems.y2 = undefined;
     self.idata.cursorDataElems.deltay = undefined;
@@ -144,6 +143,7 @@ function repaintZoomNewData(self, callback, stopCache) {
                 setTimeout(function () { cacheData(self, stream.uuid, thisID, pwe, startTime, endTime); }, 0); // do it asynchronously
             }
             if (numResponses == selectedStreams.length) {
+                s3ui.updateVertCursorStats(self);
                 callback();
             }
         };
