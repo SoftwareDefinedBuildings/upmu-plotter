@@ -59,3 +59,9 @@ table.dispTable > tr > td, tbody.axes > tr > td {
 .axissettingtable {
     table-layout: fixed;
 }
+rect.vertCursor {
+    cursor: col-resize;
+}
+rect.horizCursor {
+    cursor: row-resize;
+}

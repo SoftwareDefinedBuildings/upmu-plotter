@@ -21,7 +21,7 @@ function Cursor(self, coord, d3chartgroup, length, offset, vertical, $background
             .attr("width", 3)
             .attr("height", length)
             .attr("fill-opacity", 1)
-            .style("cursor", "col-resize")
+            .attr("class", "vertCursor")
           .node();
     } else {
         this.rectMarker = d3chartgroup.append("rect")
@@ -30,7 +30,7 @@ function Cursor(self, coord, d3chartgroup, length, offset, vertical, $background
             .attr("width", length)
             .attr("height", 3)
             .attr("fill-opacity", 1)
-            .style("cursor", "row-resize")
+            .attr("class", "horizCursor")
           .node();
     }
     this.parent = d3chartgroup.node();
