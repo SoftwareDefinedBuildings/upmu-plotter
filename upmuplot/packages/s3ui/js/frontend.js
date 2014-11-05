@@ -220,7 +220,7 @@ function createPlotDownload(self) {
             return (parseFloat(match.slice(0, match.length - 2)) * 16) + "px";
         }); // It seems that using "em" to position fonts doesn't work in Inkview, a common SVG viewing application
     var graphStyle = self.find(".plotStyles").innerHTML;
-    var xmlData = '<svg width="' + chartElem.getAttribute("width") + '" height="' + chartElem.getAttribute("height") + '" font-family="serif" font-size="16px">'
+    var xmlData = '<svg xmlns="http://www.w3.org/2000/svg" width="' + chartElem.getAttribute("width") + '" height="' + chartElem.getAttribute("height") + '" font-family="serif" font-size="16px">'
         + '<defs><style type="text/css"><![CDATA[' + graphStyle + ']]></style></defs>' + chartData + '</svg>';
     var downloadAnchor = document.createElement("a");
     downloadAnchor.innerHTML = "Download Image (created " + (new Date()).toLocaleString() + ", local time)";
