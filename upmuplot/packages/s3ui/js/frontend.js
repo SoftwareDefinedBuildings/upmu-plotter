@@ -223,7 +223,7 @@ function createPlotDownload(self) {
         });
     var chartData = chartData.replace(">\n</tspan>", " font-color=\"white\"></tspan>"); // So it renders correctly in Inkview
     var graphStyle = self.find(".plotStyles").innerHTML;
-    var xmlData = '<svg width="' + chartElem.getAttribute("width") + '" height="' + chartElem.getAttribute("height") + '" font-family="serif" font-size="16px">'
+    var xmlData = '<svg xmlns="http://www.w3.org/2000/svg" width="' + chartElem.getAttribute("width") + '" height="' + chartElem.getAttribute("height") + '" font-family="serif" font-size="16px">'
         + '<defs><style type="text/css"><![CDATA[' + graphStyle + ']]></style></defs>' + chartData + '</svg>';
     var downloadAnchor = document.createElement("a");
     downloadAnchor.innerHTML = "Download Image (created " + (new Date()).toLocaleString() + ", local time)";

@@ -1147,7 +1147,7 @@ function showDataDensity(self, uuid) {
     pixelw *= 1000000;
     var offset = self.idata.offset
     var startTime = domain[0].getTime() - offset;
-    var totalmax;
+    var totalmax = 0;
     var xPixel;
     var prevIntervalEnd;
     var toDraw = [];
@@ -1165,60 +1165,60 @@ function showDataDensity(self, uuid) {
             startIndex = streamdata.length - 1;
         }
         totalmax = streamdata[startIndex][5];
-        if (startIndex < streamdata.length) {
-            lastiteration = false;
-            for (i = startIndex; i < streamdata.length; i++) {
-                xPixel = oldXScale(streamdata[i][0] + offset);
-                xPixel += ((streamdata[i][1] - pw/2) / pixelw);
-                if (xPixel < 0) {
-                    xPixel = 0;
-                }
-                if (xPixel > WIDTH) {
-                    xPixel = WIDTH;
-                    lastiteration = true;
-                }
-                if (i == 0) {
-                    prevpt = [self.idata.oldData[uuid][3], 0, 0, 0, 0, 0];
-                } else {
-                    prevpt = streamdata[i - 1];
-                }
-                if (((streamdata[i][0] - prevpt[0]) * 1000000) + streamdata[i][1] - prevpt[1] <= pw) {
-                    if (i != 0) { // if this is the first point in the cache entry, then the cache start is less than a pointwidth away and don't drop it to zero
-                        if (i == startIndex) {
-                            toDraw.push([Math.max(0, oldXScale(prevpt[0] + offset)), prevpt[5]]);
-                        }
-                        toDraw.push([xPixel, toDraw[toDraw.length - 1][1]]);
-                    }
-                } else {
-                    prevIntervalEnd = Math.max(0, oldXScale(prevpt[0] + offset) + ((prevpt[1] + (pw/2)) / pixelw)); // x pixel of end of previous interval
-                    if (prevIntervalEnd != 0) {
-                        toDraw.push([prevIntervalEnd, prevpt[5]]);
-                    }
-                    toDraw.push([prevIntervalEnd, 0]);
-                    toDraw.push([xPixel, 0]);
-                }
-                if (!lastiteration) {
-                    toDraw.push([xPixel, streamdata[i][5]]);
-                }
-                if (!(streamdata[i][5] <= totalmax)) {
-                    totalmax = streamdata[i][5];
-                }
-                if (lastiteration) {
-                    break;
-                }
+        lastiteration = false;
+        for (i = startIndex; i < streamdata.length; i++) {
+            xPixel = oldXScale(streamdata[i][0] + offset);
+            xPixel += ((streamdata[i][1] - pw/2) / pixelw);
+            if (xPixel < 0) {
+                xPixel = 0;
             }
-            if (i == streamdata.length && (self.idata.oldData[uuid][4] - streamdata[i - 1][0]) * 1000000 - streamdata[i - 1][1] >= pw) {
-                // Force the plot to 0
-                toDraw.push([toDraw[toDraw.length - 1][0], 0]);
-                // Keep it at zero for the correct amount of time
-                toDraw.push([Math.min(oldXScale(self.idata.oldData[uuid][4] + offset), WIDTH), 0]);
+            if (xPixel > WIDTH) {
+                xPixel = WIDTH;
+                lastiteration = true;
+            }
+            if (i == 0) {
+                prevpt = [self.idata.oldData[uuid][3], 0, 0, 0, 0, 0];
+            } else {
+                prevpt = streamdata[i - 1];
+            }
+            if (((streamdata[i][0] - prevpt[0]) * 1000000) + streamdata[i][1] - prevpt[1] <= pw) {
+                if (i != 0) { // if this is the first point in the cache entry, then the cache start is less than a pointwidth away and don't drop it to zero
+                    if (i == startIndex) {
+                        toDraw.push([Math.max(0, Math.min(WIDTH, oldXScale(prevpt[0] + offset))), prevpt[5]]);
+                    }
+                    toDraw.push([xPixel, toDraw[toDraw.length - 1][1]]);
+                }
+            } else {
+                prevIntervalEnd = Math.max(0, Math.min(WIDTH, (oldXScale(prevpt[0] + offset) + ((prevpt[1] + (pw/2)) / pixelw)))); // x pixel of end of previous interval
+                if (prevIntervalEnd != 0) {
+                    toDraw.push([prevIntervalEnd, prevpt[5]]);
+                }
+                toDraw.push([prevIntervalEnd, 0]);
+                toDraw.push([xPixel, 0]);
+            }
+            if (!(streamdata[i][5] <= totalmax)) {
+                totalmax = streamdata[i][5];
+            }
+            if (lastiteration) {
+                break;
+            } else {
+                toDraw.push([xPixel, streamdata[i][5]]);
+            }
+        }
+        if (i == streamdata.length && (self.idata.oldData[uuid][4] - streamdata[i - 1][0]) * 1000000 - streamdata[i - 1][1] >= pw) {
+            // Force the plot to 0
+            toDraw.push([toDraw[toDraw.length - 1][0], 0]);
+            // Keep it at zero for the correct amount of time
+            var lastpixel = oldXScale(self.idata.oldData[uuid][4] + offset);
+            if (lastpixel > 0) {
+                toDraw.push([Math.min(lastpixel, WIDTH), 0]);
             }
         }
     }
     if (toDraw.length == 0) { // streamdata is empty, OR nothing relevant is there to draw
         toDraw = [[Math.max(0, oldXScale(self.idata.oldData[uuid][3] + offset)), 0], [Math.min(WIDTH, oldXScale(self.idata.oldData[uuid][4] + offset)), 0]];
         totalmax = 0;
-    } 
+    }
     var yScale;
     if (totalmax == 0) {
         totalmax = 1;
@@ -1239,12 +1239,14 @@ function showDataDensity(self, uuid) {
     }
     var ddplot = d3.select(self.find("svg.chart g.data-density-plot"));
     if (toDraw.length == 1) {
-        ddplot.append("circle")
-            .attr("class", "density-" + uuid)
-            .attr("cx", toDraw[0][0])
-            .attr("cy", toDraw[0][1])
-            .attr("r", 1)
-            .attr("fill", self.idata.streamSettings[uuid].color);
+        if (toDraw[0][0] != 0) {
+            ddplot.append("circle")
+                .attr("class", "density-" + uuid)
+                .attr("cx", toDraw[0][0])
+                .attr("cy", toDraw[0][1])
+                .attr("r", 1)
+                .attr("fill", self.idata.streamSettings[uuid].color);
+        }
     } else {
         ddplot.append("polyline")
             .attr("class", "density-" + uuid)
