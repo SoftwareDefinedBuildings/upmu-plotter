@@ -2,12 +2,52 @@
 
 s3ui_permalinks = new Meteor.Collection("s3ui_permalinks");
 
+// Apparently there is a bug in Iron-Router that requires this fix
+Router.onBeforeAction(Iron.Router.bodyParser.urlencoded({
+        extended: false
+    }));
+
 s3ui_server = {};
 s3ui_server.createPermalink = function (permalinkJSON) {
                 permalinkJSON.created = (new Date()).getTime();
                 permalinkJSON.lastAccessed = "never";
                 return s3ui_permalinks.insert(permalinkJSON);
             };
+            
+permalink_schema = {
+    autoupdate: {"boolean": null},
+    axes: {"object": null},
+    resetStart: {"number": null},
+    resetEnd: {"number": null},
+    tz: {"string": null},
+    streams: {"object": null},
+    window_type: {"string": null},
+    window_width: {"number": null},
+    start: {"number": null},
+    end: {"number": null}
+};
+
+stream_schema = {
+    stream: {"string": null, "object": null},
+    color: {"string": null}
+};
+
+axis_schema = {
+    axisname: {"string": null},
+    streams: {"object": null},
+    scale: {"object": null},
+    rightside: {"object": null, "boolean": null}
+};
+
+required_properties = ["streams"];
+
+axis_required_properties = ["axisname", "streams", "scale", "rightside"];
+
+conditional_properties = {
+    "fixed": ["start", "end"],
+    "last": ["window_width"],
+    "now": ["window_width"]
+};
             
 Meteor.methods({
         processQuery: function (query, type) {
@@ -60,7 +100,7 @@ Router.map(function () {
                             return;
                         }
                         var jsonPermalink = this.request.body.permalink_data;
-                        var id;
+                        var id, property, i, stream;
                         if (jsonPermalink == undefined) {
                             this.response.write("Error: required key 'permalink_data' is not present");
                             this.response.end();
@@ -71,6 +111,99 @@ Router.map(function () {
                                 this.response.write("Error: received invalid JSON: " + exception);
                                 this.response.end();
                                 return;
+                            }
+                            // validate the schema
+                            if (check_extra_fields(jsonPermalink, permalink_schema, this.response)) {
+                                return;
+                            }
+                            // check that required fields are present
+                            if (check_required_fields(jsonPermalink, required_properties, this.response)) {
+                                return;
+                            }
+                            
+                            // check that streams are valid
+                            var streams = jsonPermalink.streams;
+                            for (i = 0; i < streams.length; i++) {
+                                stream = streams[i];
+                                if (stream == undefined) {
+                                    this.response.write("Error: streams must be an array");
+                                    this.response.end();
+                                    return;
+                                }
+                                if (check_extra_fields(stream, stream_schema, this.response)) {
+                                    return;
+                                }
+                                if (!stream.hasOwnProperty("stream")) {
+                                    this.response.write("Error: required field stream is missing in element of streams array");
+                                    this.response.end();
+                                    return;
+                                }
+                                if (stream.stream == null) {
+                                    this.response.write("Error: stream data for an element of streams array is null");
+                                    this.response.end();
+                                    return;
+                                }
+                                if (stream.hasOwnProperty("color")) {
+                                    if (stream.color.length != 7 || stream.color.charAt(0) != '#') {
+                                        this.response.write("Error: stream color must be a string containing the pound sign (#) and a six digit hexadecimal number");
+                                        this.response.end();
+                                        return;
+                                    }
+                                }
+                            }
+                            // check that axes are valid
+                            var axes, axis, j;
+                            if (jsonPermalink.hasOwnProperty("axes")) {
+                                axes = jsonPermalink.axes;
+                                for (i = 0; i < axes.length; i++) {
+                                    axis = axes[i];
+                                    if (check_extra_fields(axis, axis_schema, this.response)) {
+                                        return;
+                                    }
+                                    if (check_required_fields(axis, axis_required_properties, this.response)) {
+                                        return;
+                                    }
+                                    if (typeof axis.rightside == "object" && axis.rightside != null) {
+                                        this.response.write("Error: rightside field of element of axes field may be only true, false, or null")
+                                        this.response.end();
+                                        return;
+                                    }
+                                    if (!Array.isArray(axis.streams)) {
+                                        this.response.write("Error: streams field of element of axes field must be an array");
+                                        this.response.end();
+                                        return;
+                                    }
+                                    for (j = 0; j < axis.streams; j++) {
+                                        if (typeof axis.streams[j] != "string") {
+                                            this.response.write("Error: streams field of element of axes field must be a string");
+                                            this.response.end();
+                                            return;
+                                        }
+                                    }
+                                    if (!Array.isArray(axis.scale) || axis.scale.length != 2 || typeof axis.scale[0] != "number" || typeof axis.scale[1] != "number") {
+                                        this.response.write("Error: scale field of element of axes field must be an array of length 2 containing numbers");
+                                        this.response.end();
+                                        return;
+                                    }
+                                }
+                            }
+                            // check that conditional fields are present
+                            var window_type = jsonPermalink.window_type;
+                            if (window_type == undefined) {
+                                window_type = "fixed";
+                            }
+                            if (!conditional_properties.hasOwnProperty(window_type)) {
+                                this.response.write("Error: " + window_type + " is an invalid window_type");
+                                this.response.end();
+                                return;
+                            }
+                            var additional_properties = conditional_properties[window_type];
+                            for (i = 0; i < additional_properties.length; i++) {
+                                if (!jsonPermalink.hasOwnProperty(additional_properties[i])) {
+                                    this.response.write("Error: window_type " + window_type + " requires " + additional_properties[i] + " to be specified");
+                                    this.response.end();
+                                    return;
+                                }
                             }
                             try {
                                 id = Meteor.call('createPermalink', jsonPermalink);
@@ -86,3 +219,32 @@ Router.map(function () {
                     }
             });
     });
+    
+function check_extra_fields (object, schema, response) {
+    for (var property in object) {
+        if (object.hasOwnProperty(property)) {
+            // screen for invalid properties and bad types
+            if (!schema.hasOwnProperty(property)) {
+                response.write("Error: " + property + " is not a valid field");
+                response.end();
+                return true; 
+            } else if (!schema[property].hasOwnProperty(typeof object[property])) {
+                response.write("Error: " + property + " must be of one of the following types: " + Object.keys(schema[property]).join(", "));
+                response.end();
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function check_required_fields (object, required_properties, response) {
+    for (var i = 0; i < required_properties.length; i++) {
+        if (!object.hasOwnProperty(required_properties[i])) {
+            response.write("Error: required field " + required_properties[i] + " is missing");
+            response.end();
+            return true;
+        }
+    }
+    return false;
+}

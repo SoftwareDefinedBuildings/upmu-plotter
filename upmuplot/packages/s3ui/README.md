@@ -160,7 +160,7 @@ starts a fixed number of nanoseconds before that.
 In order that the graph be displayed correctly, the final start and end times
 must be in the current UNIX epoch (i.e., Jan 01, 1970, UTC or later).
 
-For the permalink, the following fields are may be specified in the JSON object:
+For the permalink, the following fields may be specified in the JSON object:
 
 * autoupdate (optional) - Determines whether or nor the "Automatically apply settings" checkbox is checked. Defaults to TRUE.
 * axes (optional) - A list of axis objects (see below for the schema of these objects) that specify the settings of the axes. If not specified, a reasonable default is chosen at runtime; all axes are on the left side of the graph, the axis names are just y1, y2, etc., streams are assigned to axes based on their units, and the scales of the axes are chosen based on the ranges of the streams assigned.
@@ -183,7 +183,7 @@ The axis objects require the following fields:
 The objects specifying streams may have the following fields:
 
 * stream (required) - Specifies which stream should be drawn here, either as a UUID in the form of a string, or as an object containing all of the metadata of the stream.
-* color (optional) - Specifies with what color the stream should be drawn, as a string with a pound sign (#) and a six-digit hexadecimal number specifying the color. This color _must_ be one of the colors that it is possible to pick with the color picker in the graph's UI. Defaults to one of the possible colors, depening of the stream's position in the legend.
+* color (optional) - Specifies with what color the stream should be drawn, as a string with a pound sign (#) and a six-digit hexadecimal number specifying the color. This color _must_ be one of the colors that it is possible to pick with the color picker in the graph's UI. Defaults to one of the possible colors, depending of the stream's position in the legend.
 
 Below is an example of permalink data that uses a fixed window:
 <pre><code>{
