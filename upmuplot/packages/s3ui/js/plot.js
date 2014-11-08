@@ -765,12 +765,12 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
                 continue;
             }
             streamdata = data[axis.streams[j].uuid][1];
-            startIndex = s3ui.binSearch(streamdata, startTime, function (point) { return point[0]; });
-            if (startIndex < streamdata.length && streamdata[startIndex][0] < startTime) {
+            startIndex = s3ui.binSearchCmp(streamdata, [startTime, 0], s3ui.cmpTimes);
+            if (startIndex < streamdata.length && s3ui.cmpTimes(streamdata[startIndex], [startTime, 0]) < 0) {
                 startIndex++; // make sure we only look at data in the specified range
             }
-            endIndex = s3ui.binSearch(streamdata, endTime, function (point) { return point[0]; });
-            if (endIndex < streamdata.length && streamdata[endIndex][0] > endTime) {
+            endIndex = s3ui.binSearchCmp(streamdata, [endTime, 0], s3ui.cmpTimes);
+            if (endIndex < streamdata.length && s3ui.cmpTimes(streamdata[endIndex], endTime)) {
                 endIndex--; // make sure we only look at data in the specified range
             }
             for (k = startIndex; k < endIndex; k++) {
@@ -985,8 +985,8 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         yScale = axisData[streamSettings[streams[i].uuid].axisid][2];
         startTime = domain[0].getTime() - offset;
         endTime = domain[1].getTime() - offset;
-        startIndex = s3ui.binSearch(streamdata, startTime, function (point) { return point[0]; });
-        if (startIndex < streamdata.length && streamdata[startIndex][0] < startTime) {
+        startIndex = s3ui.binSearchCmp(streamdata, [startTime, 0], s3ui.cmpTimes);
+        if (startIndex < streamdata.length && s3ui.cmpTimes(streamdata[startIndex], [startTime, 0]) < 0) {
             startIndex++; // make sure we only plot data in the specified range
         }
         outOfRange = true;
@@ -1157,8 +1157,8 @@ function showDataDensity(self, uuid) {
     var oldXScale = self.idata.oldXScale;
     if (streamdata.length > 0) {    
         var i;
-        startIndex = s3ui.binSearch(streamdata, startTime, function (point) { return point[0]; });
-        if (startIndex < streamdata.length && streamdata[startIndex][0] < startTime) {
+        startIndex = s3ui.binSearchCmp(streamdata, [startTime, 0], s3ui.cmpTimes);
+        if (startIndex < streamdata.length && s3ui.cmpTimes(streamdata[startIndex], [startTime, 0]) < 0) {
             startIndex++;
         }
         if (startIndex >= streamdata.length) {

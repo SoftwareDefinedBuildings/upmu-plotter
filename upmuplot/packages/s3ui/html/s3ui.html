@@ -153,21 +153,22 @@
 
 <template name="s3plot_chart">
     <svg class="chart" width="800" height="430" background="white">
-            <rect width="800" height="430" class="background-rect" fill="white"></rect>  <!-- So the background is white, not transparent. -->
-            <g class="plotDirections" transform="translate(50, 100)">
-                <text transform="translate(0, 0)">1. Select streams from the tree to the left.</text>
-                <text transform="translate(0, 30)">2. Select a time range to load data.</text>
-                <text transform="translate(0, 60)">3. If desired, change axis settings using the box below.</text>
-                <text transform="translate(0, 90)">4. Click "Apply all Settings and Plot Data" to see the graph.</text>
-                <text transform="translate(0, 120)">5. Use the mouse to zoom and scroll.</text>
-                <text transform="translate(0, 150)">
-                                            6. Optional: Change the display settings. By default, all changes to
-                    <tspan x="0" dy="1.2em">settings will be applied immediately. If you uncheck the appropriate</tspan>
-                    <tspan x="0" dy="1.2em">checkbox below, you must click the "Apply and Plot" button to apply</tspan>
-                    <tspan x="0" dy="1.2em">changes.</tspan>
-                </text>
-            </g>
-        </svg>
+        <rect width="800" height="430" class="background-rect" fill="white"></rect>  <!-- The background is white, not transparent. -->
+        <g class="plotDirections" transform="translate(50, 100)">
+            <text transform="translate(0, 0)">1. Select streams from the tree to the left.</text>
+            <text transform="translate(0, 30)">2. Select a time range to load data.</text>
+            <text transform="translate(0, 60)">3. If desired, change axis settings using the box below.</text>
+            <text transform="translate(0, 90)">4. Click "Apply all Settings and Plot Data" to see the graph.</text>
+            <text transform="translate(0, 120)">5. Use the mouse to zoom and scroll.</text>
+            <text transform="translate(0, 150)">
+                                        6. Optional: Change the display settings. By default, all changes to
+                <tspan x="0" dy="1.2em">settings will be applied immediately. If you uncheck the appropriate</tspan>
+                <tspan x="0" dy="1.2em">checkbox below, you must click the "Apply and Plot" button to apply</tspan>
+                <tspan x="0" dy="1.2em">changes.</tspan>
+            </text>
+        </g>
+    </svg>
+    <noscript>You must enable Javascript in order to use this plotting tool.</noscript>
 </template>
 
 <template name="s3plot_streamLegend">
