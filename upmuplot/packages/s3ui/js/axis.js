@@ -62,9 +62,12 @@ function addYAxis(self) {
         .attr("class", "axisname form-control thin-margin-text")
         .attr("value", id)
         .node().onchange = function () {
-                axisObj.axisname = this.value;
-                self.$("option.option-" + axisObj.axisid).html(this.value);
-                self.$("text.axistitle-" + axisObj.axisid).html(this.value);
+                console.log(this.value);
+                var newname = this.value.replace(/</g, "&lt;").replace(/>/g, "&gt;"); // to prevent HTML or Javascript injection
+                console.log(newname);
+                axisObj.axisname = newname;
+                self.$("option.option-" + axisObj.axisid).html(newname);
+                self.$("text.axistitle-" + axisObj.axisid).html(newname);
             };
     row.append("td")
         .attr("class", "axisstreams");
