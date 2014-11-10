@@ -971,6 +971,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     var pw;
     var dataObj;
     var j;
+    var continueLoop;
 
     for (var i = 0; i < streams.length; i++) {
         xPixel = -Infinity;
@@ -986,11 +987,13 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         startTime = domain[0].getTime() - offset;
         endTime = domain[1].getTime() - offset;
         startIndex = s3ui.binSearchCmp(streamdata, [startTime, 0], s3ui.cmpTimes);
-        if (startIndex < streamdata.length && s3ui.cmpTimes(streamdata[startIndex], [startTime, 0]) < 0) {
-            startIndex++; // make sure we only plot data in the specified range
+        if (startIndex > 0 && s3ui.cmpTimes(streamdata[startIndex], [startTime, 0]) > 0) {
+            startIndex--; // make sure to plot an extra data point at the beginning
         }
         outOfRange = true;
-        for (j = startIndex; j < streamdata.length && (xPixel = xScale((currpt = streamdata[j])[0] + offset)) < WIDTH && xPixel >= 0; j++) {
+        continueLoop = true; // used to get one datapoint past the end
+        for (j = startIndex; j < streamdata.length && continueLoop; j++) {
+            continueLoop = (xPixel = xScale((currpt = streamdata[j])[0] + offset)) < WIDTH;
             prevpt = streamdata[j - 1];
             if (currLineChunk[0].length > 0 && (j == startIndex || (currpt[0] - prevpt[0]) * 1000000 + (currpt[1] - prevpt[1]) > pw)) {
                 processLineChunk(currLineChunk, lineChunks, points);
