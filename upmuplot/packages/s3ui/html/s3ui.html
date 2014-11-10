@@ -5,7 +5,7 @@
     <table class="dispTable" width="99%">
         <tr>
             <td width="20%">
-                <div style="margin-left: 20px; margin-right: 25px;">
+                <div class="leftColumn">
                     {{> s3plot_timeSelection}}
                     <div class="btn-group-vertical" style="width: 100%">
                         <div class="plotButton btn btn-primary">Apply and Plot</div>
@@ -211,41 +211,39 @@
 
 <template name="s3plot_timeSelection">
     <div class="timeSelection">
-        <div class="timeselect">
-            <form role="form">
-                <div class="row">
-                    <div class="form-group col-lg3 col-md4">
-                        <label>Start date</label>
-                        <div class="input-group" style="width:100%">
-                            <input type="text" class="form-control datefield startdate" />
-                            <div class="m1yButton btn input-group-addon" style="width:4em">-1Y</div>
-                        </div>
+        <form role="form">
+            <div class="row">
+                <div class="form-group col-lg3 col-md4">
+                    <label>Start date</label>
+                    <div class="input-group" style="width:100%">
+                        <input type="text" class="form-control datefield startdate" />
+                        <div class="m1yButton btn input-group-addon" style="width:4em">-1Y</div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="form-group col-lg2 col-md3">
-                        <label>End date</label>
-                        <div class="input-group" style="width:100%">
-                            <input type="text" class="form-control datefield enddate">
-                            <div class="nowButton btn input-group-addon" style="width:4em">Now</div>
-                        </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-lg2 col-md3">
+                    <label>End date</label>
+                    <div class="input-group" style="width:100%">
+                        <input type="text" class="form-control datefield enddate">
+                        <div class="nowButton btn input-group-addon" style="width:4em">Now</div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="form-group col-lg2 col-md3">
-                        <label>Timezone</label>
-                        <div class="input-group" style="width:100%">
-                            <select class="timezoneSelect form-control">
-                                <option value="America/Los_Angeles">America/Los_Angeles</option>
-                                <option value="UTC">UTC</option>
-                                <option value="OTHER">Other:</option>
-                            </select>
-                            <input type="text" class="otherTimezone form-control" style="visibility: hidden;" />
-                        </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-lg2 col-md3">
+                    <label>Timezone</label>
+                    <div class="input-group" style="width:100%">
+                        <select class="timezoneSelect form-control">
+                            <option value="America/Los_Angeles">America/Los_Angeles</option>
+                            <option value="UTC">UTC</option>
+                            <option value="OTHER">Other:</option>
+                        </select>
+                        <input type="text" class="otherTimezone form-control" style="visibility: hidden;" />
                     </div>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
 </template>
 

@@ -29,7 +29,6 @@ svg.chart {
 }
 .jstree-node {
     position: relative;
-    z-index: 49999; /* So the tree isn't covered by something accidentally. */
 }
 div.permalink, .legend .streamName, .axes .axisstreams {
     word-wrap: break-word;
@@ -64,4 +63,14 @@ rect.vertCursor {
 }
 rect.horizCursor {
     cursor: row-resize;
+}
+div.streamTree {
+    padding-left: 0px;
+}
+div.leftColumn {
+    margin-left: 10px;
+}
+div.timeSelection {
+    margin-left: 15px;
+    margin-right: 15px;
 }
