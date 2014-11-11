@@ -151,6 +151,14 @@ function timeToStr(time) {
     }
 }
 
+var div = document.createElement("div");
+var text = document.createTextNode("");
+div.appendChild(text);
+function escapeHTMLEntities(str) {
+    text.textContent = str;
+    return div.innerHTML;
+}
+
 s3ui.getFilepath = getFilepath;
 s3ui.getInfo = getInfo;
 s3ui.getURL = getURL;
@@ -160,3 +168,4 @@ s3ui.binSearchCmp = binSearchCmp;
 s3ui.nanosToUnit = nanosToUnit;
 s3ui.cmpTimes = cmpTimes;
 s3ui.timeToStr = timeToStr;
+s3ui.escapeHTMLEntities = escapeHTMLEntities;

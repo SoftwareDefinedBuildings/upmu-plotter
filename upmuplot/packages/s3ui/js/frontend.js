@@ -253,9 +253,9 @@ function createPermalink(self) {
             autoupdate: self.idata.automaticAxisUpdate,
             axes: $.map(self.idata.yAxes, function (d) {
                     return {
-                            axisname: d.axisname,
+                            axisname: d.truename,
                             streams: $.map(d.streams, function (s) { return s.uuid; }),
-                            scale: d.manualscale, // even if it's autoscale, we want to make sure it isn't corrected for scrolling
+                            scale: d.manualscale,
                             rightside: d.right
                         };
                 })

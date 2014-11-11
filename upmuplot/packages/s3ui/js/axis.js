@@ -3,6 +3,7 @@
 function Axis (id) {
     this.axisname = id;
     this.axisid = id;
+    this.truename = id;
     this.streams = [];
     this.units = {};
     this.autoscale = true;
@@ -62,10 +63,9 @@ function addYAxis(self) {
         .attr("class", "axisname form-control thin-margin-text")
         .attr("value", id)
         .node().onchange = function () {
-                console.log(this.value);
-                var newname = this.value.replace(/</g, "&lt;").replace(/>/g, "&gt;"); // to prevent HTML or Javascript injection
-                console.log(newname);
+                var newname = s3ui.escapeHTMLEntities(this.value); // to prevent HTML or Javascript injection
                 axisObj.axisname = newname;
+                axisObj.truename = this.value; // use this version in Permalinks so axis names aren't escaped twice
                 self.$("option.option-" + axisObj.axisid).html(newname);
                 self.$("text.axistitle-" + axisObj.axisid).html(newname);
             };
