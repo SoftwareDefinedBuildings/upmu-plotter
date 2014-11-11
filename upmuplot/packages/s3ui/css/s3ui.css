@@ -20,9 +20,15 @@ svg.chart {
 }
 .unclickedchart {
     cursor: url(../img/openhand.cur), move;
+    cursor: -moz-grab;
+    cursor: -webkit-grab;
+    cursor: grab;
 }
 .clickedchart {
     cursor: url(../img/closedhand.cur), move;
+    cursor: -moz-grabbing;
+    cursor: -webkit-grabbing;
+    cursor: grabbing;
 }
 .jstree-contextmenu {
     z-index: 99999; /* So the context menu isn't hidden. */
