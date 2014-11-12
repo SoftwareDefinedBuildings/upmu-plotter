@@ -248,8 +248,8 @@ function createPermalink(self) {
             resetStart: Number(self.idata.oldStartDate.toString() + '000000'),
             resetEnd: Number(self.idata.oldEndDate.toString() + '000000'),
             tz: self.idata.oldTimezone,
-            start: Number((domain[0].getTime() - self.idata.offset).toString() + '000000'),
-            end: Number((domain[1].getTime() - self.idata.offset).toString() + '000000'),
+            start: Number((domain[0].getTime() + (new timezoneJS.Date(domain[0], self.idata.timezone)).getTimezoneOffset() * 60000).toString() + '000000'),
+            end: Number((domain[1].getTime() + (new timezoneJS.Date(domain[1], self.idata.timezone)).getTimezoneOffset() * 60000).toString() + '000000'),
             autoupdate: self.idata.automaticAxisUpdate,
             axes: $.map(self.idata.yAxes, function (d) {
                     return {

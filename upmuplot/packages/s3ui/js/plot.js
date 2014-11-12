@@ -33,8 +33,6 @@ function init_plot(self) {
     self.idata.oldYScales = undefined;
     self.idata.oldYAxisArray = undefined;
     self.idata.oldAxisData = undefined;
-    self.idata.leftOffset = undefined;
-    self.idata.rightOffset = undefined;
     self.idata.timezone = undefined;
     self.idata.oldDomain = undefined;
     
@@ -157,7 +155,7 @@ function repaintZoomNewData(self, callback, stopCache) {
     }
     for (var i = 0; i < selectedStreams.length; i++) {
         s3ui.setStreamMessage(self, selectedStreams[i].uuid, "Fetching data...", 5);
-        s3ui.ensureData(self, selectedStreams[i].uuid, pwe, domain[0], domain[1], makeDataCallback(selectedStreams[i], domain[0].getTime(), domain[1].getTime()));
+        s3ui.ensureData(self, selectedStreams[i].uuid, pwe, domain[0].getTime(), domain[1].getTime(), makeDataCallback(selectedStreams[i], domain[0].getTime(), domain[1].getTime()));
     }
     if (selectedStreams.length == 0) {
         callback();
@@ -694,17 +692,17 @@ function drawPlot(self) {
     
     self.idata.timezone = selectedTimezone;
     
-    self.idata.leftOffset = startDateObj.getTimezoneOffset() * -60000; // what to add to UTC to get to selected time zone
-    self.idata.rightOffset = endDateObj.getTimezoneOffset() * -60000;
+    var leftOffset = startDateObj.getTimezoneOffset() * -60000; // what to add to UTC to get to selected time zone
+    var rightOffset = endDateObj.getTimezoneOffset() * -60000;
     
     self.idata.xTitle.innerHTML = "Time [" + selectedTimezone + "]";
     
-    self.idata.oldDomain = [startDate + self.idata.leftOffset, endDate + self.idata.rightOffset];
+    self.idata.oldDomain = [startDate + leftOffset, endDate + rightOffset];
     // Create the xScale and axis if we need to
     var xScale, xAxis;
     if (!sameTimeRange) {
         xScale = d3.time.scale.utc() // I'm telling d3 it's in UTC time, but in reality I'm going to add an offset to everything so it actually displays the selected time zone
-            .domain([startDate + self.idata.leftOffset, endDate + self.idata.rightOffset])
+            .domain([startDate + leftOffset, endDate + rightOffset])
             .range([0, self.idata.WIDTH]);
         xAxis = d3.svg.axis().scale(xScale).orient("bottom").ticks(5);
         self.idata.oldStartDate = startDate;

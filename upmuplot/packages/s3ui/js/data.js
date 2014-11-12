@@ -117,7 +117,7 @@ function processBracketResponse(self, uuids, response) {
    whether the plotter should keep polling the server for a change in
    brackets. */
 function shouldPollBrackets(self, uuid, domain) {
-    return !self.idata.lastTimes.hasOwnProperty(uuid) || ((domain[1] - self.idata.rightOffset) >= (self.idata.lastTimes[uuid] + (domain[0] - domain[1])));
+    return !self.idata.lastTimes.hasOwnProperty(uuid) || ((domain[1].getTime() + (new timezoneJS.Date(domain[1])).getTimezoneOffset() * 60000) >= (self.idata.lastTimes[uuid] + (domain[0] - domain[1])));
 }
 
 /* POINTWIDTH is the number of milliseconds in one interval. Converts this to
@@ -425,6 +425,7 @@ function insertData(self, uuid, cache, data, dataStart, dataEnd, callback) {
     }
     // convert data to correct timezone
     for (var a = m ; a < n; a++) {
+        data[a].originalMillis = data[a][0];
         data[a][0] -= (new timezoneJS.Date(data[a][0], self.idata.timezone)).getTimezoneOffset() * 60000;
     }
     var cacheEntry = new CacheEntry(cacheStart, cacheEnd, dataBefore.concat(data.slice(m, n), dataAfter));

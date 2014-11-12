@@ -434,13 +434,15 @@ function setTimeZoom(self, start, end, resetStart, resetEnd, tz) {
             }
         }
     }
-    self.idata.inittrans = (resetStart - start) / (end - start) * self.idata.WIDTH;
-    self.idata.initzoom = (resetEnd - resetStart) / (end - start);
-    var offset;
     try {
-        offset = 60000 * ((new Date()).getTimezoneOffset() - (new timezoneJS.Date(tz)).getTimezoneOffset());
-        self.imethods.setStartTime(new Date(resetStart + offset));
-        self.imethods.setEndTime(new Date(resetEnd + offset));
+        var resetStartT = resetStart - (new timezoneJS.Date(resetStart, tz)).getTimezoneOffset() * 60000;
+        var resetEndT = resetEnd - (new timezoneJS.Date(resetEnd, tz)).getTimezoneOffset() * 60000;
+        var startT = start - (new timezoneJS.Date(start, tz)).getTimezoneOffset() * 60000;
+        var endT = end - (new timezoneJS.Date(end, tz)).getTimezoneOffset() * 60000;
+        self.idata.inittrans = (resetStartT - startT) / (endT - startT) * self.idata.WIDTH;
+        self.idata.initzoom = (resetEndT - resetStartT) / (endT - startT);
+        self.imethods.setStartTime(new Date(resetStartT + new Date(resetStartT).getTimezoneOffset() * 60000));
+        self.imethods.setEndTime(new Date(resetEndT + new Date(resetEndT).getTimezoneOffset() * 60000));
         self.imethods.applyAllSettings();
     } catch (err) {
         console.log("Could not execute permalink: " + err.message);
@@ -453,7 +455,7 @@ function nanos_to_millis(num) {
     var millis = num.slice(0, -6);
     var nanos = num.slice(-6);
     if (millis.length == 0) {
-        return floor ? 0 : 1;
+        return Number(nanos) < 500000 ? 0 : 1;
     } else {
         return Number(millis) + (Number(nanos) < 500000 ? 0 : 1);
     }

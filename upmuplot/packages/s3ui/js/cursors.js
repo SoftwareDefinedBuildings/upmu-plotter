@@ -183,8 +183,7 @@ function updateVertCursorStats(self) {
             cursors.freqx[1].innerHTML = (1000 / (x2millis - x1millis + ((x2nanos - x1nanos) / 1000000)));
         }
         if (self.idata.showingDensity != undefined) {
-            x1millis -= self.idata.offset; // switch to UTC time
-            x2millis -= self.idata.offset; // switch to UTC time
+
             var selectedData = self.idata.oldData[self.idata.showingDensity][1];
             var pwedelta = self.idata.oldData[self.idata.showingDensity][2] - 1; // the exponent for the width of the range
             var delta = Math.pow(2, pwedelta);
@@ -196,7 +195,7 @@ function updateVertCursorStats(self) {
                 var leftPoint = getNearestDataPoint(self, x1millis, x1nanos, selectedData, self.idata.showingDensity, delta * 2);
                 showEntry(cursors.fx1);
                 if (leftPoint.length == 6) { // if we haven't cached the exact time
-                    timearr = [leftPoint[0], leftPoint[1]];
+                    timearr = [leftPoint.originalMillis, leftPoint[1]];
                     timearr[1] += deltananos;
                     timearr[0] += deltamillis;
                     if (timearr[1] >= 1000000) {
@@ -218,14 +217,14 @@ function updateVertCursorStats(self) {
                     var rightPoint = getNearestDataPoint(self, x2millis, x2nanos, selectedData, self.idata.showingDensity, delta * 2);
                     showEntry(cursors.fx2);
                     if (rightPoint.length == 6) { // if we haven't cached the exact time
-                        timearr = [rightPoint[0], rightPoint[1]];
+                        timearr = [rightPoint.originalMillis, rightPoint[1]];
                         timearr[1] += deltananos;
                         timearr[0] += deltamillis;
                         if (timearr[1] >= 1000000) {
                             timearr[1] -= 1000000;
                             timearr[0] += 1;
                         }
-                        cursors.fx2[1].innerHTML = s3ui.timeToStr(rightPoint) + " \xB1 2";
+                        cursors.fx2[1].innerHTML = s3ui.timeToStr(timearr) + " \xB1 2";
                         showExp(self, cursors.fx2[2]);
                         cursors.fx2[2].innerHTML = pwedelta;
                     } else {
@@ -357,12 +356,12 @@ function getNearestDataPoint(self, xmillis, xnanos, data, uuid, pw) {
     }
     if (currentPoint[5] == 1 && currentPoint.length == 6) {
         // Request the exact time from quasar
-        var endTime = [currentPoint[0] + Math.floor(pw / 1000000), currentPoint[1] + pw % 1000000];
+        var endTime = [currentPoint.originalMillis + Math.floor(pw / 1000000), currentPoint[1] + pw % 1000000];
         if (endTime[1] >= 1000000) {
             endTime[1] -= 1000000;
             endTime[0] += 1;
         }
-        var url = self.idata.dataURLStart + uuid + '?starttime=' + s3ui.timeToStr(currentPoint) + '&endtime=' + s3ui.timeToStr(endTime) + '&unitoftime=ns&pw=0';
+        var url = self.idata.dataURLStart + uuid + '?starttime=' + s3ui.timeToStr([currentPoint.originalMillis, currentPoint[1]]) + '&endtime=' + s3ui.timeToStr(endTime) + '&unitoftime=ns&pw=0';
         s3ui.getURL(url, function (data) {
                 cacheExactTime(self, currentPoint, data);
             }, 'text');
