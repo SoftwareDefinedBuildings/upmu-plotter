@@ -159,6 +159,16 @@ function escapeHTMLEntities(str) {
     return div.innerHTML;
 }
 
+/* Converts a date whose timestamp is in the STARTTZ timezone into a UTC timestamp. */
+function dateToUTCStamp(date, startTZ) {
+    return (new timezoneJS.Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds(), date.getUTCMilliseconds(), startTZ)).getTime();
+}
+
+/* Converts a UTC timestamp into a timestamp in the ENDTZ timezone. */
+function UTCStampToTimezone(timestamp, endTZ) {
+    return (new timezoneJS.Date(timestamp, endTZ)).getTime();
+}
+
 s3ui.getFilepath = getFilepath;
 s3ui.getInfo = getInfo;
 s3ui.getURL = getURL;
@@ -169,3 +179,5 @@ s3ui.nanosToUnit = nanosToUnit;
 s3ui.cmpTimes = cmpTimes;
 s3ui.timeToStr = timeToStr;
 s3ui.escapeHTMLEntities = escapeHTMLEntities;
+s3ui.dateToUTCStamp = dateToUTCStamp;
+s3ui.UTCStampToTimezone = UTCStampToTimezone;

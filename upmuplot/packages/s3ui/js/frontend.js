@@ -248,8 +248,8 @@ function createPermalink(self) {
             resetStart: Number(self.idata.oldStartDate.toString() + '000000'),
             resetEnd: Number(self.idata.oldEndDate.toString() + '000000'),
             tz: self.idata.oldTimezone,
-            start: Number((domain[0].getTime() + (new timezoneJS.Date(domain[0], self.idata.timezone)).getTimezoneOffset() * 60000).toString() + '000000'),
-            end: Number((domain[1].getTime() + (new timezoneJS.Date(domain[1], self.idata.timezone)).getTimezoneOffset() * 60000).toString() + '000000'),
+            start: s3ui.dateToUTCStamp(domain[0], self.idata.timezone).toString() + '000000',
+            end: s3ui.dateToUTCStamp(domain[1], self.idata.timezone).toString() + '000000',
             autoupdate: self.idata.automaticAxisUpdate,
             axes: $.map(self.idata.yAxes, function (d) {
                     return {
@@ -358,8 +358,8 @@ function createCSVDownload(self, streams, settingsObj, domain, pwe, graphExport)
     var dataJSON = {
             "UUIDS": streams,
             "Labels": streams.map(function (x) { return settingsObj[x]; }),
-            "StartTime": domain[0] - self.idata.offset,
-            "EndTime": domain[1] - self.idata.offset,
+            "StartTime": s3ui.dateToUTCStamp(domain[0], self.idata.timezone),
+            "EndTime": s3ui.dateToUTCStamp(domain[1], self.idata.timezone),
             "UnitOfTime": "ms",
             "PointWidth": pwe
         };

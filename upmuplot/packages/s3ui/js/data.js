@@ -214,8 +214,10 @@ function ensureData(self, uuid, pointwidthexp, startTime, endTime, callback, cac
     pointwidthexp = Math.min(self.idata.pweHigh, pointwidthexp);
     var halfPWnanos = Math.pow(2, pointwidthexp - 1) - 1;
     var halfPWmillis = halfPWnanos / 1000000;
-    startTime = Math.min(Math.max(startTime, self.idata.queryLow + Math.ceil(halfPWmillis)), self.idata.queryHigh - Math.ceil(halfPWmillis) - 1);
-    endTime = Math.min(Math.max(endTime, self.idata.queryLow + Math.ceil(halfPWmillis) + 1), self.idata.queryHigh - Math.ceil(halfPWmillis));
+    var low = s3ui.UTCStampToTimezone(self.idata.queryLow + Math.ceil(halfPWmillis), self.idata.timezone);
+    var high = s3ui.UTCStampToTimezone(self.idata.queryHigh - Math.ceil(halfPWmillis), self.idata.timezone);
+    startTime = Math.min(Math.max(startTime, low), high - 1);
+    endTime = Math.min(Math.max(endTime, low + 1), high);
     var dataCache = self.idata.dataCache;
     // Create the mapping for this stream if it isn't already present
     if (!dataCache.hasOwnProperty(uuid)) {
@@ -294,8 +296,8 @@ function makeDataRequest(self, uuid, queryStart, queryEnd, pointwidthexp, halfpw
     will give me back all intervals that touch the query range. So I shrink
     the range by half a pointwidth on each side to compensate for that. */
     var trueQueryStart, trueQueryEnd; // converted to UTC time
-    trueQueryStart = queryStart + (new timezoneJS.Date(queryStart, self.idata.timezone)).getTimezoneOffset() * 60000;
-    trueQueryEnd = queryEnd + (new timezoneJS.Date(queryEnd, self.idata.timezone)).getTimezoneOffset() * 60000;
+    trueQueryStart = s3ui.dateToUTCStamp(new Date(queryStart), self.idata.timezone);
+    trueQueryEnd = s3ui.dateToUTCStamp(new Date(queryEnd), self.idata.timezone);
     var halfpwmillisStart = Math.floor(halfpwnanos / 1000000);
     var halfpwnanosStart = halfpwnanos - (1000000 * halfpwmillisStart);
     halfpwnanosStart = (1000000 + halfpwnanosStart).toString().slice(1);
@@ -400,7 +402,7 @@ function insertData(self, uuid, cache, data, dataStart, dataEnd, callback) {
         dataBefore = cache[i].cached_data;
         if (data.length > 0) {
             // We want to get rid of overlap
-            var end_utc = cache[i].end_time + (new timezoneJS.Date(cache[i].end_time, self.idata.timezone)).getTimezoneOffset() * 60000;
+            var end_utc = s3ui.dateToUTCStamp(new Date(cache[i].end_time), self.idata.timezone);
             m = s3ui.binSearch(data, end_utc, function (d) { return d[0]; });
             if (data[m][0] < end_utc) {
                 m++;
@@ -415,7 +417,7 @@ function insertData(self, uuid, cache, data, dataStart, dataEnd, callback) {
         dataAfter = cache[j].cached_data;
         if (data.length > 0) {
             // We want to get rid of overlap
-            var start_utc = cache[j].start_time + (new timezoneJS.Date(cache[i].end_time, self.idata.timezone)).getTimezoneOffset() * 60000;
+            var start_utc = s3ui.dateToUTCStamp(new Date(cache[j].start_time), self.idata.timezone);
             n = s3ui.binSearch(data, start_utc, function (d) { return d[0]; })
             if (data[n][0] >= start_utc) {
                 n--;
@@ -424,9 +426,17 @@ function insertData(self, uuid, cache, data, dataStart, dataEnd, callback) {
         }
     }
     // convert data to correct timezone
-    for (var a = m ; a < n; a++) {
-        data[a].originalMillis = data[a][0];
-        data[a][0] -= (new timezoneJS.Date(data[a][0], self.idata.timezone)).getTimezoneOffset() * 60000;
+    var oldMin = undefined;
+    var oldOffset;
+    for (var a = m; a < n; a++) {
+        var millis = data[a][0];
+        var minute = millis % 60000;
+        if (minute != oldMin) {
+            oldMin = minute;
+            oldOffset = (new timezoneJS.Date(millis, self.idata.timezone)).getTimezoneOffset() * 60000;
+        }
+        data[a].originalMillis = millis;
+        data[a][0] -= oldOffset;
     }
     var cacheEntry = new CacheEntry(cacheStart, cacheEnd, dataBefore.concat(data.slice(m, n), dataAfter));
     var loadedStreams = self.idata.loadedStreams;
