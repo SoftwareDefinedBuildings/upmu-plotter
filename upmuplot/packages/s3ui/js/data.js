@@ -99,7 +99,7 @@ function processBracketResponse(self, uuids, response) {
         } else if (prevLast < newLast) {
             trimCache(self, uuids[i], prevLast);
             self.idata.lastTimes[uuids[i]] = newLast;
-            if (self.idata.onscreen && (prevLast + self.idata.offset) <= domain[1] && (newLast + self.idata.offset) >= domain[0]) {
+            if (self.idata.onscreen && prevLast <= domain[1].getTime() + ((new timezoneJS.Date(domain[1], self.idata.timezone)).getTimezoneOffset() * 60000) && newLast >= domain[0].getTime() + ((new timezoneJS.Date(domain[0], self.idata.timezone)).getTimezoneOffset() * 60000)) {
                 loadNewData = true;
             }
         }
@@ -117,7 +117,7 @@ function processBracketResponse(self, uuids, response) {
    whether the plotter should keep polling the server for a change in
    brackets. */
 function shouldPollBrackets(self, uuid, domain) {
-    return !self.idata.lastTimes.hasOwnProperty(uuid) || ((domain[1] - self.idata.offset) >= (self.idata.lastTimes[uuid] + (domain[0] - domain[1])));
+    return !self.idata.lastTimes.hasOwnProperty(uuid) || ((domain[1] - self.idata.rightOffset) >= (self.idata.lastTimes[uuid] + (domain[0] - domain[1])));
 }
 
 /* POINTWIDTH is the number of milliseconds in one interval. Converts this to
@@ -202,7 +202,7 @@ function validateContiguous(cacheEntry, pwe) {
    STARTTIME to ENDTIME at the point width corresponding to POINTWIDTHEXP, or
    floor(lg(POINTWIDTH)). If it does not, data are procured from the server and
    added to the cache so the extent of its data is at least from STARTTIME to
-   ENDTIME. STARTTIME and ENDTIME are specified in UTC (Universal Coord. Time).
+   ENDTIME. STARTTIME and ENDTIME are specified in the selected timezone.
    Once the data is found or procured, CALLBACK is called with an array of data
    as its first argument, where the requested data is a subset of the requested
    data (second and third arguments are the start and end time of the cache
@@ -293,10 +293,13 @@ function makeDataRequest(self, uuid, queryStart, queryEnd, pointwidthexp, halfpw
     in terms of the midpoints of the intervals I get back; the real archiver
     will give me back all intervals that touch the query range. So I shrink
     the range by half a pointwidth on each side to compensate for that. */
+    var trueQueryStart, trueQueryEnd; // converted to UTC time
+    trueQueryStart = queryStart + (new timezoneJS.Date(queryStart, self.idata.timezone)).getTimezoneOffset() * 60000;
+    trueQueryEnd = queryEnd + (new timezoneJS.Date(queryEnd, self.idata.timezone)).getTimezoneOffset() * 60000;
     var halfpwmillisStart = Math.floor(halfpwnanos / 1000000);
     var halfpwnanosStart = halfpwnanos - (1000000 * halfpwmillisStart);
     halfpwnanosStart = (1000000 + halfpwnanosStart).toString().slice(1);
-    var url = self.idata.dataURLStart + uuid + '?starttime=' + (queryStart + halfpwmillisStart) + halfpwnanosStart + '&endtime=' + (queryEnd + halfpwmillisStart) + halfpwnanosStart + '&unitoftime=ns&pw=' + pointwidthexp;
+    var url = self.idata.dataURLStart + uuid + '?starttime=' + (trueQueryStart + halfpwmillisStart) + halfpwnanosStart + '&endtime=' + (trueQueryEnd + halfpwmillisStart) + halfpwnanosStart + '&unitoftime=ns&pw=' + pointwidthexp;
     if (caching) {
         s3ui.getURL(url, function (data) {
                 callback(data, queryStart, queryEnd);
@@ -397,8 +400,9 @@ function insertData(self, uuid, cache, data, dataStart, dataEnd, callback) {
         dataBefore = cache[i].cached_data;
         if (data.length > 0) {
             // We want to get rid of overlap
-            m = s3ui.binSearch(data, cache[i].end_time, function (d) { return d[0]; });
-            if (data[m][0] < cache[i].end_time) {
+            var end_utc = cache[i].end_time + (new timezoneJS.Date(cache[i].end_time, self.idata.timezone)).getTimezoneOffset() * 60000;
+            m = s3ui.binSearch(data, end_utc, function (d) { return d[0]; });
+            if (data[m][0] < end_utc) {
                 m++;
             }
         }
@@ -411,12 +415,17 @@ function insertData(self, uuid, cache, data, dataStart, dataEnd, callback) {
         dataAfter = cache[j].cached_data;
         if (data.length > 0) {
             // We want to get rid of overlap
-            n = s3ui.binSearch(data, cache[j].start_time, function (d) { return d[0]; })
-            if (data[n][0] >= cache[j].start_time) {
+            var start_utc = cache[j].start_time + (new timezoneJS.Date(cache[i].end_time, self.idata.timezone)).getTimezoneOffset() * 60000;
+            n = s3ui.binSearch(data, start_utc, function (d) { return d[0]; })
+            if (data[n][0] >= start_utc) {
                 n--;
             }
             n++;
         }
+    }
+    // convert data to correct timezone
+    for (var a = m ; a < n; a++) {
+        data[a][0] -= (new timezoneJS.Date(data[a][0], self.idata.timezone)).getTimezoneOffset() * 60000;
     }
     var cacheEntry = new CacheEntry(cacheStart, cacheEnd, dataBefore.concat(data.slice(m, n), dataAfter));
     var loadedStreams = self.idata.loadedStreams;

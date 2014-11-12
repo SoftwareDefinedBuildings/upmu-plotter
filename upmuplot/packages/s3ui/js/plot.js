@@ -33,7 +33,9 @@ function init_plot(self) {
     self.idata.oldYScales = undefined;
     self.idata.oldYAxisArray = undefined;
     self.idata.oldAxisData = undefined;
-    self.idata.offset = undefined;
+    self.idata.leftOffset = undefined;
+    self.idata.rightOffset = undefined;
+    self.idata.timezone = undefined;
     self.idata.oldDomain = undefined;
     
     self.idata.scriptsize = "0.75em";
@@ -155,7 +157,7 @@ function repaintZoomNewData(self, callback, stopCache) {
     }
     for (var i = 0; i < selectedStreams.length; i++) {
         s3ui.setStreamMessage(self, selectedStreams[i].uuid, "Fetching data...", 5);
-        s3ui.ensureData(self, selectedStreams[i].uuid, pwe, domain[0] - self.idata.offset, domain[1] - self.idata.offset, makeDataCallback(selectedStreams[i], domain[0] - self.idata.offset, domain[1] - self.idata.offset));
+        s3ui.ensureData(self, selectedStreams[i].uuid, pwe, domain[0], domain[1], makeDataCallback(selectedStreams[i], domain[0].getTime(), domain[1].getTime()));
     }
     if (selectedStreams.length == 0) {
         callback();
@@ -684,16 +686,25 @@ function drawPlot(self) {
         return;
     }
     
-    self.idata.offset = startDateObj.getTimezoneOffset() * -60000; // what to add to UTC to get to selected time zone
+    if (self.idata.timezone != selectedTimezone) {
+        self.idata.dataCache = {};
+        self.idata.loadedData = 0;
+        self.idata.loadedStreams = 0;
+    }
+    
+    self.idata.timezone = selectedTimezone;
+    
+    self.idata.leftOffset = startDateObj.getTimezoneOffset() * -60000; // what to add to UTC to get to selected time zone
+    self.idata.rightOffset = endDateObj.getTimezoneOffset() * -60000;
     
     self.idata.xTitle.innerHTML = "Time [" + selectedTimezone + "]";
     
-    self.idata.oldDomain = [startDate + self.idata.offset, endDate + self.idata.offset];
+    self.idata.oldDomain = [startDate + self.idata.leftOffset, endDate + self.idata.rightOffset];
     // Create the xScale and axis if we need to
     var xScale, xAxis;
     if (!sameTimeRange) {
         xScale = d3.time.scale.utc() // I'm telling d3 it's in UTC time, but in reality I'm going to add an offset to everything so it actually displays the selected time zone
-            .domain([startDate + self.idata.offset, endDate + self.idata.offset])
+            .domain([startDate + self.idata.leftOffset, endDate + self.idata.rightOffset])
             .range([0, self.idata.WIDTH]);
         xAxis = d3.svg.axis().scale(xScale).orient("bottom").ticks(5);
         self.idata.oldStartDate = startDate;
@@ -742,8 +753,8 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
     var axis;
     var startIndex, endIndex;
     var domain = xScale.domain();
-    var startTime = domain[0] - self.idata.offset;
-    var endTime = domain[1] - self.idata.offset;
+    var startTime = domain[0];
+    var endTime = domain[1];
     for (i = 0; i < yAxes.length; i++) {
         axis = yAxes[i];
         numstreams = axis.streams.length;
@@ -964,7 +975,6 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     var pixelw = (domain[1] - domain[0]) / WIDTH * 1000000; // pixel width in nanoseconds
     var currpt;
     var prevpt;
-    var offset = self.idata.offset;
     var lineChunks;
     var points;
     var currLineChunk;
@@ -984,8 +994,8 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         streamdata = data[streams[i].uuid][1];
         pw = Math.pow(2, data[streams[i].uuid][2]);
         yScale = axisData[streamSettings[streams[i].uuid].axisid][2];
-        startTime = domain[0].getTime() - offset;
-        endTime = domain[1].getTime() - offset;
+        startTime = domain[0].getTime();
+        endTime = domain[1].getTime();
         startIndex = s3ui.binSearchCmp(streamdata, [startTime, 0], s3ui.cmpTimes);
         if (startIndex > 0 && s3ui.cmpTimes(streamdata[startIndex], [startTime, 0]) > 0) {
             startIndex--; // make sure to plot an extra data point at the beginning
@@ -993,7 +1003,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         outOfRange = true;
         continueLoop = true; // used to get one datapoint past the end
         for (j = startIndex; j < streamdata.length && continueLoop; j++) {
-            continueLoop = (xPixel = xScale((currpt = streamdata[j])[0] + offset)) < WIDTH;
+            continueLoop = (xPixel = xScale((currpt = streamdata[j])[0])) < WIDTH;
             prevpt = streamdata[j - 1];
             if (currLineChunk[0].length > 0 && (j == startIndex || (currpt[0] - prevpt[0]) * 1000000 + (currpt[1] - prevpt[1]) > pw)) {
                 processLineChunk(currLineChunk, lineChunks, points);
@@ -1148,8 +1158,7 @@ function showDataDensity(self, uuid) {
     var pixelw = (domain[1] - domain[0]) / WIDTH;
     var pw = Math.pow(2, self.idata.oldData[uuid][2]);
     pixelw *= 1000000;
-    var offset = self.idata.offset
-    var startTime = domain[0].getTime() - offset;
+    var startTime = domain[0].getTime();
     var totalmax = 0;
     var xPixel;
     var prevIntervalEnd;
@@ -1170,7 +1179,7 @@ function showDataDensity(self, uuid) {
         totalmax = streamdata[startIndex][5];
         lastiteration = false;
         for (i = startIndex; i < streamdata.length; i++) {
-            xPixel = oldXScale(streamdata[i][0] + offset);
+            xPixel = oldXScale(streamdata[i][0]);
             xPixel += ((streamdata[i][1] - pw/2) / pixelw);
             if (xPixel < 0) {
                 xPixel = 0;
@@ -1187,12 +1196,12 @@ function showDataDensity(self, uuid) {
             if (((streamdata[i][0] - prevpt[0]) * 1000000) + streamdata[i][1] - prevpt[1] <= pw) {
                 if (i != 0) { // if this is the first point in the cache entry, then the cache start is less than a pointwidth away and don't drop it to zero
                     if (i == startIndex) {
-                        toDraw.push([Math.max(0, Math.min(WIDTH, oldXScale(prevpt[0] + offset))), prevpt[5]]);
+                        toDraw.push([Math.max(0, Math.min(WIDTH, oldXScale(prevpt[0]))), prevpt[5]]);
                     }
                     toDraw.push([xPixel, toDraw[toDraw.length - 1][1]]);
                 }
             } else {
-                prevIntervalEnd = Math.max(0, Math.min(WIDTH, (oldXScale(prevpt[0] + offset) + ((prevpt[1] + (pw/2)) / pixelw)))); // x pixel of end of previous interval
+                prevIntervalEnd = Math.max(0, Math.min(WIDTH, (oldXScale(prevpt[0]) + ((prevpt[1] + (pw/2)) / pixelw)))); // x pixel of end of previous interval
                 if (prevIntervalEnd != 0) {
                     toDraw.push([prevIntervalEnd, prevpt[5]]);
                 }
@@ -1212,14 +1221,14 @@ function showDataDensity(self, uuid) {
             // Force the plot to 0
             toDraw.push([toDraw[toDraw.length - 1][0], 0]);
             // Keep it at zero for the correct amount of time
-            var lastpixel = oldXScale(self.idata.oldData[uuid][4] + offset);
+            var lastpixel = oldXScale(self.idata.oldData[uuid][4]);
             if (lastpixel > 0) {
                 toDraw.push([Math.min(lastpixel, WIDTH), 0]);
             }
         }
     }
     if (toDraw.length == 0) { // streamdata is empty, OR nothing relevant is there to draw
-        toDraw = [[Math.max(0, oldXScale(self.idata.oldData[uuid][3] + offset)), 0], [Math.min(WIDTH, oldXScale(self.idata.oldData[uuid][4] + offset)), 0]];
+        toDraw = [[Math.max(0, oldXScale(self.idata.oldData[uuid][3])), 0], [Math.min(WIDTH, oldXScale(self.idata.oldData[uuid][4])), 0]];
         totalmax = 0;
     }
     var yScale;
