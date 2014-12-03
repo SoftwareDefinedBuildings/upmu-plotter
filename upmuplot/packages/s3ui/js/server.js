@@ -75,7 +75,20 @@ Meteor.methods({
                     return '[]';
                 }
             },
-        createPermalink: s3ui_server.createPermalink,
+        requestMetadata: function (request, urlbase) {
+                this.unblock();
+                var user = Meteor.user();
+                var url;
+                if (user == null || !user.hasOwnProperty('tags')) {
+                    url = urlbase +'?tags=public';
+                } else {
+                    url = urlbase + '?tags=' + user.tags.join(',');
+                }
+                var result = HTTP.call('POST', url, {
+                        content: request
+                    });
+                return result.content;
+            },
         retrievePermalink: function (permalinkID) {
                 var obj = s3ui_permalinks.findOne({"_id": permalinkID});
                 if (obj == undefined) {

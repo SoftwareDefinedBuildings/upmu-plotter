@@ -56,7 +56,7 @@ function updateStreamList(self) {
             core: {
                 data: function (obj, callback) {
                         if (obj.id == "#") {
-                            s3ui.getURL('SENDPOST ' + self.idata.tagsURL + ' select distinct Metadata/SourceName', function (data) {
+                            Meteor.call("requestMetadata", 'select distinct Metadata/SourceName', self.idata.tagsURL, function (error, data) {
                                     var sourceList = JSON.parse(data);
                                     var i;
                                     var rootID;
@@ -73,7 +73,7 @@ function updateStreamList(self) {
                                                         data: {
                                                                 toplevel: true,
                                                                 children: function (callback) {
-                                                                        s3ui.getURL('SENDPOST ' + self.idata.tagsURL + ' select distinct Path where Metadata/SourceName = "' + sourceName + '"', function (data) {
+                                                                        Meteor.call("requestMetadata", 'select distinct Path where Metadata/SourceName = "' + sourceName + '"', self.idata.tagsURL, function (childerror, data) {
                                                                                 callback.call(this, pathsToTree(self, sourceName, JSON.parse(data)));
                                                                             });
                                                                     },
@@ -84,7 +84,7 @@ function updateStreamList(self) {
                                             }(sourceList[i]);
                                     }
                                     callback(sourceList);
-                                }, "text");
+                                });
                         } else {
                             obj.data.children(callback);
                         }
