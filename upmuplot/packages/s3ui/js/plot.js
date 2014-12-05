@@ -1009,7 +1009,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
             outOfRange = outOfRange && (mint < 0 || mint > HEIGHT) && (maxt < 0 || maxt > HEIGHT) && (mint < HEIGHT || maxt > 0);
         }
         processLineChunk(currLineChunk, lineChunks, points);
-        if (lineChunks.length == 1 && lineChunks[0][0].length == 0) {
+        if ((lineChunks.length == 1 && lineChunks[0][0].length == 0) || streamdata[startIndex][0] > endTime || streamdata[j - 1][0] < startTime) {
             s3ui.setStreamMessage(self, streams[i].uuid, "No data in specified time range", 3);
         } else {
             s3ui.setStreamMessage(self, streams[i].uuid, undefined, 3);
