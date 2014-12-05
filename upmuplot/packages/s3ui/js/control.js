@@ -283,14 +283,14 @@ function updateGraphSize() {
    in a url, creates the state of the graph it describes. This function assumes
    that the graph has just been loaded, with no streams selected or custom
    settings applied. */
-function executePermalink(self, args) {
+function executePermalink(self, args, set_streams_only) {
     var streams = (args.streams || args.streamids);
     var streamObjs = [];
     var stream;
     var colors = [];
     var noRequest = true;
     var uuidMap = {}; // Maps uuid to an index in the array
-    var query = ' select * where';
+    var query = 'select * where';
     for (i = 0; i < streams.length; i++) {
         stream = streams[i];
         colors.push(stream.color);
@@ -307,9 +307,9 @@ function executePermalink(self, args) {
     }
     
     if (noRequest) {
-        setTimeout(function () { finishExecutingPermalink(self, streamObjs, colors, args); }, 50);
+        setTimeout(function () { finishExecutingPermalink(self, streamObjs, colors, args, set_streams_only); }, 50);
     } else {
-        s3ui.getURL('SENDPOST ' + self.idata.tagsURL + query, function (data) {
+        Meteor.call('requestMetadata', query, self.idata.tagsURL, function (error, data) {
                 var receivedStreamObjs = JSON.parse(data);
                 for (i = 0; i < receivedStreamObjs.length; i++) {
                     streamObjs[uuidMap[receivedStreamObjs[i].uuid]] = receivedStreamObjs[i];
@@ -320,12 +320,12 @@ function executePermalink(self, args) {
                         colors.splice(i, 1);
                     }
                 }
-                finishExecutingPermalink(self, streamObjs, colors, args);
-            }, 'text');
+                finishExecutingPermalink(self, streamObjs, colors, args, set_streams_only);
+            });
     }
 }
 
-function finishExecutingPermalink(self, streams, colors, args) {
+function finishExecutingPermalink(self, streams, colors, args, set_streams_only) {
     self.imethods.selectStreams(streams);
     var i;
     for (i = 0; i < streams.length; i++) {
@@ -336,6 +336,9 @@ function finishExecutingPermalink(self, streams, colors, args) {
                 console.log('Could not set ' + streams[i].uuid + ' to ' + colors[i] + ': ' + err.message);
             }
         }
+    }
+    if (set_streams_only) {
+        return; // special handling for logging in/out
     }
     if (args.hasOwnProperty('tz')) {
         self.imethods.setTimezone(args.tz);

@@ -55,16 +55,36 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_header('Content-type','text/html')
         self.end_headers()
         print self.query
+        tags = None
+        if self.path.find('?') != -1:
+            arg_string = self.path.split('?')[1]
+            arg_pairs = map(lambda x: x.split('='), arg_string.split('&'))
+            args = {pair[0]: pair[1] for pair in arg_pairs}
+            if 'tags' in args:
+                tag_string = args['tags']
+                tags = tag_string.split(',')
+        if not tags:
+            tags = ['public'] # if no tags are given, assume this
+        authorized = ('admin' in tags)
+        print tags
         if self.query.startswith("select"):
             newquery = self.query
             if newquery == 'select distinct Metadata/SourceName':
                 self.wfile.write('["Fake Data"]')
             elif newquery == 'select distinct Path where Metadata/SourceName = "Fake Data"':
-                self.wfile.write('["/tests/Data Range Test", "/tests/Data Range Test 2"]')
-            elif newquery == 'select * where Metadata/SourceName = "Fake Data" and Path = "/tests/Data Range Test"':
+                if authorized:
+                    self.wfile.write('["/tests/Data Range Test", "/tests/Data Range Test 2"]')
+                else:
+                    self.wfile.write('["/tests/Data Range Test"]')
+            elif newquery == 'select * where Metadata/SourceName = "Fake Data" and Path = "/tests/Data Range Test"' or newquery == 'select * where uuid = "fake-data"':
                 self.wfile.write('[{"Path": "/tests/Data Range Test", "Metadata": {"SourceName": "Fake Data", "Instrument": {"ModelName": "A Python Program"}}, "uuid": "fake-data", "Properties": {"UnitofTime": "ns", "Timezone": "America/Phoenix", "UnitofMeasure": "N", "ReadingType": "long"}}]')
-            elif newquery == 'select * where Metadata/SourceName = "Fake Data" and Path = "/tests/Data Range Test 2"':
+            elif authorized and (newquery == 'select * where Metadata/SourceName = "Fake Data" and Path = "/tests/Data Range Test 2"' or newquery == 'select * where uuid = "fake-data2'):
                 self.wfile.write('[{"Path": "/tests/Data Range Test 2", "Metadata": {"SourceName": "Fake Data", "Instrument": {"ModelName": "A Python Program"}}, "uuid": "fake-data2", "Properties": {"UnitofTime": "ns", "Timezone": "UTC", "UnitofMeasure": "N", "ReadingType": "long"}}]')
+            elif newquery == 'select * where uuid = "fake-data" or uuid = "fake-data2"' or newquery == 'select * where uuid = "fake-data2" or uuid = "fake-data"':
+                if authorized:
+                    self.wfile.write('[{"Path": "/tests/Data Range Test", "Metadata": {"SourceName": "Fake Data", "Instrument": {"ModelName": "A Python Program"}}, "uuid": "fake-data", "Properties": {"UnitofTime": "ns", "Timezone": "America/Phoenix", "UnitofMeasure": "N", "ReadingType": "long"}}, {"Path": "/tests/Data Range Test 2", "Metadata": {"SourceName": "Fake Data", "Instrument": {"ModelName": "A Python Program"}}, "uuid": "fake-data2", "Properties": {"UnitofTime": "ns", "Timezone": "UTC", "UnitofMeasure": "N", "ReadingType": "long"}}]')
+                else:
+                    self.wfile.write('[{"Path": "/tests/Data Range Test", "Metadata": {"SourceName": "Fake Data", "Instrument": {"ModelName": "A Python Program"}}, "uuid": "fake-data", "Properties": {"UnitofTime": "ns", "Timezone": "America/Phoenix", "UnitofMeasure": "N", "ReadingType": "long"}}]')
             else:
                 self.wfile.write('')
         elif 'UUIDS' in self.query:

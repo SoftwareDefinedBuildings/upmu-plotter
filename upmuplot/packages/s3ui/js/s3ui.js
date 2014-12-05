@@ -165,8 +165,13 @@ function init_graph(self, c1, c2) {
     
     // Event handlers are added programmatically
     self.find(".getPermalink").onclick = function () {
-            self.find(".permalink").innerHTML = 'Generating permalink...';
-            setTimeout(function () { s3ui.createPermalink(self); }, 50);
+            var permalinkElem = self.find(".permalink");
+            permalinkElem.innerHTML = 'Generating permalink...';
+            setTimeout(function () {
+                    if (s3ui.createPermalink(self, false) == undefined) {
+                        permalinkElem.innerHTML = 'You must plot some streams before creating a permalink.';
+                    }
+                }, 50);
         };
     self.find(".makeGraph").onclick = function () {
             self.find(".download-graph").innerHTML = 'Creating image...';
@@ -275,7 +280,15 @@ function init_graph(self, c1, c2) {
     self.idata.otherChange = false;
     s3ui.updatePlotMessage(self);
     
-    s3ui.updateStreamList(self);
+    /* When a user logs in or logs out, we need to update the stream tree. */
+    Tracker.autorun(function () {
+            Meteor.userId(); // so it runs reactively when the currently logged in user changes
+            var curr_state = s3ui.createPermalink(self, true);
+            s3ui.updateStreamList(self);
+            if (curr_state != undefined) {
+                s3ui.executePermalink(self, curr_state, true); // reselect the streams from before, to the best of our ability
+            }
+        });
     
     // Second callback
     if (typeof c2 == "function") {

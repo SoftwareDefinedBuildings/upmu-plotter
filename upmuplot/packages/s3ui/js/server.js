@@ -79,16 +79,17 @@ Meteor.methods({
                 this.unblock();
                 var user = Meteor.user();
                 var url;
-                if (user == null || !user.hasOwnProperty('tags')) {
+                if (user == null || !user.hasOwnProperty('s3ui_tags')) {
                     url = urlbase +'?tags=public';
                 } else {
-                    url = urlbase + '?tags=' + user.tags.join(',');
+                    url = urlbase + '?tags=' + user.s3ui_tags.join(',');
                 }
                 var result = HTTP.call('POST', url, {
                         content: request
                     });
                 return result.content;
             },
+        createPermalink: s3ui_server.createPermalink,
         retrievePermalink: function (permalinkID) {
                 var obj = s3ui_permalinks.findOne({"_id": permalinkID});
                 if (obj == undefined) {

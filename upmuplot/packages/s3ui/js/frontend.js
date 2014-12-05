@@ -234,7 +234,10 @@ function createPlotDownload(self) {
     linkLocation.insertBefore(downloadAnchor, null); // ... and replace it with this download link
 }
 
-function createPermalink(self) {
+function createPermalink(self, return_raw_document) {
+    if (self.idata.oldXScale == undefined) {
+        return;
+    }
     var coerce_stream;
     if (self.find(".includeMetadata").checked) {
         coerce_stream = function (stream) { return JSON.parse(JSON.stringify(stream)); };
@@ -260,6 +263,9 @@ function createPermalink(self) {
                         };
                 })
         };
+    if (return_raw_document) {
+        return permalink;
+    }
     Meteor.call("createPermalink", permalink, function (error, result) {
             if (error == undefined) {
                 var id = result;
@@ -271,8 +277,11 @@ function createPermalink(self) {
                 var permalocation = self.find(".permalink");
                 permalocation.innerHTML = "";
                 permalocation.insertBefore(anchor, null);
+            } else {
+                console.log(error);
             }
         });
+    return true;
 }
 
 function buildCSVMenu(self) {
