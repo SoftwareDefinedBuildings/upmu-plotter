@@ -976,6 +976,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
     for (var i = 0; i < streams.length; i++) {
         xPixel = -Infinity;
         if (!data.hasOwnProperty(streams[i].uuid)) {
+            s3ui.setStreamMessage(self, streams[i].uuid, "No data in specified time range", 3);
             continue;
         }
         lineChunks = [];
