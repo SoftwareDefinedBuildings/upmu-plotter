@@ -337,19 +337,6 @@ function finishExecutingPermalink(self, streams, colors, args, set_streams_only)
             }
         }
     }
-    if (set_streams_only) {
-        return; // special handling for logging in/out
-    }
-    if (args.hasOwnProperty('tz')) {
-        self.imethods.setTimezone(args.tz);
-    } else {
-        args.tz = s3ui.getSelectedTimezone(self);
-    }
-    if (args.hasOwnProperty('autoupdate')) {
-        if (!args.autoupdate) {
-            self.imethods.toggleAutomaticUpdate();
-        }
-    }
     if (args.hasOwnProperty('axes')) {
         var axes = args.axes;
         var yAxes = self.idata.yAxes;
@@ -366,7 +353,7 @@ function finishExecutingPermalink(self, streams, colors, args, set_streams_only)
             id = "y" + (i + 1);
             axis = axes[i];
             for (j = 0; j < axis.streams.length; j++) {
-                if (self.idata.streamSettings[axis.streams[j]].axisid != id) {
+                if (self.idata.streamSettings.hasOwnProperty(axis.streams[j]) && self.idata.streamSettings[axis.streams[j]].axisid != id) {
                     self.imethods.setStreamAxis(axis.streams[j], id);
                 }
             }
@@ -377,6 +364,19 @@ function finishExecutingPermalink(self, streams, colors, args, set_streams_only)
             if (axis.rightside !== false) {
                 self.imethods.setAxisSide(id, axis.rightside === null ? null : !axis.rightside);
             }
+        }
+    }
+    if (set_streams_only) {
+        return; // special handling for logging in/out
+    }
+    if (args.hasOwnProperty('tz')) {
+        self.imethods.setTimezone(args.tz);
+    } else {
+        args.tz = s3ui.getSelectedTimezone(self);
+    }
+    if (args.hasOwnProperty('autoupdate')) {
+        if (!args.autoupdate) {
+            self.imethods.toggleAutomaticUpdate();
         }
     }
     var start;
