@@ -17,7 +17,16 @@ def doc_matches_path(stream_doc, pathstarts):
 
 client = pymongo.MongoClient()
 mongo_collection = client.qdf.metadata
-tag_defs = client.upmu_test_database.tag_defs
+try:
+    configfile = open(sys.argv[-1], 'r')
+    data = configfile.read()
+    configfile.close()
+except BaseException as be:
+    print be
+    print 'You must specify a file name as an argument. The file must be a JSON document that maps each tag to a list of path-start strings'
+    exit()
+    
+tag_defs = json.loads(data)
 class HTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -37,8 +46,9 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         if not tags:
             tags = ['public'] # if no tags are given, assume this
         pathstarts = set()
-        for tag_def in tag_defs.find({"tag_name": {"$in": tags}}):
-            pathstarts.update(tag_def['path_start'])
+        for tag in tags:
+            if tag in tag_defs:
+                pathstarts.update(tag_defs[tag])
         
         self.query = self.rfile.read(int(self.headers['Content-Length']))
         self.send_response(200)
