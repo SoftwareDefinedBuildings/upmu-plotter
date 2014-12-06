@@ -1,0 +1,46 @@
+{
+    "users": {
+        "one": {
+            "_id": "N48aqjuntKbEF2XXe",
+            "createdAt": "2014-12-06T19:24:15.216Z",
+            "s3ui_tags": [
+                "admin",
+                "extras"
+            ],
+            "services": {
+                "password": {
+                    "bcrypt": "$2a$10$P/fnDEgaPKMQugzG4.VSdO.4C7ZgH7D69XZ6hVVbXDprEnLEdGlcK"
+                }
+            },
+            "username": "one"
+        },
+        "master": {
+            "_id": "aqQ7HeLr68Zsw8Ydq",
+            "createdAt": "2014-12-06T19:24:15.350Z",
+            "s3ui_tags": [
+                "all"
+            ],
+            "services": {
+                "password": {
+                    "bcrypt": "$2a$10$ZuAh1h.FhvsDHMOSytxikOURo4uinkt3Lezk4iO8NIw.AGvT.tSIG"
+                }
+            },
+            "username": "master"
+        },
+        "hello": {
+            "_id": "bgZYfAhctQt2uSaSA",
+            "createdAt": "2014-12-06T19:24:15.057Z",
+            "s3ui_tags": [
+                "public",
+                "admin"
+            ],
+            "services": {
+                "password": {
+                    "bcrypt": "$2a$10$c2L.LwnRZvP7JXSuC02qEOvUq9Ze89hCWS/MNcFSUq007fh4TyCk6"
+                }
+            },
+            "username": "hello"
+        }
+    },
+    "users_to_add": {}
+}
