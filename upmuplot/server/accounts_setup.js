@@ -31,12 +31,8 @@ Meteor.startup(function () {
             var document = users_to_add[user];
             var document_to_upload = {};
             var s3ui_tags;
-            if (document.hasOwnProperty("username")) {
-                document_to_upload["username"] = document["username"];
-            } else {
-                document_to_upload["username"] = user;
-                document["username"] = user; // so we can get it in the next for loop
-            }
+            document_to_upload["username"] = user;
+            document["username"] = user; // so we can get it in the next for loop
             if (document.hasOwnProperty("password")) {
                 document_to_upload["password"] = document["password"]
             } else {

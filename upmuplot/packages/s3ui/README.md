@@ -272,3 +272,48 @@ Below is an example of permalink data that uses a window of type "now" (a window
 	],
 	"tz" : "America/Los_Angeles"
 }</code></pre>
+
+Restricting Stream Access
+-------------------------
+It is possible to restrict streams to be visible only by certain users. The
+is place is as follows: an account system is set up via Meteor's login system.
+In each user document is a field called "s3ui_tags", which contains a list of
+tags corresponding to each user. Each tag is a token that represents certain
+streams. When the program requests stream metadata to build the stream tree, it
+sends the current user's tags along with the request. The program that returns
+the metadata is responsible for interpreting the tags and only revealing
+information about streams visible to users with those tags.
+
+The s3ui package does not do any of the setup work to use Meteor's accounts
+system; doing so would preclude use of Meteor's accounts system for the s3ui
+plot in conjunction with other features.
+
+That said, an example of an appropriate configuration may be found in the "lib"
+and "server" directories of the "upmuplot" Meteor project. The files here set
+up the user information to be read from the "server/account_list.json" file.
+The "users\_to\_add" property contains an object mapping usernames to objects
+containing the "password" in plaintext and "s3ui_tags" as an array of strings.
+The "users" property contains information about existing users; here, the
+password is not stored in plaintext. When Meteor, as configured in this
+repository, starts, it moves the users in "users\_to\_add" to "users", hashing
+the passwords as appropriate, and updates Meteor's internal database of users
+according to changes made in the file.
+
+Similarly, an example of a program to serve metadata requests is found in the
+python folder of this package  ("metadata.py"). It reads the tag definitions
+from a file passed in as a command line argument (such as "tagconfig.json").
+The file is expected to be a JSON document mapping each tag to an array of
+strings, each of which represents a prefix of paths of streams corresponding to
+that tag.
+
+Examples of the two configuration files can be found in the appropriate
+directories of this repository. Once again, using these example programs to
+restrict stream access is by no means required; you may use any method you wish
+to add users to the Meteor.users repository as long as the "s3ui_tags" field in
+each user document is correct, you can interpret the tags to find out the
+streams they refer to in any way you want, and you can even choose to not
+restrict stream access at all.
+
+If a user logs in or out while streams are selected, the plotting application
+will maintain the streams being plotted as far as possible, ensuring that the
+new user is still authorized to see those streams.
