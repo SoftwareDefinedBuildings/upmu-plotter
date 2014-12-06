@@ -1,8 +1,12 @@
 s3ui package
 ============
-This package defines the "s3plot" template, which contains a graphing utility
-that can be included in a Meteor application. Multiple graphs can be inserted
-into the same web page and will act independently of one another.
+The "upmu-plotter" repository contains the "s3ui" package along with an example
+of how to use it.
+
+The "s3ui" package defines the "s3plot" template, which contains a graphing
+utility that can be included in a Meteor application. Multiple instances of
+"s3plot" can be inserted into the same web page and will act independently of
+one another.
 
 Instantiating a Graph
 ---------------------
