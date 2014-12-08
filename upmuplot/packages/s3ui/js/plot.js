@@ -684,7 +684,8 @@ function drawPlot(self) {
         return;
     }
     
-    self.idata.offset = startDateObj.getTimezoneOffset() * -60000; // what to add to UTC to get to selected time zone
+    var refDate = new timezoneJS.Date(1970, 0, 1, 0, 0, 0, selectedTimezone);
+    self.idata.offset = refDate.getTimezoneOffset() * -60000; // what to add to UTC to get to selected time zone
     
     self.idata.xTitle.innerHTML = "Time [" + selectedTimezone + "]";
     
