@@ -1228,19 +1228,14 @@ function showDataDensity(self, uuid) {
     if (totalmax == 0) {
         totalmax = 1;
     }
-    yScale = d3.scale.log().base(2).domain([0.5, totalmax]).range([45, 0]);
     
+    yScale = d3.scale.linear().domain([0, totalmax]).range([45, 0]);
     for (j = 0; j < toDraw.length; j++) {
         if (toDraw[j][0] == 0 && j > 0) {
             toDraw.shift(); // Only draw one point at x = 0; there may be more in the array
             j--;
         }
-        if (toDraw[j][1] == 0) {
-            // To plot a density of 0, I'm putting 0.5 into the data so the log scale will work; 
-            toDraw[j][1] = yScale(0.5);
-        } else {
-            toDraw[j][1] = yScale(toDraw[j][1]);
-        }
+        toDraw[j][1] = yScale(toDraw[j][1]); // this does linear scale
     }
     var ddplot = d3.select(self.find("svg.chart g.data-density-plot"));
     if (toDraw.length == 1) {
@@ -1260,16 +1255,10 @@ function showDataDensity(self, uuid) {
             .attr("stroke", self.idata.streamSettings[uuid].color);
     }
         
-    var formatter = d3.format("d");
+    var formatter = d3.format("f");
     
     ddplot.select("g.data-density-axis")
-        .call(d3.svg.axis().scale(yScale).orient("left").tickValues([0.5, Math.round(Math.sqrt(totalmax)), totalmax])
-        .tickFormat(function (d) {
-                if (d < 1) {
-                    d = Math.floor(d);
-                }
-                return formatter(d);
-            }));
+        .call(d3.svg.axis().scale(yScale).orient("left").tickValues([0, Math.round(totalmax / 2), totalmax]).tickFormat(formatter));
 }
 
 function hideDataDensity(self) {
