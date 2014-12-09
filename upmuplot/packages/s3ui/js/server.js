@@ -1,6 +1,7 @@
 // This code is to be run on the Meteor server (all other files in this package are to be run on the client)
 
 s3ui_permalinks = new Meteor.Collection("s3ui_permalinks");
+csv_downloads = new Meteor.Collection("csv_downloads");
 
 // Apparently there is a bug in Iron-Router that requires this fix
 Router.onBeforeAction(Iron.Router.bodyParser.urlencoded({
@@ -101,7 +102,45 @@ Meteor.methods({
             }
     });
     
+var http = Npm.require('http');
+var url = Npm.require('url');
+    
 Router.map(function () {
+        this.route('csv_forwarder', {
+                path: '/s3ui_csv',
+                where: 'server',
+                action: function () {
+                        this.response.statusCode = 200;
+                        this.response.setHeader('Content-Disposition', 'attachment; filename=data.csv');
+                        this.response.setHeader('Content-Type', 'text/plain; charset=utf-8');
+                        this.response.setHeader('Transfer-Encoding', 'chunked');
+                        if (this.request.method != "POST") {
+                            this.response.write("To get a CSV file, send the required data as a JSON document via a POST request.");
+                            this.response.end();
+                            return;
+                        }
+                        mainresponse = this.response;
+                        var parsedURL = url.parse(this.request.body.dest);
+                        var csvRequest = http.request({
+                                host: parsedURL.hostname,
+                                port: parsedURL.port == null ? undefined : parsedURL.port,
+                                path: parsedURL.path,
+                                method: "POST",
+                                headers: {"Content-type": "application/x-www-form-urlencoded"}
+                            }, function (result) {
+                                result.on('data', function (chunk) {
+                                        mainresponse.write(chunk.toString());
+                                    });
+                                result.on('end', function (chunk) {
+                                        mainresponse.end();
+                                    });
+                            });
+                        csvRequest.on("error", function (e) {
+                                console.log("Error in CSV request: " + e);
+                            });
+                        csvRequest.end('body=' + this.request.body.body);
+                    }
+            });
         this.route('permalink_generator', {
                 path: '/s3ui_permalink',
                 where: 'server',
@@ -117,6 +156,9 @@ Router.map(function () {
                         var id, property, i, stream;
                         if (jsonPermalink == undefined) {
                             this.response.write("Error: required key 'permalink_data' is not present");
+                            console.log(JSON.stringify(this.response.body))
+                            console.log(this.response.body);
+                            this.response.write(JSON.stringify(this.response.body));
                             this.response.end();
                         } else {
                             try {

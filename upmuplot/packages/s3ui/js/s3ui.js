@@ -177,7 +177,9 @@ function init_graph(self, c1, c2) {
             self.find(".download-graph").innerHTML = 'Creating image...';
             setTimeout(function () { s3ui.createPlotDownload(self); }, 50);
         };
-    self.find(".csv-form").setAttribute("action", self.idata.csvURL);
+    var csvForm = self.find(".csv-form");
+    csvForm.setAttribute("action", window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "") + "/s3ui_csv");
+    csvForm.querySelector(".csv-form-url").value = self.idata.csvURL;
     self.find(".makecsv").onclick = function () {
             s3ui.buildCSVMenu(self);
             $(self.find(".csv-modal")).modal("toggle");
