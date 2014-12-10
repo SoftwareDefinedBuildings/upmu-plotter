@@ -21,6 +21,7 @@ permalink_schema = {
     resetStart: {"number": null},
     resetEnd: {"number": null},
     tz: {"string": null},
+    dst: {"boolean": null},
     streams: {"object": null},
     window_type: {"string": null},
     window_width: {"number": null},

@@ -27,6 +27,7 @@ function init_plot(self) {
     self.idata.oldStartDate = undefined;
     self.idata.oldEndDate = undefined;
     self.idata.oldTimezone = undefined;
+    self.idata.oldDST = undefined;
     self.idata.oldData = {};
     self.idata.oldXScale = undefined;
     self.idata.oldXAxis = undefined;
@@ -656,14 +657,23 @@ function drawPlot(self) {
         return;
     }
     var selectedTimezone = s3ui.getSelectedTimezone(self);
+    var dst = selectedTimezone[1];
+    selectedTimezone = selectedTimezone[0];
     self.idata.oldTimezone = selectedTimezone;
+    self.idata.oldDST = dst;
+    
     var naiveStartDateObj = self.idata.dateConverter.parse(startText);
     var naiveEndDateObj = self.idata.dateConverter.parse(endText);
     try {
-        var startDateObj = new timezoneJS.Date(naiveStartDateObj.getFullYear(), naiveStartDateObj.getMonth(), naiveStartDateObj.getDate(), naiveStartDateObj.getHours(), naiveStartDateObj.getMinutes(), naiveStartDateObj.getSeconds(), selectedTimezone);
-        var endDateObj = new timezoneJS.Date(naiveEndDateObj.getFullYear(), naiveEndDateObj.getMonth(), naiveEndDateObj.getDate(), naiveEndDateObj.getHours(), naiveEndDateObj.getMinutes(), naiveEndDateObj.getSeconds(), selectedTimezone);
-        var startDate = startDateObj.getTime();
-        var endDate = endDateObj.getTime();
+        var tz = s3ui.getTimezoneOffsetMinutes(selectedTimezone, dst, true)
+        self.idata.offset = tz[0] * -60000; // what to add to UTC to get to selected time zone
+        self.idata.xTitle.innerHTML = "Time [" + selectedTimezone + " (" + tz[1] + ")]";
+        var startDateObj = new timezoneJS.Date(naiveStartDateObj.getFullYear(), naiveStartDateObj.getMonth(), naiveStartDateObj.getDate(), naiveStartDateObj.getHours(), naiveStartDateObj.getMinutes(), naiveStartDateObj.getSeconds(), 'UTC');
+        var endDateObj = new timezoneJS.Date(naiveEndDateObj.getFullYear(), naiveEndDateObj.getMonth(), naiveEndDateObj.getDate(), naiveEndDateObj.getHours(), naiveEndDateObj.getMinutes(), naiveEndDateObj.getSeconds(), 'UTC');
+        // startDateObj.getTime() and endDateObj.getTime() are in selected time zone
+        var startDate = startDateObj.getTime() - self.idata.offset;
+        var endDate = endDateObj.getTime() - self.idata.offset;
+        // startDate and endDate are in UTC
     } catch (err) {
         loadingElem.html(err);
         return;
@@ -683,11 +693,6 @@ function drawPlot(self) {
         loadingElem.html("Error: No streams are selected.");
         return;
     }
-    
-    var refDate = new timezoneJS.Date(1970, 0, 1, 0, 0, 0, selectedTimezone);
-    self.idata.offset = refDate.getTimezoneOffset() * -60000; // what to add to UTC to get to selected time zone
-    
-    self.idata.xTitle.innerHTML = "Time [" + selectedTimezone + "]";
     
     self.idata.oldDomain = [startDate + self.idata.offset, endDate + self.idata.offset];
     // Create the xScale and axis if we need to

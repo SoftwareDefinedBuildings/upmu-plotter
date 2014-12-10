@@ -217,11 +217,17 @@ function init_graph(self, c1, c2) {
                         }
                         s3ui.processBracketResponse(self, uuids, range);
                         range = range.Merged;
-                        var offset = 60000 * ((new Date()).getTimezoneOffset() - (new timezoneJS.Date(s3ui.getSelectedTimezone(self))).getTimezoneOffset());
-                        self.imethods.setStartTime(new Date(Math.floor(range[0] / 1000000) + offset));
-                        var endTime = range[1] / 1000000;
-                        self.imethods.setEndTime(new Date(Math.ceil(range[1] / 1000000) + offset));
-                        self.imethods.applyAllSettings();
+                        try {
+                            var tz = s3ui.getSelectedTimezone(self);
+                            var offset = 60000 * ((new Date()).getTimezoneOffset() - s3ui.getTimezoneOffsetMinutes(tz[0], tz[1]));
+                            var naiveStart = new Date(Math.floor(range[0] / 1000000));
+                            var naiveEnd = new Date(Math.ceil(range[1] / 1000000));
+                            self.imethods.setStartTime(new Date(naiveStart.getTime() + 60000 * (naiveStart.getTimezoneOffset() - s3ui.getTimezoneOffsetMinutes(tz[0], tz[1]))));
+                            self.imethods.setEndTime(new Date(naiveEnd.getTime() + 60000 * (naiveEnd.getTimezoneOffset() - s3ui.getTimezoneOffsetMinutes(tz[0], tz[1]))));
+                            self.imethods.applyAllSettings();
+                        } catch (err) {
+                            self.find(".plotLoading").innerHTML = err;
+                        }
                     });
             } else {
                 self.find(".plotLoading").innerHTML = "Error: No streams are selected.";
@@ -260,6 +266,10 @@ function init_graph(self, c1, c2) {
     self.find(".timezoneSelect").onchange = function () {
             var visibility = (this[this.selectedIndex].value == 'OTHER' ? 'visible' : 'hidden');
             self.find(".otherTimezone").style.visibility = visibility;
+            self.idata.changedTimes = true;
+            s3ui.updatePlotMessage(self);
+        };
+    self.find(".dstButton").onclick = function () {
             self.idata.changedTimes = true;
             s3ui.updatePlotMessage(self);
         };

@@ -159,6 +159,32 @@ function escapeHTMLEntities(str) {
     return div.innerHTML;
 }
 
+function getTimezoneOffsetMinutes(tz_str, dst, getAbbrev) {
+    var janDate = new timezoneJS.Date(2014, 0, 1, tz_str);
+    var junDate = new timezoneJS.Date(2014, 5, 1, tz_str);
+    var janOffset = janDate.getTimezoneOffset();
+    var junOffset = junDate.getTimezoneOffset();
+    if (dst) {
+        if (getAbbrev) {
+            if (janOffset < junOffset) {
+                return [janOffset, janDate.getTimezoneAbbreviation()];
+            } else {
+                return [junOffset, junDate.getTimezoneAbbreviation()];
+            }
+        }
+        return Math.min(janDate.getTimezoneOffset(), junDate.getTimezoneOffset());
+    } else {
+        if (getAbbrev) {
+            if (janOffset > junOffset) {
+                return [janOffset, janDate.getTimezoneAbbreviation()];
+            } else {
+                return [junOffset, junDate.getTimezoneAbbreviation()];
+            }
+        }
+        return Math.max(janDate.getTimezoneOffset(), junDate.getTimezoneOffset());
+    }
+}
+
 s3ui.getFilepath = getFilepath;
 s3ui.getInfo = getInfo;
 s3ui.getURL = getURL;
@@ -169,3 +195,4 @@ s3ui.nanosToUnit = nanosToUnit;
 s3ui.cmpTimes = cmpTimes;
 s3ui.timeToStr = timeToStr;
 s3ui.escapeHTMLEntities = escapeHTMLEntities;
+s3ui.getTimezoneOffsetMinutes = getTimezoneOffsetMinutes;

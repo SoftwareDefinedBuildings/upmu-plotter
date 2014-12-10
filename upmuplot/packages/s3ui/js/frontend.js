@@ -208,11 +208,12 @@ function updatePlotMessage(self) {
 
 function getSelectedTimezone(self) {
     var timezoneSelect = self.find(".timezoneSelect");
+    var dst = (self.find(".dstButton").getAttribute("aria-pressed") == "true");
     var selection = timezoneSelect[timezoneSelect.selectedIndex].value;
     if (selection == "OTHER") {
-        return self.find(".otherTimezone").value.trim();
+        return [self.find(".otherTimezone").value.trim(), dst];
     } else {
-        return selection;
+        return [selection, dst];
     }
 }
 
@@ -251,6 +252,7 @@ function createPermalink(self, return_raw_document) {
             resetStart: Number(self.idata.oldStartDate.toString() + '000000'),
             resetEnd: Number(self.idata.oldEndDate.toString() + '000000'),
             tz: self.idata.oldTimezone,
+            dst: self.idata.oldDST,
             start: Number((domain[0].getTime() - self.idata.offset).toString() + '000000'),
             end: Number((domain[1].getTime() - self.idata.offset).toString() + '000000'),
             autoupdate: self.idata.automaticAxisUpdate,

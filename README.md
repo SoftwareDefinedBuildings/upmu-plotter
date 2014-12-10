@@ -126,6 +126,7 @@ The bound methods provided are:
 * setStartTime(date) - Given a DATE object, sets the start time to the date it represents in local time.
 * setEndTime(date) - Given a DATE object, sets the end time to the date it represents in local time.
 * setTimezone(iana\_str) - Sets the timezone to IANA\_STR.
+* setDST(dst) - Marks Daylight Savings Time as being in effect if DST is true. Otherwise, marks Daylight Savings Time as not being in effect.
 * addAxis() - Creates a new y-axis and returns the id associated with it.
 * removeAxis(id) - Removes the axis with the specified ID, reassigning streams as necessary. The axis with the id "y1" cannot be removed.
 * renameAxis(id, newName) - Assigns the name NEWNAME to the axis with the specified ID.
@@ -171,6 +172,7 @@ For the permalink, the following fields may be specified in the JSON object:
 * resetStart (optional) - The start time that should be used when the "Reset Zoom" button is clicked. If not specified, a default value close to the start time initially displayed is chosen. For consistency, this value is specified in nanoseconds since the UNIX epoch in UTC time, but the value used is only precise up to the second.
 * resetEnd (optional) - The end time that should be used when the "Reset Zoom" button is clicked. If not specified, a default value close to the end time initially displayed is chosen. For consistency, this value is specified in nanoseconds since the UNIX epoch in UTC time, but the value used is only precise up to the second.
 * tz (optional) - The time zone in which the graph should be displayed. Defaults to "America/Los_Angeles". All dates in the permalink are specified in nanoseconds since the epoch in UTC time, regardless of the value of this parameter.
+* dst (optional) - Indicates whether Daylight Savings Time is (TRUE) or is not (FALSE) in effect for the specified timezone.
 * streams (required) - A list of objects specifying streams (see below for the schema of these objects).
 * window\_type (optional) - A string specifying the type of window to be used. The possible values are "fixed", "last", and "now". If an invalid string is used or the key is omitted altogether, defaults to "fixed".
 * window\_width (conditional) - The width of the window, specified in nanoseconds since the epoch (but precise to milliseconds). Required if the window\_type is "last" or "now", otherwise ignored.

@@ -9,6 +9,7 @@ function init_control(self) {
     self.imethods.setStartTime = bind_method(setStartTime, self);
     self.imethods.setEndTime = bind_method(setEndTime, self);
     self.imethods.setTimezone = bind_method(setTimezone, self);
+    self.imethods.setDST = bind_method(setDST, self);
     self.imethods.addAxis = function () { return s3ui.addYAxis(self); };
     self.imethods.removeAxis = bind_method(removeAxis, self);
     self.imethods.renameAxis = bind_method(renameAxis, self);
@@ -70,6 +71,22 @@ function setTimezone(tz) {
         if (otherTZ.value !== tz) {
             otherTZ.value = tz;
             otherTZ.onchange();
+        }
+    }
+}
+
+/* Sets the DST setting to the specified value. */
+function setDST(dst) {
+    var dstButton = this.find(".dstButton");
+    if (dst) {
+        if (dstButton.getAttribute("aria-pressed") == "false") {
+            dstButton.setAttribute("aria-pressed", "true")
+            $(dstButton).addClass("active");
+        }
+    } else {
+        if (dstButton.getAttribute("aria-pressed") == "true") {
+            dstButton.setAttribute("aria-pressed", "false");
+            $(dstButton).removeClass("active");
         }
     }
 }
@@ -372,7 +389,12 @@ function finishExecutingPermalink(self, streams, colors, args, set_streams_only)
     if (args.hasOwnProperty('tz')) {
         self.imethods.setTimezone(args.tz);
     } else {
-        args.tz = s3ui.getSelectedTimezone(self);
+        args.tz = s3ui.getSelectedTimezone(self)[0];
+    }
+    if (args.hasOwnProperty('dst')) {
+        self.imethods.setDST(args.dst);
+    } else {
+        args.dst = s3ui.getSelectedTimezone(self)[1];
     }
     if (args.hasOwnProperty('autoupdate')) {
         if (!args.autoupdate) {
@@ -401,7 +423,7 @@ function finishExecutingPermalink(self, streams, colors, args, set_streams_only)
                 if ((end - start) * 1000000 < args.window_width) {
                     start--;
                 }
-                setTimeZoom(self, start, end, args.resetStart, args.resetEnd, args.tz);
+                setTimeZoom(self, start, end, args.resetStart, args.resetEnd, args.tz, args.dst);
             }, 'text/json');
         return;
     } else {
@@ -415,10 +437,10 @@ function finishExecutingPermalink(self, streams, colors, args, set_streams_only)
             }
         }
     }
-    setTimeZoom(self, start, end, args.resetStart, args.resetEnd, args.tz);
+    setTimeZoom(self, start, end, args.resetStart, args.resetEnd, args.tz, args.dst);
 }
 
-function setTimeZoom(self, start, end, resetStart, resetEnd, tz) {
+function setTimeZoom(self, start, end, resetStart, resetEnd, tz, dst) {
     if (resetStart == undefined || resetEnd == undefined) {
         resetStart = Math.floor(start / 1000) * 1000;
         resetEnd = Math.ceil(end / 1000) * 1000;
@@ -439,11 +461,11 @@ function setTimeZoom(self, start, end, resetStart, resetEnd, tz) {
     }
     self.idata.inittrans = (resetStart - start) / (end - start) * self.idata.WIDTH;
     self.idata.initzoom = (resetEnd - resetStart) / (end - start);
-    var offset;
     try {
-        offset = 60000 * ((new Date()).getTimezoneOffset() - (new timezoneJS.Date(tz)).getTimezoneOffset());
-        self.imethods.setStartTime(new Date(resetStart + offset));
-        self.imethods.setEndTime(new Date(resetEnd + offset));
+        var naiveStart = new Date(resetStart);
+        var naiveEnd = new Date(resetEnd);
+        self.imethods.setStartTime(new Date(naiveStart.getTime() + 60000 * (naiveStart.getTimezoneOffset() - s3ui.getTimezoneOffsetMinutes(tz, dst))));
+        self.imethods.setEndTime(new Date(naiveEnd.getTime() + 60000 * (naiveEnd.getTimezoneOffset() - s3ui.getTimezoneOffsetMinutes(tz, dst))));
         self.imethods.applyAllSettings();
     } catch (err) {
         console.log("Could not execute permalink: " + err.message);
