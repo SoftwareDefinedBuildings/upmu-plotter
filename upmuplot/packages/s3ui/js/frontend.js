@@ -228,7 +228,7 @@ function createPlotDownload(self) {
         + '<defs><style type="text/css"><![CDATA[' + graphStyle + ']]></style></defs>' + chartData + '</svg>';
     var downloadAnchor = document.createElement("a");
     downloadAnchor.innerHTML = "Download Image (created " + (new Date()).toLocaleString() + ", local time)";
-    downloadAnchor.setAttribute("href", 'data:text/svg;charset="utf-8",' + encodeURIComponent(xmlData));
+    downloadAnchor.setAttribute("href", 'data:application/octet-stream;charset=utf-8,' + encodeURIComponent(xmlData));
     downloadAnchor.setAttribute("download", "graph.svg");
     var linkLocation = self.find(".download-graph");
     linkLocation.innerHTML = ""; // Clear what was there before...
