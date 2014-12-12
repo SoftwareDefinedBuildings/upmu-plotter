@@ -139,6 +139,9 @@ The bound methods provided are:
 * toggleAutomaticUpdate() - Programmatically checks or unchecks the "Automatically apply stream removals and changes to axis settings" checkbox.
 * applySettings() - Programmatically clicks the "Apply Settings" button (visible when "Automatically apply stream removals and changes to axis settings is unchecked")
 * updateGraphSize() - Uses the width function to recompute the width of the graph.
+* updateVerticalCursor(xCoord) - Creates a vertical cursor, if possible, at the location specified by XCOORD, in pixels to the right of the origin of the graph.
+* updateHorizontalCursor(yCoord) - Creates a horizontal cursor, if possible, at the location specified by YCOORD, in pixels above the origin of the graph.
+* toggleLegendEntrySelection(uuid) - Toggles selection of (i.e., selects or deselects, as appropriate) the entry in the legend corresponding to the stream with the specified UUID. If no such stream is in the legend, no action is taken.
 * changeVisuals(options) - Reinitializes the visuals with the specified OPTIONS, according to the parameters specified (from the list above). The only differences between this function and the instantiation of the graph is that the "width" and "height" properties are ignored, and the new default values are those currently applied.
 
 Permalinks
@@ -194,6 +197,7 @@ The objects specifying streams may have the following fields:
 
 * stream (required) - Specifies which stream should be drawn here, either as a UUID in the form of a string, or as an object containing all of the metadata of the stream.
 * color (optional) - Specifies with what color the stream should be drawn, as a string with a pound sign (#) and a six-digit hexadecimal number specifying the color. This color _must_ be one of the colors that it is possible to pick with the color picker in the graph's UI. Defaults to one of the possible colors, depending of the stream's position in the legend.
+* selected (optional) - Specifies if this stream is selected. Only one stream may be selected (if this field is set to TRUE for multiple streams, there is no guarantee as to which stream is actually selected).
 
 Below is an example of permalink data that uses a fixed window:
 <pre><code>{

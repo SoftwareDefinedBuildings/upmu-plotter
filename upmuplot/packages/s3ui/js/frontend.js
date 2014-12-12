@@ -248,7 +248,7 @@ function createPermalink(self, return_raw_document) {
     var domain = self.idata.oldXScale.domain();
     var streams = [];
     var permalink = {
-            streams: self.idata.selectedStreams.map(function (d) { return {stream: coerce_stream(d), color: self.idata.streamSettings[d.uuid].color}; }),
+            streams: self.idata.selectedStreams.map(function (d) { return { stream: coerce_stream(d), color: self.idata.streamSettings[d.uuid].color, selected: self.idata.showingDensity == d.uuid }; }),
             resetStart: Number(self.idata.oldStartDate.toString() + '000000'),
             resetEnd: Number(self.idata.oldEndDate.toString() + '000000'),
             tz: self.idata.oldTimezone,

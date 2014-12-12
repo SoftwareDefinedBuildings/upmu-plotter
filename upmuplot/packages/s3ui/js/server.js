@@ -35,7 +35,8 @@ permalink_schema = {
 
 stream_schema = {
     stream: {"string": null, "object": null},
-    color: {"string": null}
+    color: {"string": null},
+    selected: {"boolean": null}
 };
 
 axis_schema = {

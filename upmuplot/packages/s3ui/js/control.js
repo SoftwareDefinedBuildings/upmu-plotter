@@ -27,6 +27,7 @@ function init_control(self) {
     self.imethods.updateGraphSize = bind_method(updateGraphSize, self);
     self.imethods.createVerticalCursor = bind_method(createVerticalCursor, self);
     self.imethods.createHorizontalCursor = bind_method(createHorizontalCursor, self);
+    self.imethods.toggleLegendEntrySelection = bind_method(toggleLegendEntrySelection, self);
 }
 
 /* Given DATE, a date object, sets the start time to be the day/time it
@@ -326,11 +327,21 @@ function createHorizontalCursor(yCoord) {
     return newCursor;
 }
 
+function toggleLegendEntrySelection(uuid) {
+    var nameElem = this.find(".streamName-" + uuid);
+    if (nameElem != null) {
+        nameElem.onclick();
+    }
+}
+
 /* Given LINK, the portion of a hyperlink that occurs after the question mark
    in a url, creates the state of the graph it describes. This function assumes
    that the graph has just been loaded, with no streams selected or custom
    settings applied. */
 function executePermalink(self, args, set_streams_only) {
+    if (!set_streams_only) {
+        self.idata.$loadingElem.html("Restoring permalink...");
+    }
     var streams = (args.streams || args.streamids);
     var streamObjs = [];
     var stream;
@@ -338,13 +349,20 @@ function executePermalink(self, args, set_streams_only) {
     var noRequest = true;
     var uuidMap = {}; // Maps uuid to an index in the array
     var query = 'select * where';
+    var toSelect = undefined;
     for (i = 0; i < streams.length; i++) {
         stream = streams[i];
         colors.push(stream.color);
         if (typeof stream.stream == 'object') {
             streamObjs[i] = stream.stream;
+            if (stream.selected) {
+                toSelect = stream.uuid;
+            }
         } else {
             uuidMap[stream.stream] = i;
+            if (stream.selected) {
+                toSelect = stream.stream;
+            }
             if (!noRequest) {
                 query += ' or';
             }
@@ -367,12 +385,12 @@ function executePermalink(self, args, set_streams_only) {
                         colors.splice(i, 1);
                     }
                 }
-                finishExecutingPermalink(self, streamObjs, colors, args, set_streams_only);
+                finishExecutingPermalink(self, streamObjs, colors, args, toSelect, set_streams_only);
             });
     }
 }
 
-function finishExecutingPermalink(self, streams, colors, args, set_streams_only) {
+function finishExecutingPermalink(self, streams, colors, args, streamToSelect, set_streams_only) {
     self.imethods.selectStreams(streams);
     var i;
     for (i = 0; i < streams.length; i++) {
@@ -383,6 +401,9 @@ function finishExecutingPermalink(self, streams, colors, args, set_streams_only)
                 console.log('Could not set ' + streams[i].uuid + ' to ' + colors[i] + ': ' + err.message);
             }
         }
+    }
+    if (streamToSelect != undefined) {
+        self.imethods.toggleLegendEntrySelection(streamToSelect);
     }
     if (args.hasOwnProperty('axes')) {
         var axes = args.axes;
@@ -452,7 +473,7 @@ function finishExecutingPermalink(self, streams, colors, args, set_streams_only)
                 }
                 if ((end - start) * 1000000 < args.window_width) {
                     start--;
-                }x
+                }
                 setTimeZoom(self, start, end, args.resetStart, args.resetEnd, args.tz, args.dst);
                 self.imethods.applyAllSettings();
                 setCursors(self, args);

@@ -21,7 +21,7 @@ function init_plot(self) {
     self.idata.widthmin = 450;
 
     // Selection of the element to display progress
-    self.idata.loadingElem = self.$('.plotLoading');
+    self.idata.$loadingElem = self.$('.plotLoading');
 
     // Parameters of the last update
     self.idata.oldStartDate = undefined;
@@ -81,7 +81,7 @@ function init_plot(self) {
 // Behavior for zooming and scrolling
 function repaintZoom(self) {
     d3.select(self.find("g.x-axis")).call(self.idata.oldXAxis);
-    drawStreams(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldXScale, self.idata.oldYScales, self.idata.oldYAxisArray, self.idata.oldAxisData, self.idata.loadingElem, true);
+    drawStreams(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldXScale, self.idata.oldYScales, self.idata.oldYAxisArray, self.idata.oldAxisData, self.idata.$loadingElem, true);
 }
 
 // In these functions, I abbreviate point self.idata.WIDTH exponent with pwe
@@ -510,7 +510,7 @@ function initPlot(self) {
         .attr("transform", "translate(" + self.idata.margin.left + ", " + self.idata.margin.top + ")")
         .attr("class", "cursorgroup");
     self.idata.$background = $("svg.chart > .clickscreen, svg.chart .data-density-background, svg.chart .y-axis-background-left, svg.chart .y-axis-background-right");
-    self.idata.loadingElem = $(self.find('.plotLoading'));
+    self.idata.$loadingElem = $(self.find('.plotLoading'));
     self.idata.initialized = true;
 }
 
@@ -626,25 +626,25 @@ function applySettings(self, loadData, overrideAutomaticAxisUpdate) {
         } else {
             if (loadData) {
                 repaintZoomNewData(self, function () {
-                        drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, self.idata.loadingElem);
+                        drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, self.idata.$loadingElem);
                     });
             }
-            drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, self.idata.loadingElem);
+            drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, self.idata.$loadingElem);
         }
     }
 }
 
 function drawPlot(self) {
     // Get the time range we are going to plot
-    var loadingElem = self.idata.loadingElem;
-    loadingElem.html("Verifying date range...");
+    var $loadingElem = self.idata.$loadingElem;
+    $loadingElem.html("Verifying date range...");
     var startText = self.find(".startdate").value;
     var endText = self.find(".enddate").value;
     if (startText == "") {
-        loadingElem.html("Error: Start date is not selected.");
+        $loadingElem.html("Error: Start date is not selected.");
         return;
     } else if (endText == "") {
-        loadingElem.html("Error: End date is not selected.");
+        $loadingElem.html("Error: End date is not selected.");
         return;
     }
     var selectedTimezone = s3ui.getSelectedTimezone(self);
@@ -666,11 +666,11 @@ function drawPlot(self) {
         var endDate = endDateObj.getTime() - self.idata.offset;
         // startDate and endDate are in UTC
     } catch (err) {
-        loadingElem.html(err);
+        $loadingElem.html(err);
         return;
     }
     if (startDate >= endDate) {
-        loadingElem.html("Error: Selected date range is invalid.");
+        $loadingElem.html("Error: Selected date range is invalid.");
         return;
     }
     
@@ -678,10 +678,10 @@ function drawPlot(self) {
     var sameTimeRange = ((startDate == self.idata.oldStartDate) && (endDate == self.idata.oldEndDate));
     
     // Verify that streams have been selected
-    loadingElem.html("Verifying stream selection...");
+    $loadingElem.html("Verifying stream selection...");
     var numstreams = self.idata.selectedStreams.length;
     if (numstreams == 0) {
-        loadingElem.html("Error: No streams are selected.");
+        $loadingElem.html("Error: No streams are selected.");
         return;
     }
     
@@ -703,7 +703,7 @@ function drawPlot(self) {
         xAxis = self.idata.oldXAxis;
     }
     
-    loadingElem.html("Fetching data...");
+    $loadingElem.html("Fetching data...");
     
     self.idata.zoom.x(xScale);
     self.idata.zoom.scale(self.idata.initzoom).translate([self.idata.inittrans, 0]);
@@ -716,13 +716,13 @@ function drawPlot(self) {
                 d3.select(self.find("g.x-axis"))
                     .call(xAxis);
             }
-            loadingElem.html("Drawing graph...");
+            $loadingElem.html("Drawing graph...");
             // Set a timeout so the new message (Drawing graph...) actually shows
-            setTimeout(function () { d3.select(".plotclickscreen").call(self.idata.zoom); drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, loadingElem); }, 50);
+            setTimeout(function () { d3.select(".plotclickscreen").call(self.idata.zoom); drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, $loadingElem); }, 50);
         });
 }
 
-function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xScale, loadingElem) {
+function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xScale, $loadingElem) {
     otherChange = false;
     
     var yAxes = self.idata.yAxes;
@@ -921,18 +921,18 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
     
     s3ui.updateHorizCursorStats(self);
     
-    drawStreams(self, data, streams, streamSettings, xScale, yScales, yAxisArray, axisData, loadingElem, false);
+    drawStreams(self, data, streams, streamSettings, xScale, yScales, yAxisArray, axisData, $loadingElem, false);
 }
 
 /* Render the graph on the screen. If DRAWFAST is set to true, the entire plot is not drawn (for the sake of speed); in
    paticular new streams are not added and old ones not removed (DRAWFAST tells it to optimize for scrolling).
 */
-function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxisArray, axisData, loadingElem, drawFast) {
+function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxisArray, axisData, $loadingElem, drawFast) {
     if (!drawFast && (streams.length == 0 || yAxisArray.length == 0)) {
         if (streams.length == 0) {
-            loadingElem.html("Error: No streams are selected.");
+            $loadingElem.html("Error: No streams are selected.");
         } else {
-            loadingElem.html("Error: All selected streams have no data.");
+            $loadingElem.html("Error: All selected streams have no data.");
         }
         self.$("g.chartarea > g").remove();
         return;
