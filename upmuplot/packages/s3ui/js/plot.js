@@ -73,6 +73,9 @@ function init_plot(self) {
     self.idata.cursorDataElems.y1 = undefined;
     self.idata.cursorDataElems.y2 = undefined;
     self.idata.cursorDataElems.deltay = undefined;
+    
+    self.idata.$background = undefined;
+    self.idata.cursorgroup = undefined;
 }
 
 // Behavior for zooming and scrolling
@@ -478,16 +481,10 @@ function initPlot(self) {
         .attr("class", "clickscreen bottomcursorselect")
       .node();
     $(bottomcursorselect).mousedown(function (event) {
-            if (self.idata.vertCursor1 != undefined && self.idata.vertCursor2 != undefined) {
-                return;
+            var newCursor = self.imethods.createVerticalCursor(event.pageX - (self.idata.margin.left + $(chart.node()).offset().left));
+            if (newCursor) {
+                newCursor.select(event.pageX);
             }
-            var newCursor = new s3ui.Cursor(self, event.pageX - (self.idata.margin.left + $(chart.node()).offset().left), cursorgroup, self.idata.HEIGHT + 65, -65, true, $background, function () { s3ui.updateVertCursorStats(self); });
-            if (self.idata.vertCursor1 == undefined) {
-                self.idata.vertCursor1 = newCursor;
-            } else{
-                self.idata.vertCursor2 = newCursor;
-            }
-            newCursor.select(event.pageX);
         });
     var leftcursorselect = chart.append("rect")
         .attr("width", self.idata.margin.left)
@@ -496,16 +493,10 @@ function initPlot(self) {
         .attr("transform", "translate(0, " + self.idata.margin.top + ")")
       .node();
     var createHorizCursor = function (event) {
-        if (self.idata.horizCursor1 != undefined && self.idata.horizCursor2 != undefined) {
-            return;
+        var newCursor = self.imethods.createHorizontalCursor(event.pageY - (self.idata.margin.top + $(chart.node()).offset().top));
+        if (newCursor) {
+            newCursor.select(event.pageY);
         }
-        var newCursor = new s3ui.Cursor(self, event.pageY - (self.idata.margin.top + $(chart.node()).offset().top), cursorgroup, self.idata.WIDTH, 0, false, $background, function () { s3ui.updateHorizCursorStats(self); });
-        if (self.idata.horizCursor1 == undefined) {
-            self.idata.horizCursor1 = newCursor;
-        } else{
-            self.idata.horizCursor2 = newCursor;
-        }
-        newCursor.select(event.pageY);
     };
     $(leftcursorselect).mousedown(createHorizCursor);
     var rightcursorselect = chart.append("rect")
@@ -515,10 +506,10 @@ function initPlot(self) {
         .attr("transform", "translate(" + (self.idata.margin.left + self.idata.WIDTH) + ", " + self.idata.margin.top + ")")
       .node();
     $(rightcursorselect).mousedown(createHorizCursor);
-    var cursorgroup = chart.append("g")
+    self.idata.cursorgroup = chart.append("g")
         .attr("transform", "translate(" + self.idata.margin.left + ", " + self.idata.margin.top + ")")
         .attr("class", "cursorgroup");
-    var $background = $("svg.chart > .clickscreen, svg.chart .data-density-background, svg.chart .y-axis-background-left, svg.chart .y-axis-background-right");
+    self.idata.$background = $("svg.chart > .clickscreen, svg.chart .data-density-background, svg.chart .y-axis-background-left, svg.chart .y-axis-background-right");
     self.idata.loadingElem = $(self.find('.plotLoading'));
     self.idata.initialized = true;
 }
@@ -1098,7 +1089,7 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         s3ui.updatePlotMessage(self);
     }
     
-    if (self.idata.showingDensity != undefined) {
+    if (self.idata.showingDensity != undefined && self.idata.oldData.hasOwnProperty(self.idata.showingDensity)) {
         s3ui.setStreamMessage(self, self.idata.showingDensity, "Interval width: " + s3ui.nanosToUnit(Math.pow(2, self.idata.oldData[self.idata.showingDensity][2])), 4);
         var ddplot = $(self.find("svg.chart g.data-density-plot"));
         ddplot.children("polyline, circle").remove();

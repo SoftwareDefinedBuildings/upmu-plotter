@@ -6,7 +6,7 @@ function init_cursors(self) {
     self.idata.vertCursor1 = undefined;
     self.idata.vertCursor2 = undefined;
     self.idata.showingVertCursors = false;
-    self.idata.showingHorizCursors = true;
+    self.idata.showingHorizCursors = false;
 }
 
 /* d3chartgroup is a d3 selection. updateCallback is a function to call when the position of this cursor is updated. */
@@ -121,7 +121,7 @@ Cursor.prototype.deleteSelf = function () {
 }
 
 function updateVertCursorStats(self) {
-    if (self.idata.initialized && self.idata.onscreen) {
+    if (self.idata.initialized && self.idata.oldDomain != undefined) {
         var cursors = self.idata.cursorDataElems;
         var scale = self.idata.oldXScale;
         var firstCursor = self.idata.vertCursor1;
@@ -182,7 +182,7 @@ function updateVertCursorStats(self) {
             showEntry(cursors.freqx);
             cursors.freqx[1].innerHTML = (1000 / (x2millis - x1millis + ((x2nanos - x1nanos) / 1000000)));
         }
-        if (self.idata.showingDensity != undefined) {
+        if (self.idata.showingDensity != undefined && self.idata.oldData.hasOwnProperty(self.idata.showingDensity)) {
             x1millis -= self.idata.offset; // switch to UTC time
             x2millis -= self.idata.offset; // switch to UTC time
             var selectedData = self.idata.oldData[self.idata.showingDensity][1];
@@ -255,11 +255,11 @@ function showExp(self, elem) {
 }
 
 function updateHorizCursorStats(self) {
-    if (self.idata.initialized && self.idata.onscreen) {
+    if (self.idata.initialized) {
         var cursors = self.idata.cursorDataElems;
         var firstCursor = self.idata.horizCursor1;
         var secondCursor = self.idata.horizCursor2;
-        if (self.idata.showingDensity == undefined || (firstCursor == undefined && secondCursor == undefined)) {
+        if (self.idata.showingDensity == undefined || !self.idata.oldData.hasOwnProperty(self.idata.showingDensity) || (firstCursor == undefined && secondCursor == undefined)) {
             hideEntry(cursors.y1);
             hideEntry(cursors.y2);
             hideEntry(cursors.deltay);

@@ -25,6 +25,8 @@ function init_control(self) {
     self.imethods.deselectStreams = bind_method(deselectStreams, self);
     self.imethods.applySettings = bind_method(applySettings, self);
     self.imethods.updateGraphSize = bind_method(updateGraphSize, self);
+    self.imethods.createVerticalCursor = bind_method(createVerticalCursor, self);
+    self.imethods.createHorizontalCursor = bind_method(createHorizontalCursor, self);
 }
 
 /* Given DATE, a date object, sets the start time to be the day/time it
@@ -296,6 +298,34 @@ function updateGraphSize() {
     s3ui.updateSize(this, true);
 }
 
+function createVerticalCursor(xCoord) {
+    if ((this.idata.vertCursor1 != undefined && this.idata.vertCursor2 != undefined) || xCoord < 0 || xCoord > this.idata.WIDTH) {
+        return false;
+    }
+    var self = this;
+    var newCursor = new s3ui.Cursor(this, xCoord, this.idata.cursorgroup, this.idata.HEIGHT + 65, -65, true, this.idata.$background, function () { s3ui.updateVertCursorStats(self); });
+    if (this.idata.vertCursor1 == undefined) {
+        this.idata.vertCursor1 = newCursor;
+    } else{
+        this.idata.vertCursor2 = newCursor;
+    }
+    return newCursor;
+}
+
+function createHorizontalCursor(yCoord) {
+    if ((this.idata.horizCursor1 != undefined && this.idata.horizCursor2 != undefined) || yCoord < 0 || yCoord > this.idata.HEIGHT) {
+        return false;
+    }
+    var self = this;
+    var newCursor = new s3ui.Cursor(this, yCoord, this.idata.cursorgroup, this.idata.WIDTH, 0, false, this.idata.$background, function () { s3ui.updateHorizCursorStats(self); });
+    if (this.idata.horizCursor1 == undefined) {
+        this.idata.horizCursor1 = newCursor;
+    } else {
+        this.idata.horizCursor2 = newCursor;
+    }
+    return newCursor;
+}
+
 /* Given LINK, the portion of a hyperlink that occurs after the question mark
    in a url, creates the state of the graph it describes. This function assumes
    that the graph has just been loaded, with no streams selected or custom
@@ -422,8 +452,10 @@ function finishExecutingPermalink(self, streams, colors, args, set_streams_only)
                 }
                 if ((end - start) * 1000000 < args.window_width) {
                     start--;
-                }
+                }x
                 setTimeZoom(self, start, end, args.resetStart, args.resetEnd, args.tz, args.dst);
+                self.imethods.applyAllSettings();
+                setCursors(self, args);
             }, 'text/json');
         return;
     } else {
@@ -438,6 +470,8 @@ function finishExecutingPermalink(self, streams, colors, args, set_streams_only)
         }
     }
     setTimeZoom(self, start, end, args.resetStart, args.resetEnd, args.tz, args.dst);
+    self.imethods.applyAllSettings();
+    setCursors(self, args);
 }
 
 function setTimeZoom(self, start, end, resetStart, resetEnd, tz, dst) {
@@ -466,9 +500,35 @@ function setTimeZoom(self, start, end, resetStart, resetEnd, tz, dst) {
         var naiveEnd = new Date(resetEnd);
         self.imethods.setStartTime(new Date(naiveStart.getTime() + 60000 * (naiveStart.getTimezoneOffset() - s3ui.getTimezoneOffsetMinutes(tz, dst))));
         self.imethods.setEndTime(new Date(naiveEnd.getTime() + 60000 * (naiveEnd.getTimezoneOffset() - s3ui.getTimezoneOffsetMinutes(tz, dst))));
-        self.imethods.applyAllSettings();
     } catch (err) {
         console.log("Could not execute permalink: " + err.message);
+    }
+}
+
+function setCursors(self, args) {
+    var updateVert = false;
+    var updateHoriz = false;
+    if (args.hasOwnProperty("vertCursor1")) {
+        self.imethods.createVerticalCursor(args.vertCursor1 * self.idata.WIDTH);
+        updateVert = true;
+    }
+    if (args.hasOwnProperty("vertCursor2")) {
+        self.imethods.createVerticalCursor(args.vertCursor2 * self.idata.WIDTH);
+        updateVert = true;
+    }
+    if (args.hasOwnProperty("horizCursor1")) {
+        self.imethods.createHorizontalCursor((1 - args.horizCursor1) * self.idata.HEIGHT);
+        updateHoriz = true;
+    }
+    if (args.hasOwnProperty("horizCursor2")) {
+        self.imethods.createHorizontalCursor((1 - args.horizCursor2) * self.idata.HEIGHT);
+        updateHoriz = true;
+    }
+    if (updateVert) {
+        s3ui.updateVertCursorStats(self);
+    }
+    if (updateHoriz) {
+        s3ui.updateHorizCursorStats(self);
     }
 }
 

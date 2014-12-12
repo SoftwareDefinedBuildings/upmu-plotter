@@ -26,7 +26,11 @@ permalink_schema = {
     window_type: {"string": null},
     window_width: {"number": null},
     start: {"number": null},
-    end: {"number": null}
+    end: {"number": null},
+    vertCursor1: {"number": null},
+    vertCursor2: {"number": null},
+    horizCursor1: {"number": null},
+    horizCursor2: {"number": null}
 };
 
 stream_schema = {

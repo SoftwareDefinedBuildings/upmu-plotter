@@ -265,6 +265,18 @@ function createPermalink(self, return_raw_document) {
                         };
                 })
         };
+    if (self.idata.vertCursor1) {
+        permalink.vertCursor1 = self.idata.vertCursor1.coord / self.idata.WIDTH;
+    }
+    if (self.idata.vertCursor2) {
+        permalink.vertCursor2 = self.idata.vertCursor2.coord / self.idata.WIDTH;
+    }
+    if (self.idata.horizCursor1) {
+        permalink.horizCursor1 = 1 - self.idata.horizCursor1.coord / self.idata.HEIGHT;
+    }
+    if (self.idata.horizCursor2) {
+        permalink.horizCursor2 = 1 - self.idata.horizCursor2.coord / self.idata.HEIGHT;
+    }
     if (return_raw_document) {
         return permalink;
     }

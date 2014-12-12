@@ -178,6 +178,10 @@ For the permalink, the following fields may be specified in the JSON object:
 * window\_width (conditional) - The width of the window, specified in nanoseconds since the epoch (but precise to milliseconds). Required if the window\_type is "last" or "now", otherwise ignored.
 * start (conditional) - The start time of the window, specified in nanoseconds since the epoch (but precise to milliseconds). Required if the window\_type if "fixed", otherwise ignored.
 * end (conditional) - The start time of the window, specified in nanoseconds since the epoch (but precise to milliseconds). Required if the window\_type if "fixed", otherwise ignored.
+* vertCursor1 (optional) - The position of the first vertical cursor, specified as the coordinate of the cursor on the horizontal axis divided by the range of the horizontal axis.
+* vertCursor2 (optional) - The position of the first vertical cursor, specified as the coordinate of the cursor on the horizontal axis divided by the range of the horizontal axis.
+* horizCursor1 (optional) - The position of the first horizontal cursor, specified as the coordinate of the cursor on a vertical axis divided by the length of the vertical axis.
+* horizCursor2 (optional) - The position of the second horizontal cursor, specified as the coordinate of the cursor on a vertical axis divided by the length of the vertical axis.
 
 The axis objects require the following fields:
 
