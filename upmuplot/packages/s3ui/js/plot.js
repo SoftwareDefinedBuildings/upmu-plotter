@@ -76,6 +76,8 @@ function init_plot(self) {
     
     self.idata.$background = undefined;
     self.idata.cursorgroup = undefined;
+    
+    // The minimum width that an axis takes up is 100 pixels
 }
 
 // Behavior for zooming and scrolling
@@ -118,7 +120,7 @@ function cacheData(self, uuid, drawID, pwe, startTime, endTime) {
         }, true);
 }
 
-function repaintZoomNewData(self, callback, stopCache) {
+function repaintZoomNewData(self, callback, stopCache, widthEstimate) {
     if (callback == undefined) {
         callback = function () { repaintZoom(self); };
     }
@@ -152,7 +154,10 @@ function repaintZoomNewData(self, callback, stopCache) {
             }
         };
     }
-    var pwe = s3ui.getPWExponent((domain[1] - domain[0]) / self.idata.WIDTH);
+    if (widthEstimate == undefined) {
+        widthEstimate = self.idata.WIDTH;
+    }
+    var pwe = s3ui.getPWExponent((domain[1] - domain[0]) / widthEstimate);
     var thisID = ++self.idata.drawRequestID;
     if (self.idata.drawRequestID > 8000000) {
         self.idata.drawRequestID = -1;
@@ -710,6 +715,20 @@ function drawPlot(self) {
     self.idata.initzoom = 1;
     self.idata.inittrans = 0;
     
+    var leftCount = -1;
+    var rightCount = -1;
+    for (var i = 0; i < self.idata.yAxes.length; i++) {
+        if (self.idata.yAxes[i].right === false) {
+            leftCount++;
+        } else if (self.idata.yAxes[i].right === true) {
+            rightCount++;
+        }
+    }
+    leftCount = Math.max(0, leftCount);
+    rightCount = Math.max(0, rightCount);
+    var estimatedWidthAfterAxes = Math.max(self.idata.widthmin, self.idata.WIDTH - 100 * (leftCount + rightCount));
+    // an upper bound on the width we'll have after adding axes, so our estimated point width exponent is less likely to be too high
+    
     // Get the data for the streams
     repaintZoomNewData(self, function () {
             if (!sameTimeRange) {
@@ -719,7 +738,7 @@ function drawPlot(self) {
             $loadingElem.html("Drawing graph...");
             // Set a timeout so the new message (Drawing graph...) actually shows
             setTimeout(function () { d3.select(".plotclickscreen").call(self.idata.zoom); drawYAxes(self, self.idata.oldData, self.idata.selectedStreams, self.idata.streamSettings, self.idata.oldStartDate, self.idata.oldEndDate, self.idata.oldXScale, $loadingElem); }, 50);
-        });
+        }, false, estimatedWidthAfterAxes);
 }
 
 function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xScale, $loadingElem) {
