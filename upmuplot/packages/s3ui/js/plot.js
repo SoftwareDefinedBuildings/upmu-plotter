@@ -589,10 +589,10 @@ function updateSize(self, redraw) {
         // methods, but that would be much less readable (enough to make up for the slowness of checking this.vertical
         // twice unnecessarily)
         if (self.idata.vertCursor1 != undefined) {
-            self.idata.vertCursor1.updateCoordinate(self.idata.vertCursor1.coord * WIDTH / oldwidth);
+            self.idata.vertCursor1.updateCoordinate(self.idata.vertCursor1.coord / oldwidth * WIDTH);
         }
         if (self.idata.vertCursor2 != undefined) {
-            self.idata.vertCursor2.updateCoordinate(self.idata.vertCursor2.coord * WIDTH / oldwidth);
+            self.idata.vertCursor2.updateCoordinate(self.idata.vertCursor2.coord / oldwidth * WIDTH);
         }
         if (self.idata.horizCursor1 != undefined) {
             self.idata.horizCursor1.updateLength(WIDTH);

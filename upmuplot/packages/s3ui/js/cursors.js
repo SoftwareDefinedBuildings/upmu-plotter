@@ -16,7 +16,7 @@ function Cursor(self, coord, d3chartgroup, length, offset, vertical, $background
     coord--;
     if (vertical) {
         this.rectMarker = d3chartgroup.append("rect")
-            .attr("x", coord)
+            .attr("x", coord - 1)
             .attr("y", offset)
             .attr("width", 3)
             .attr("height", length)
@@ -26,7 +26,7 @@ function Cursor(self, coord, d3chartgroup, length, offset, vertical, $background
     } else {
         this.rectMarker = d3chartgroup.append("rect")
             .attr("x", offset)
-            .attr("y", coord)
+            .attr("y", coord - 1)
             .attr("width", length)
             .attr("height", 3)
             .attr("fill-opacity", 1)
@@ -55,9 +55,9 @@ Cursor.prototype.updateLength = function (newLength) {
 Cursor.prototype.updateCoordinate = function (newCoord) {
     this.coord = newCoord;
     if (this.vertical) {
-        this.rectMarker.setAttribute("x", newCoord);
+        this.rectMarker.setAttribute("x", newCoord - 1);
     } else {
-        this.rectMarker.setAttribute("y", newCoord);
+        this.rectMarker.setAttribute("y", newCoord - 1);
     }
 }
 
