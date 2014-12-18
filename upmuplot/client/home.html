@@ -1,6 +1,12 @@
 <template name="home">
-  {{#with plot_data}}
-    {{> s3plot}}
-  {{/with}}
+    {{#if valid_browser}}
+        {{#with plot_data}}
+            {{> s3plot}}
+        {{/with}}
+    {{else}}
+        <div class="well">
+            You are using a browser that is not supported by this application. Try using a recent version of Mozilla Firefox or Google Chrome.
+        </div>
+    {{/if}}
 </template>
 
