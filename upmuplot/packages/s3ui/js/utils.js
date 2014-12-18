@@ -185,6 +185,20 @@ function getTimezoneOffsetMinutes(tz_str, dst, getAbbrev) {
     }
 }
 
+function getDisplayColor(axisObj, streamSettings) {
+    var streams = axisObj.streams;
+    if (streams.length > 0) {
+        var color = streamSettings[streams[0].uuid].color;
+        for (var k = 1; k < streams.length; k++) {
+            if (streamSettings[streams[k].uuid].color != color) {
+                return "rgb(0, 0, 0)";
+            }
+        }
+        return color;
+    }
+    return "rgb(0, 0, 0)";
+}
+
 s3ui.getFilepath = getFilepath;
 s3ui.getInfo = getInfo;
 s3ui.getURL = getURL;
@@ -196,3 +210,4 @@ s3ui.cmpTimes = cmpTimes;
 s3ui.timeToStr = timeToStr;
 s3ui.escapeHTMLEntities = escapeHTMLEntities;
 s3ui.getTimezoneOffsetMinutes = getTimezoneOffsetMinutes;
+s3ui.getDisplayColor = getDisplayColor;

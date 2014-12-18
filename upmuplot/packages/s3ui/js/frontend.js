@@ -50,16 +50,17 @@ function toggleLegend (self, show, streamdata, update) {
           .node();
         colorMenu.onchange = function () {
                 var newColor = this[this.selectedIndex].value;
+                streamSettings[streamdata.uuid].color = newColor;
                 self.$("g.series-" + streamdata.uuid).attr({
                         "stroke": newColor,
                         "fill": newColor
                     });
+                s3ui.applyDisplayColor(self, self.idata.axisMap[streamSettings[streamdata.uuid].axisid], streamSettings);
                 self.$("polyline.density-" + streamdata.uuid).attr("stroke", newColor);
                 color = [parseInt(newColor.slice(1, 3), 16), parseInt(newColor.slice(3, 5), 16), parseInt(newColor.slice(5, 7), 16)].join(", ");
                 if (self.idata.selectedLegendEntry == nameElem) {
                     nameCell.style("background-color", "rgba(" + color + ", 0.3)");
                 }
-                streamSettings[streamdata.uuid].color = newColor;
             };
         streamSettings[streamdata.uuid] = { color: colorMenu[colorMenu.selectedIndex].value, axisid: "y1", active: true }; // axisid is changed
         self.idata.streamMessages[streamdata.uuid] = [{0: ""}, 0];

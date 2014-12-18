@@ -886,10 +886,10 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
       .selectAll("g.y-axis-left")
       .data(leftYAxes);
     update.enter()
-      .append("g")
-        .attr("class", "y-axis-left axis");
+      .append("g");
     update
         .attr("transform", function (d, i) { return "translate(" + (self.idata.margin.left - leftMargins[i]) + ", 0)"; })
+        .attr("class", function (d, i) { return "y-axis-left axis axis-" + leftYObjs[i].axisid; })
         .each(function (yAxis) { d3.select(this).call(yAxis.orient("left")); });
     update.exit().remove();
     
@@ -897,10 +897,10 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
       .selectAll("g.y-axis-right")
       .data(rightYAxes);
     update.enter()
-      .append("g")
-        .attr("class", "y-axis-right axis");
+      .append("g");
     update
         .attr("transform", function (d, i) { return "translate(" + rightMargins[i] + ", 0)"; })
+        .attr("class", function (d, i) { return "y-axis-right axis axis-" + rightYObjs[i].axisid; })
         .each(function (yAxis) { d3.select(this).call(yAxis.orient("right")); });
     update.exit().remove();
     
@@ -939,6 +939,10 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
     update.exit().remove();
     
     s3ui.updateHorizCursorStats(self);
+    
+    for (var i = 0; i < toDraw.length; i++) {
+        s3ui.applyDisplayColor(self, toDraw[i], streamSettings);
+    }
     
     drawStreams(self, data, streams, streamSettings, xScale, yScales, yAxisArray, axisData, $loadingElem, false);
 }
@@ -1292,6 +1296,15 @@ function resetZoom(self) {
     }
 }
 
+function applyDisplayColor(self, axisObj, streamSettings) {
+    var color = s3ui.getDisplayColor(axisObj, streamSettings);
+    yAxisDOMElem = self.find(".axis-" + axisObj.axisid);
+    yAxisDOMElem.style.fill = color;
+    $(yAxisDOMElem.querySelectorAll("line")).css("stroke", color);
+    yAxisDOMElem.querySelector("path").style.stroke = color;
+    self.find(".axistitle-" + axisObj.axisid).style.fill = color;
+}
+
 s3ui.init_plot = init_plot;
 s3ui.repaintZoomNewData = repaintZoomNewData;
 s3ui.updateSize = updateSize;
@@ -1300,3 +1313,4 @@ s3ui.applySettings = applySettings;
 s3ui.showDataDensity = showDataDensity;
 s3ui.hideDataDensity = hideDataDensity;
 s3ui.resetZoom = resetZoom;
+s3ui.applyDisplayColor = applyDisplayColor;
