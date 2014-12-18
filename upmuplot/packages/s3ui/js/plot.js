@@ -745,12 +745,12 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
     otherChange = false;
     
     var yAxes = self.idata.yAxes;
-    
+    var i, j, k;
+        
     // Find the minimum and maximum value in each stream to properly scale the axes
     var axisData = {}; // Maps axis ID to a 2-element array containing the minimum and maximum; later on a third element is added containing the y-Axis scale
     var toDraw = [];
     var numstreams;
-    var i, j, k;
     var streamdata;
     var totalmin;
     var totalmax;
@@ -808,6 +808,16 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
             axisData[axis.axisid] = [totalmin, totalmax, undefined, true];
         } else {
             axisData[axis.axisid] = [-1, 1, undefined, false];
+        }
+    }
+    
+    // Generate names for new axes if not overridden
+    var axisnameelem;
+    for (i = 0; i < toDraw.length; i++) {
+        if (toDraw[i].newaxis && toDraw[i].axisname === toDraw[i].axisid) {
+            axisnameelem = self.find(".axis-" + toDraw[i].axisid + " > td > .axisname");
+            axisnameelem.value = s3ui.getUnitString(toDraw[i].units);
+            axisnameelem.onchange();
         }
     }
     
@@ -889,7 +899,7 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
       .append("g");
     update
         .attr("transform", function (d, i) { return "translate(" + (self.idata.margin.left - leftMargins[i]) + ", 0)"; })
-        .attr("class", function (d, i) { return "y-axis-left axis axis-" + leftYObjs[i].axisid; })
+        .attr("class", function (d, i) { return "y-axis-left axis drawnAxis-" + leftYObjs[i].axisid; })
         .each(function (yAxis) { d3.select(this).call(yAxis.orient("left")); });
     update.exit().remove();
     
@@ -900,7 +910,7 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
       .append("g");
     update
         .attr("transform", function (d, i) { return "translate(" + rightMargins[i] + ", 0)"; })
-        .attr("class", function (d, i) { return "y-axis-right axis axis-" + rightYObjs[i].axisid; })
+        .attr("class", function (d, i) { return "y-axis-right axis drawnAxis-" + rightYObjs[i].axisid; })
         .each(function (yAxis) { d3.select(this).call(yAxis.orient("right")); });
     update.exit().remove();
     
@@ -1298,7 +1308,7 @@ function resetZoom(self) {
 
 function applyDisplayColor(self, axisObj, streamSettings) {
     var color = s3ui.getDisplayColor(axisObj, streamSettings);
-    yAxisDOMElem = self.find(".axis-" + axisObj.axisid);
+    yAxisDOMElem = self.find(".drawnAxis-" + axisObj.axisid);
     yAxisDOMElem.style.fill = color;
     $(yAxisDOMElem.querySelectorAll("line")).css("stroke", color);
     yAxisDOMElem.querySelector("path").style.stroke = color;

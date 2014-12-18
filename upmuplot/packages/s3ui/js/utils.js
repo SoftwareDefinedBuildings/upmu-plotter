@@ -199,6 +199,16 @@ function getDisplayColor(axisObj, streamSettings) {
     return "rgb(0, 0, 0)";
 }
 
+function getUnitString(unitDict) {
+    var unitList = [];
+    for (unit in unitDict) {
+        if (unitDict.hasOwnProperty(unit) && unitDict[unit] > 0) {
+            unitList.push(unit);
+        }
+    }
+    return unitList.join(", ");
+}
+
 s3ui.getFilepath = getFilepath;
 s3ui.getInfo = getInfo;
 s3ui.getURL = getURL;
@@ -211,3 +221,4 @@ s3ui.timeToStr = timeToStr;
 s3ui.escapeHTMLEntities = escapeHTMLEntities;
 s3ui.getTimezoneOffsetMinutes = getTimezoneOffsetMinutes;
 s3ui.getDisplayColor = getDisplayColor;
+s3ui.getUnitString = getUnitString;

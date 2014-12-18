@@ -227,14 +227,7 @@ function updateYAxis (self, axisid) {
         .remove()
     rowSelection.select("td.axisunits")
         .each(function () {
-                var unitList = [];
-                var units = self.idata.axisMap[axisid].units;
-                for (unit in units) {
-                    if (units.hasOwnProperty(unit) && units[unit] > 0) {
-                        unitList.push(unit);
-                    }
-                }
-                this.innerHTML = unitList.join(", ");
+                this.innerHTML = s3ui.getUnitString(self.idata.axisMap[axisid].units);
             });
 }
 
