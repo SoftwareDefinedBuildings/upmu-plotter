@@ -1,6 +1,6 @@
 if (Meteor.isClient) {
     var localtest = false;
-    Template.home.valid_browser = navigator.userAgent.search("Mozilla") != -1 || navigator.userAgent.search("Chrome") != -1;
+    Template.home.valid_browser = navigator.userAgent.search("Firefox") != -1 || navigator.userAgent.search("Chrome") != -1;
     Template.home.plot_data = [
         {
             tagsURL: localtest ? 'http://localhost:7856' : 'http://miranda.cs.berkeley.edu:4523/',
