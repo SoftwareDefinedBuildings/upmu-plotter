@@ -3,10 +3,10 @@ if (Meteor.isClient) {
     Template.home.valid_browser = navigator.userAgent.search("Firefox") != -1 || navigator.userAgent.search("Chrome") != -1;
     Template.home.plot_data = [
         {
-            tagsURL: localtest ? 'http://localhost:7856' : 'http://miranda.cs.berkeley.edu:4523/',
-            dataURLStart: localtest ? 'http://localhost:7856/data/uuid/' : 'http://miranda.cs.berkeley.edu:9000/data/uuid/',
-            bracketURL: localtest ? 'http://localhost:7856' : 'http://miranda.cs.berkeley.edu:9000/q/bracket',
-            csvURL: 'http://miranda.cs.berkeley.edu:9000/wrappedcsv'
+            tagsURL: 'http://localhost:4523/',
+            dataURLStart: 'http://asylum.cs.berkeley.edu:9000/data/uuid/',
+            bracketURL: 'http://asylum.cs.berkeley.edu:9000/q/bracket',
+            csvURL: 'http://asylum.cs.berkeley.edu:9000/wrappedcsv'
         }, 
         function (inst) 
         { 
