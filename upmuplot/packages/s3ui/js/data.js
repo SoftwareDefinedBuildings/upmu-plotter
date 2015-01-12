@@ -298,9 +298,10 @@ function makeDataRequest(self, uuid, queryStart, queryEnd, pointwidthexp, halfpw
     halfpwnanosStart = (1000000 + halfpwnanosStart).toString().slice(1);
     var url = self.idata.dataURLStart + uuid + '?starttime=' + (queryStart + halfpwmillisStart) + halfpwnanosStart + '&endtime=' + (queryEnd + halfpwmillisStart) + halfpwnanosStart + '&unitoftime=ns&pw=' + pointwidthexp;
     if (caching) {
-        s3ui.getURL(url, function (data) {
+        Meteor.call('requestData', url, function (error, data) {
+                console.log("Called!");
                 callback(data, queryStart, queryEnd);
-            }, 'text');
+            });
     } else {
         queueRequest(self, url, function (data) {
                 callback(data, queryStart, queryEnd);
@@ -359,14 +360,14 @@ function effectSecondaryRequests(self) {
         if (pendingData.hasOwnProperty(id)) {
             clearTimeout(id);
             entry = pendingData[id];
-            s3ui.getURL(entry[0], (function (cb) {
-                    return function (data) {
+            Meteor.call("requestData", entry[0], (function (cb) {
+                    return function (error, result) {
                             self.idata.pendingRequests--;
-                            cb(data);
+                            if (error == undefined) {
+                                cb(data);
+                            }
                         };
-                })(entry[1]), entry[2], function () {
-                    self.idata.pendingRequests--;
-                });
+                })(entry[1]));
         }
     }
     self.idata.pendingSecondaryRequestData = {};

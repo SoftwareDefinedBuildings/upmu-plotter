@@ -7,6 +7,9 @@ csv_downloads = new Meteor.Collection("csv_downloads");
 Router.onBeforeAction(Iron.Router.bodyParser.urlencoded({
         extended: false
     }));
+    
+var Future = Npm.require('fibers/future');
+var fut = new Future();
 
 s3ui_server = {};
 s3ui_server.createPermalink = function (permalinkJSON) {
@@ -55,6 +58,30 @@ conditional_properties = {
     "last": ["window_width"],
     "now": ["window_width"]
 };
+
+connection_pool = {};
+
+var net = Npm.require("net");
+var http = Npm.require('http');
+
+var connAgent = new http.Agent();
+connAgent.maxSockets = 100;
+
+function getConnection(dataURLStart) {
+    if (connection_pool.hasOwnProperty(dataURLStart)) {
+        if (connection_pool[dataURLStart].length > 0) {
+            return connection_pool[dataURLStart].pop();
+        }
+    } else {
+        connection_pool[dataURLStart] = [];
+    }
+    var parsedDataURL = url.parse(dataURLStart);
+    var socket = net.connect({
+            host: parsedDataURL.hostname,
+            port: parsedDataURL.port == null ? undefined : parsedDataURL.port,
+            local: parseDataURL.path
+        });
+}
             
 Meteor.methods({
         processQuery: function (query, type) {
@@ -62,7 +89,6 @@ Meteor.methods({
                 var params = query.split(" ");
                 var url, payload, request;
                 if (params[0] === "SENDPOST") {
-                    console.log("full params: ", params);
                     url = params[1];
                     payload = params.slice(2).join(' ');
                     request = "POST";
@@ -105,10 +131,38 @@ Meteor.methods({
                     s3ui_permalinks.update(permalinkID, {$set: {lastAccessed: (new Date()).getTime()}});
                 }
                 return obj;
+            },
+        requestData: function (dataUrl) {
+                this.unblock();
+                var fut = new Future();
+                var parsedURL = url.parse(dataUrl);
+                
+                var req = http.request({
+                        hostname: parsedURL.hostname,
+                        port: parsedURL.port == null ? undefined : parseInt(parsedURL.port),
+                        path: parsedURL.path,
+                        agent: connAgent,
+                        method: "GET"
+                    }, function (resp) {
+                        fut.return(resp);
+                    });
+                req.end();
+                response = fut.wait();
+                
+                var fut2 = new Future();
+                var dataBuffer = [];
+                response.on('data', function (data) {
+                        dataBuffer.push(data.toString());
+                    });
+                response.on('end', function () {
+                        fut2.return(dataBuffer);
+                    });
+                var getData = Meteor.wrapAsync(response.on, response);
+                var data = fut2.wait().join('');
+                return data;
             }
     });
     
-var http = Npm.require('http');
 var url = Npm.require('url');
     
 Router.map(function () {
