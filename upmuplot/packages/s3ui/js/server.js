@@ -64,8 +64,17 @@ connection_pool = {};
 var net = Npm.require("net");
 var http = Npm.require('http');
 
-var connAgent = new http.Agent();
-connAgent.maxSockets = 100;
+var connPools = {};
+
+Meteor.onConnection(function (connection) {
+        var pool = new http.Agent();
+        pool.maxSockets = 25;
+        connPools[connection.id] = pool;
+        connection.onClose(function () {
+                // It seems I don't have to do any cleanup work to delete an http.Agent
+                delete connPools[connection.id];
+            })
+    });
 
 function getConnection(dataURLStart) {
     if (connection_pool.hasOwnProperty(dataURLStart)) {
@@ -141,7 +150,7 @@ Meteor.methods({
                         hostname: parsedURL.hostname,
                         port: parsedURL.port == null ? undefined : parseInt(parsedURL.port),
                         path: parsedURL.path,
-                        agent: connAgent,
+                        agent: connPools[this.connection.id],
                         method: "GET"
                     }, function (resp) {
                         fut.return(resp);
