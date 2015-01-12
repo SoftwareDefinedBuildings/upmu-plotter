@@ -72,6 +72,10 @@ Meteor.onConnection(function (connection) {
         connPools[connection.id] = pool;
         connection.onClose(function () {
                 // It seems I don't have to do any cleanup work to delete an http.Agent
+                for (var i = 0; i < pool.sockets.length; i++) {
+                    pool.sockets[i].end();
+                    pool.sockets[i].destroy();
+                }
                 delete connPools[connection.id];
             })
     });
