@@ -105,5 +105,5 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     pass
         
-serv = ThreadedHTTPServer(('', 4523), HTTPRequestHandler)
+serv = ThreadedHTTPServer(('', 4524), HTTPRequestHandler)
 serv.serve_forever()
