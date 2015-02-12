@@ -4,9 +4,9 @@ if (Meteor.isClient) {
     Template.home.plot_data = [
         {
             tagsURL: 'http://localhost:4523/',
-            dataURLStart: 'http://asylum.cs.berkeley.edu:9000/data/uuid/',
-            bracketURL: 'http://asylum.cs.berkeley.edu:9000/q/bracket',
-            csvURL: 'http://asylum.cs.berkeley.edu:9000/wrappedcsv'
+            dataURLStart: 'http://miranda.cs.berkeley.edu:9000/data/uuid/',
+            bracketURL: 'http://miranda.cs.berkeley.edu:9000/q/bracket',
+            csvURL: 'http://miranda.cs.berkeley.edu:9000/wrappedcsv'
         }, 
         function (inst) 
         { 
