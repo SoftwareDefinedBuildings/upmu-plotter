@@ -1,6 +1,9 @@
+var slashRE = new RegExp("/", "g");
+
 function getFilepath(datum) {
+    var rawpath = datum.Path.replace(slashRE, "/ "); // so the line breaks where appropriate
     var sourceName = datum.Metadata.SourceName;
-    return (sourceName == undefined ? '<no source name>' : sourceName) + datum.Path;
+    return (sourceName == undefined ? '<no source name>' : sourceName) + rawpath;
 }
 
 function getInfo (datum, linebreak) {
