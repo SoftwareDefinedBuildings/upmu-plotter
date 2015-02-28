@@ -1,6 +1,4 @@
 {
-    "public": ["/upmu/soda_a/", "/upmu/soda_b", "/demo"],
-    "admin": ["/upmu/grizzly_new/"],
-    "extra": ["/upmu/switch_a6/", "/upmu/building_71/"],
-    "all": ["/upmu/"]
+    "public": ["/upmu/soda_a/", "/upmu/soda_b", "/upmu/culler"],
+    "all": ["/"]
 }
