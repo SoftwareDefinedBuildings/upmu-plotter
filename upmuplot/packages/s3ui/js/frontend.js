@@ -13,6 +13,7 @@ function init_frontend(self) {
     self.idata.otherChange = undefined;
     self.idata.automaticAxisUpdate = false; // True if axes will be updated without the need for an "Update Axes" button
     self.idata.initPermalink = window.location.protocol + "//" + window.location.hostname + (function (port) { if (port === '') { return ''; } return ':' + port; })(window.location.port) + window.location.pathname + '?'; // The start of the permalink
+    self.idata.loadedPermalink = false;
     self.idata.selectedLegendEntry = undefined; // The currently selected legend entry
     self.idata.chart = self.find("svg.chart");
     self.idata.widthFunction = function () {
@@ -292,6 +293,7 @@ function createPermalink(self, return_raw_document) {
                 var permalocation = self.find(".permalink");
                 permalocation.innerHTML = "";
                 permalocation.insertBefore(anchor, null);
+                self.idata.loadedPermalink = true;
             } else {
                 console.log(error);
             }

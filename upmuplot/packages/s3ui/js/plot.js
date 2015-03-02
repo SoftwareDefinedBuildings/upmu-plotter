@@ -961,6 +961,9 @@ function drawYAxes(self, data, streams, streamSettings, startDate, endDate, xSca
    paticular new streams are not added and old ones not removed (DRAWFAST tells it to optimize for scrolling).
 */
 function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxisArray, axisData, $loadingElem, drawFast) {
+    if (self.idata.loadedData) {
+        self.find(".permalink").innerHTML = "";
+    }
     if (!drawFast && (streams.length == 0 || yAxisArray.length == 0)) {
         if (streams.length == 0) {
             $loadingElem.html("Error: No streams are selected.");
