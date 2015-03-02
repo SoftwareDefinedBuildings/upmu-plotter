@@ -14,7 +14,15 @@ if (Meteor.isClient) {
             instances.push(inst);
             s3ui.default_cb1(inst);
         },
-        s3ui.default_cb2];
+        function (inst)
+        {
+            if (window.location.search.length > 0) {
+                s3ui.exec_permalink(inst, window.location.search.slice(1));
+            } else {
+                inst.imethods.selectStreams([{ "Path" : "/upmu/soda_a/L1MAG", "uuid" : "abffcf07-9e17-404a-98c3-ea4d60042ff3", "Properties" : { "UnitofTime" : "ns", "Timezone" : "UTC", "UnitofMeasure" : "V", "ReadingType" : "double" }, "Metadata" : { "SourceName" : "uPMU", "Instrument" : { "ModelName" : "PQube3", "SerialNumber" : "P3001244" } } }]);
+                inst.find(".showAll").click();
+            }
+        }];
         //function () 
         //{ 
             /*var inst = instances[instances.length - 1]; 
