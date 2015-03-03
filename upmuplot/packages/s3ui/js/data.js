@@ -299,7 +299,6 @@ function makeDataRequest(self, uuid, queryStart, queryEnd, pointwidthexp, halfpw
     var url = self.idata.dataURLStart + uuid + '?starttime=' + (queryStart + halfpwmillisStart) + halfpwnanosStart + '&endtime=' + (queryEnd + halfpwmillisStart) + halfpwnanosStart + '&unitoftime=ns&pw=' + pointwidthexp;
     if (caching) {
         Meteor.call('requestData', url, function (error, data) {
-                console.log("Called!");
                 callback(data, queryStart, queryEnd);
             });
     } else {
