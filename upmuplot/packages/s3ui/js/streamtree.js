@@ -51,6 +51,17 @@ function updateStreamList(self) {
                 s3ui.applySettings(self, false);
             }
         });
+        
+    streamTreeDiv.on("click", ".jstree-checkbox", function (event) {
+            var id = event.target.parentNode.parentNode.getAttribute("id");
+            var node = streamTree.get_node(id);
+            if (streamTree.is_selected(node)) {
+                streamTree.deselect_node(node);
+            } else {
+                checkboxHandler(node);
+            }
+            return false;
+        });
     
     streamTreeDiv.jstree({
             core: {
@@ -104,7 +115,14 @@ function updateStreamList(self) {
        before it occurs, in the case where the user cancels it before
        it is complete. */
     streamTree.old_select_node = streamTree.select_node;
-    streamTree.select_node = function (nodes, suppress_event, prevent_open) {
+    streamTree.select_node = makeSelectHandler(self, streamTree, false);
+    
+    var checkboxHandler = makeSelectHandler(self, streamTree, true); // select all children when checkbox is clicked, but just expand if text is clicked
+}
+
+/* If SELECTALLCHILDREN is true, selects all the children. If not, simply expands the node. */
+function makeSelectHandler(self, streamTree, selectAllChildren) {
+    handler = function (nodes, suppress_event, prevent_open) {
             if (nodes.length == undefined) {
                 nodes = [nodes];
             }
@@ -119,20 +137,34 @@ function updateStreamList(self) {
                         streamTree.load_node(node, function (node, status) {
                                 self.idata.loadingRootNodes[node.id] = false;
                                 if (status) {
-                                    if (!streamTree.is_selected(node)) {
-                                        streamTree.select_node(node, false);
+                                    if (selectAllChildren) {
+                                        if (!streamTree.is_selected(node)) {
+                                            handler(node);
+                                        }
+                                    } else {
+                                        streamTree.toggle_node(node);
                                     }
                                 } else {
                                     alert("Could not load node contents (could not communicate with archiver)");
                                 }
                             });
                     }
-                } else if (streamCount <= 5 || confirm("About to select " + streamCount + " streams. Continue?")) {
-                    streamTree.old_select_node(node, suppress_event, prevent_open);
+                } else if (selectAllChildren) {
+                    if (streamCount <= 5 || confirm("About to select " + streamCount + " streams. Continue?")) {
+                        streamTree.old_select_node(node, suppress_event, prevent_open);
+                    }
+                } else {
+                    if (node.children.length == 0) {
+                        streamTree.old_select_node(node, suppress_event, prevent_open); // if it's a leaf, select it
+                    } else {
+                        streamTree.toggle_node(node);
+                    }
                 }
             }
         };
+    return handler;
 }
+
 
 // The following functions are useful for the tree for selecting streams
 
@@ -243,7 +275,7 @@ function getContextMenu(self, node, callback) {
     }
 }
 
-/* Selects or deselects a node and all of its children, maintaing internal
+/* Selects or deselects a node and all of its children, maintaining internal
    state ONLY (not outward appearance of being checked!). Returns true if a
    POST request was made for at least one stream object; otherwise returns
    false. */
