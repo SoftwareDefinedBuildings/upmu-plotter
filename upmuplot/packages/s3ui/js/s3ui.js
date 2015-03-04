@@ -119,6 +119,9 @@ function init_visuals(self, options) {
     setVisibility(self, options, "div.plotLoading", "hide_info_bar");
     setVisibility(self, options, "div.timeSelection", "hide_time_selection");
     setVisibility(self, options, "div.streamSelection", "hide_stream_tree");
+    if (!options.hasOwnProperty("hide_plot_directions")) { // we have to take action to enforce the default here
+        options.hide_plot_directions = false;
+    }
     setVisibility(self, options, "g.plotDirections", "hide_plot_directions");
     setVisibility(self, options, "button.updateStreamList", "hide_refresh_button");
     

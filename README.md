@@ -38,7 +38,7 @@ The object of parameters may have the following properties (all optional):
 * hide\_info\_bar - TRUE if the area where general messages are displayed is to be hidden. Defaults to FALSE.
 * hide\_time\_selection - TRUE if the menu to select the start and end times is to be hidden. Defaults to FALSE.
 * hide\_stream\_tree - TRUE if the tree used to select streams is to be hidden. Defaults to FALSE.
-* hide\_plot\_directions - TRUE if the directions for how to use the interface are to be hidden. Defaults to FALSE
+* hide\_plot\_directions - TRUE if the directions for how to use the interface are to be hidden. Defaults to FALSE.
 * hide\_refresh\_button - TRUE if the "Refresh Stream Tree" button is to be hidden. Defaults to FALSE.
 * hide\_axis\_selection - TRUE if the axis selection menu within the legend is to be hidden. Defaults to FALSE.
 * disable\_color\_selection - TRUE if the color selection menu within the legend is to be disabled. Defaults to FALSE.
