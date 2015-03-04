@@ -1,7 +1,11 @@
 var slashRE = new RegExp("/", "g");
 
+function formatPath(metadata) {
+    return metadata.Path.replace(slashRE, "/ "); // so the line breaks where appropriate
+}
+
 function getFilepath(datum) {
-    var rawpath = datum.Path.replace(slashRE, "/ "); // so the line breaks where appropriate
+    var rawpath = formatPath(datum);
     var sourceName = datum.Metadata.SourceName;
     return (sourceName == undefined ? '<no source name>' : sourceName) + rawpath;
 }
@@ -212,6 +216,7 @@ function getUnitString(unitDict) {
     return unitList.join(", ");
 }
 
+s3ui.formatPath = formatPath;
 s3ui.getFilepath = getFilepath;
 s3ui.getInfo = getInfo;
 s3ui.getURL = getURL;

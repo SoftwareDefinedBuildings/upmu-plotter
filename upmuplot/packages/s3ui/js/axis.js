@@ -222,7 +222,7 @@ function updateYAxis (self, axisid) {
     streamUpdate.enter()
       .append("div");
     streamUpdate
-        .text(function (stream) { return stream.Path; });
+        .text(function (stream) { return s3ui.formatPath(stream); });
     streamUpdate.exit()
         .remove()
     rowSelection.select("td.axisunits")
