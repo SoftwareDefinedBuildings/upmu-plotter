@@ -7,7 +7,8 @@ if (Meteor.isClient) {
             dataURLStart: 'http://miranda.cs.berkeley.edu:9000/data/uuid/',
             bracketURL: 'http://miranda.cs.berkeley.edu:9000/q/bracket',
             csvURL: 'http://miranda.cs.berkeley.edu:9000/wrappedcsv',
-            hide_reset_button: true
+            hide_reset_button: true,
+            hide_plot_directions: true
         }, 
         function (inst) 
         { 
