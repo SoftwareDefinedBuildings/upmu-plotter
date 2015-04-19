@@ -67,7 +67,7 @@ function updateStreamList(self) {
             core: {
                 data: function (obj, callback) {
                         if (obj.id == "#") {
-                            Meteor.call("requestMetadata", 'select distinct Metadata/SourceName', self.idata.tagsURL, function (error, data) {
+                            Meteor.call("requestMetadata", 'select distinct Metadata/SourceName;', self.idata.tagsURL, function (error, data) {
                                     var sourceList = JSON.parse(data);
                                     var i;
                                     var rootID;
@@ -84,7 +84,7 @@ function updateStreamList(self) {
                                                         data: {
                                                                 toplevel: true,
                                                                 children: function (callback) {
-                                                                        Meteor.call("requestMetadata", 'select distinct Path where Metadata/SourceName = "' + sourceName + '"', self.idata.tagsURL, function (childerror, data) {
+                                                                        Meteor.call("requestMetadata", 'select distinct Path where Metadata/SourceName = "' + sourceName + '";', self.idata.tagsURL, function (childerror, data) {
                                                                                 callback.call(this, pathsToTree(self, sourceName, JSON.parse(data)));
                                                                             });
                                                                     },
@@ -241,7 +241,7 @@ function getContextMenu(self, node, callback) {
                         label: "Show Info",
                         action: function () {
                                 if (node.data.streamdata == undefined) {
-                                    Meteor.call('requestMetadata', 'select * where Metadata/SourceName = "' + node.data.sourceName + '" and Path = "' + node.data.path + '"', self.idata.tagsURL, function (error, data) {
+                                    Meteor.call('requestMetadata', 'select * where Metadata/SourceName = "' + node.data.sourceName + '" and Path = "' + node.data.path + '";', self.idata.tagsURL, function (error, data) {
                                              if (node.data.streamdata == undefined) {
                                                  data = JSON.parse(data)[0];
                                                  node.data.streamdata = data;
@@ -288,7 +288,7 @@ function selectNode(self, tree, select, node) { // unfortunately there's no simp
         node.data.selected = select;
         if (node.data.streamdata == undefined) {
             self.idata.pendingRequests += 1;
-            Meteor.call('requestMetadata', 'select * where Metadata/SourceName = "' + node.data.sourceName + '" and Path = "' + node.data.path + '"', self.idata.tagsURL, function (error, data) {
+            Meteor.call('requestMetadata', 'select * where Metadata/SourceName = "' + node.data.sourceName + '" and Path = "' + node.data.path + '";', self.idata.tagsURL, function (error, data) {
                     self.idata.pendingRequests -= 1;
                     if (node.data.selected == select) { // the box may have been unchecked in the meantime
                         if (node.data.streamdata == undefined) { // it might have been loaded in the meantime

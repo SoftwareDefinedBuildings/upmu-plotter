@@ -51,6 +51,13 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                 pathstarts.update(tag_defs[tag])
         
         self.query = self.rfile.read(int(self.headers['Content-Length']))
+        if len(self.query) == 0:
+            self.send_response(400)
+            self.end_headers()
+            self.wfile.write("Request was empty")
+            return
+        if self.query[-1] == ';':
+            self.query = self.query[:-1]
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET POST')
@@ -105,5 +112,5 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     pass
         
-serv = ThreadedHTTPServer(('', 4524), HTTPRequestHandler)
+serv = ThreadedHTTPServer(('', 4523), HTTPRequestHandler)
 serv.serve_forever()
