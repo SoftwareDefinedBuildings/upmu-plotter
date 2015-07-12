@@ -1067,18 +1067,11 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
       .selectAll("g.streamGroup")
       .data(dataArray);
         
-    update.enter()
+    var enter = update.enter()
       .append("g")
       .attr("class", "streamGroup");
         
-    if (!drawFast) {
-        update
-            .attr("class", function (dataObj) { return "streamGroup series-" + dataObj.uuid; })
-            .attr("stroke", function (d) { return d.color; })
-            .attr("stroke-width", function (d) { return self.idata.showingDensity == d.uuid ? 3 : 1; })
-            .attr("fill", function (d) { return d.color; })
-            .attr("fill-opacity", function (d) { return self.idata.showingDensity == d.uuid ? 0.5 : 0.3; });
-    }
+    setAppearance(self, drawFast ? enter : update);
         
     update.exit()
         .remove();
@@ -1131,6 +1124,15 @@ function drawStreams (self, data, streams, streamSettings, xScale, yScales, yAxi
         ddplot.children("polyline, circle").remove();
         showDataDensity(self, self.idata.showingDensity);
     }
+}
+
+function setAppearance(self, update) {
+    update
+        .attr("class", function (dataObj) { return "streamGroup series-" + dataObj.uuid; })
+        .attr("stroke", function (d) { return d.color; })
+        .attr("stroke-width", function (d) { return self.idata.showingDensity == d.uuid ? 3 : 1; })
+        .attr("fill", function (d) { return d.color; })
+        .attr("fill-opacity", function (d) { return self.idata.showingDensity == d.uuid ? 0.5 : 0.3; });
 }
 
 function processLineChunk(lc, lineChunks, points) {
