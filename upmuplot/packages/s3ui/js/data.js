@@ -363,7 +363,7 @@ function effectSecondaryRequests(self) {
                     return function (error, result) {
                             self.idata.pendingRequests--;
                             if (error == undefined) {
-                                cb(data);
+                                cb(result);
                             }
                         };
                 })(entry[1]));
