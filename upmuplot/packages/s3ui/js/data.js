@@ -527,7 +527,7 @@ function trimCache(self, uuid, lastTime) {
                 var excised = entries.splice(0, index);
                 for (var i = 0; i < excised.length; i++) {
                     self.idata.loadedData -= excised[i].cached_data.length;
-                    self.idata.loadedStreams[uuid] -= excised.cached_data.length;
+                    self.idata.loadedStreams[uuid] -= excised[i].cached_data.length;
                 }
             }
         }
