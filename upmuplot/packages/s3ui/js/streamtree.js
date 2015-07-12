@@ -1,6 +1,7 @@
 function init_streamtree(self) {
     self.idata.tagsURL = 'http://new.openbms.org/backend/api/query?';
     self.idata.streamTree = undefined;
+    self.idata.$streamTreeDiv = undefined;
     self.idata.rootNodes = undefined;; // Acts as a set of root nodes: maps name to id
     self.idata.leafNodes = undefined; // Acts as a set of leaf nodes that appear in the tree: maps full path to id
     self.idata.loadingRootNodes = undefined; // Acts as a set of root nodes that are loading (used to prevent duplicate requests)
@@ -24,11 +25,13 @@ function updateStreamList(self) {
         for (i = 0; i < roots.length; i++) {
             s3ui.selectNode(self, self.idata.streamTree, false, self.idata.streamTree.get_node(roots[i]));
         }
+        self.idata.$streamTreeDiv.off();
         self.idata.streamTree.destroy(true);
         s3ui.applySettings(self, false);
     }
     
     var streamTreeDiv = $(self.find("div.streamTree"));
+    self.idata.$streamTreeDiv = streamTreeDiv;
     
     streamTreeDiv.on("loaded.jstree", function (event, data) {
             for (var i = self.idata.mayHaveSelectedLeaves.length - 1; i >= 0; i--) {
