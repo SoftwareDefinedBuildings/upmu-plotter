@@ -5,7 +5,7 @@ function init_streamtree(self) {
     self.idata.rootNodes = undefined;; // Acts as a set of root nodes: maps name to id
     self.idata.leafNodes = undefined; // Acts as a set of leaf nodes that appear in the tree: maps full path to id
     self.idata.loadingRootNodes = undefined; // Acts as a set of root nodes that are loading (used to prevent duplicate requests)
-    self.idata.pendingStreamRequests = 0; // Keeps track of the number of requests for stream objects that are currently open
+    self.idata.pendingStreamRequests = 0; // Keeps track of the number of requests for stream objects that are currently open (currently not used, but may be useful for optimizing)
     self.idata.internallyIgnoreSelects = false;
     self.idata.initiallySelectedStreams = {}; // Maps the source name of a stream to an object that maps path to stream object, if it has not yet been found in the tree
     self.idata.mayHaveSelectedLeaves = undefined; // An array of IDs of root nodes whose children may be initially selected
@@ -44,15 +44,11 @@ function updateStreamList(self) {
                 return;
             }
             selectNode(self, streamTree, true, data.node);
-            if (self.idata.pendingStreamRequests == 0) {
-                s3ui.applySettings(self, true);
-            }
+            s3ui.applySettings(self, true);
         });
     streamTreeDiv.on("deselect_node.jstree", function (event, data) {
             selectNode(self, streamTree, false, data.node);
-            if (self.idata.pendingStreamRequests == 0) {
-                s3ui.applySettings(self, false);
-            }
+            s3ui.applySettings(self, false);
         });
         
     streamTreeDiv.on("click", ".jstree-checkbox", function (event) {
@@ -284,9 +280,11 @@ function getContextMenu(self, node, callback) {
    false. */
 function selectNode(self, tree, select, node) { // unfortunately there's no simple way to differentiate between undetermined and unselected nodes
     if (!node.data.child) {
+        var result = false;
         for (var i = 0; i < node.children.length; i++) {
-            selectNode(self, tree, select, tree.get_node(node.children[i]));
+            result = selectNode(self, tree, select, tree.get_node(node.children[i])) || result;
         }
+        return result;
     } else if (node.data.selected != select) {
         node.data.selected = select;
         if (node.data.streamdata == undefined) {
@@ -298,14 +296,13 @@ function selectNode(self, tree, select, node) { // unfortunately there's no simp
                             data = JSON.parse(data)[0];
                             node.data.streamdata = data;
                         }
-                        s3ui.toggleLegend(self, select, node.data.streamdata, false);
-                    }
-                    if (self.idata.pendingStreamRequests == 0) {
-                        s3ui.applySettings(self, true);
+                        s3ui.toggleLegend(self, select, node.data.streamdata, true);
                     }
                 });
+            return true;
         } else {
-            s3ui.toggleLegend(self, select, node.data.streamdata, false);
+            s3ui.toggleLegend(self, select, node.data.streamdata, true);
+            return false;
         }
     }
 }
