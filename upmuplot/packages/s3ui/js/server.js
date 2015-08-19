@@ -147,6 +147,7 @@ Meteor.methods({
             },
         requestData: function (dataUrl) {
                 this.unblock();
+                var clientIP = this.connection.clientAddress;
                 var fut = new Future();
                 var parsedURL = url.parse(dataUrl);
                 
@@ -154,6 +155,7 @@ Meteor.methods({
                         hostname: parsedURL.hostname,
                         port: parsedURL.port == null ? undefined : parseInt(parsedURL.port),
                         path: parsedURL.path,
+                        headers: {'x-forwarded-for':clientIP},
                         agent: connPools[this.connection.id],
                         method: "GET"
                     }, function (resp) {
