@@ -353,6 +353,7 @@ function buildCSVMenu(self) {
     var pwselector = graphExport.querySelector(".pointwidth-selector");
     var domain = self.idata.oldXScale;
     var submitButton = graphExport.querySelector("div.csv-button");
+    var $submitButton = $(submitButton);
     var textSpace;
     if (streams.length > 0 && domain != undefined) {
         domain = domain.domain();
@@ -362,7 +363,14 @@ function buildCSVMenu(self) {
                 var m1 = this.nextSibling.nextSibling;
                 m1.innerHTML = "Point width: " + s3ui.nanosToUnit(pw) + " [exponent = " + (62 - this.value) + "]";
                 var pps = Math.ceil(1000000 * (domain[1] - domain[0]) / pw);
-                m1.nextSibling.nextSibling.innerHTML = "About " + pps + (pps == 1 ? " point per stream" : " points per stream");
+                var statusString = "About " + pps + (pps == 1 ? " point per stream" : " points per stream");
+                if (pps > 100000) {
+                    $submitButton.addClass("disabled")
+                    statusString += " <strong>(too many to download)</strong>"
+                } else {
+                    $submitButton.removeClass("disabled")
+                }
+                m1.nextSibling.nextSibling.innerHTML = statusString;
             };
         pwselector.value = 63 - self.idata.oldData[streams[0].uuid][2];
         pwselector.onchange();
